@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Asymmetric Real Estate Layout</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style data-purpose="custom-animations">
+    /* Subtle float animation for decorative elements */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    .animate-float {
+      animation: float 4s ease-in-out infinite;
+    }
+  </style>
+<style data-purpose="layout-positioning">
+    /* Custom container to handle the specific overlapping offsets */
+    .image-grid-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 700px;
+      margin: 0 auto;
+    }
+
+    /* Specific Border Radii matching IMAGE_3 reference */
+    .radius-top-left {
+      border-radius: 60px 20px 20px 20px;
+    }
+    .radius-top-right {
+      border-radius: 20px 60px 20px 20px;
+    }
+    .radius-bottom-left {
+      border-radius: 20px 20px 20px 60px;
+    }
+
+    /* Floating Pill Element with Circles */
+    .pill-accent {
+      width: 140px;
+      height: 60px;
+      background-color: #C3B1E1; /* Light Purple from reference */
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      z-index: 40;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+<!-- BEGIN: MainGallerySection -->
+<main class="w-full max-w-4xl" data-purpose="gallery-wrapper">
+<div class="image-grid-container" data-purpose="asymmetric-layout" style="height: 850px;">
+<!-- BEGIN: DecorativeBackgroundElements -->
+<!-- Top Circle Accent -->
+<div class="absolute top-4 left-[40%] translate-x-4 w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center z-0">
+<svg class="h-8 w-8 text-blue-400" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" transform="rotate(45 12 12)"></path>
+</svg>
+</div>
+<!-- Small Star Icons -->
+<div class="absolute top-1/3 -left-4 text-green-300 animate-float" style="animation-delay: 0.5s;">
+<svg fill="currentColor" height="24" viewbox="0 0 24 24" width="24"><path d="M12 0l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9z"></path></svg>
+</div>
+<div class="absolute bottom-1/3 right-12 text-green-300 animate-float">
+<svg fill="currentColor" height="32" viewbox="0 0 24 24" width="32"><path d="M12 0l3 9h9l-7 5 3 9-8-6-8 6 3-9-7-5h9z"></path></svg>
+</div>
+<!-- Blue Dot Accent -->
+<div class="absolute bottom-1/4 right-0 w-6 h-6 bg-blue-300 rounded-full opacity-60"></div>
+<!-- END: DecorativeBackgroundElements -->
+<!-- BEGIN: ImageOne (Top Left) -->
+<!-- Represents the woman in orange from reference -->
+<div class="absolute top-12 left-4 w-5/12 aspect-[4/5] z-10 overflow-hidden shadow-xl radius-top-left border-8 border-white bg-blue-50" data-purpose="image-card">
+<img alt="Handshake over house model" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0ugXOxzHtQcXpz1yOQKIQDsIJZyrb1zSZ_k77J-DHrOoiXFeyDRki1RBddrJgd54q3JYZlR6wChE5wJqnpL5PWb1LrbWhPeQGVfYcQqlght6Mijp7JWuneqoCUyY-WfFa90Z4Z6vYMDZnHjzoLgCMnc4VmGcVS6DKEzsKhX1fVP-8gQ-f3PvRJJ8PLK9aLViPKST0zGPXfXkB9p0aKkQqtyoAseS6xxzeF_5du96KjPQB5HSqvRHghiwhZxCT_rIS-XlEY1vrV3e"/>
+</div>
+<!-- END: ImageOne -->
+<!-- BEGIN: ImageTwo (Top Right) -->
+<!-- Represents the man in glasses from reference -->
+<div class="absolute top-40 right-4 w-5/12 aspect-[4/5] z-20 overflow-hidden shadow-2xl radius-top-right border-8 border-white bg-purple-50" data-purpose="image-card">
+<img alt="Handing over house keys" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0uhoQl0l2dR1P9IERKX5gjBpVNjCq3WRy1zrWsIajtT6jIgJoPCRsYER8x_wDTsh7HHWVGWxNNE0Xf-6vYSW0YG47QyEZAxG7pIOpD7lrs5cKLBsXpp8QCgKimOzu02sjY7LHKjfM4YsIASFG4bxOEFVbY2VQPDA1gbseUl-XpKB7StW4peMj97BJLTmQnFBznVjCjPPMt7g547nQoPIAexMTunTtlIeVX9XueGTXlIMXbxttjy5NX0cqk8TFTfy8cVbpg_KIryB_Q"/>
+</div>
+<!-- END: ImageTwo -->
+<!-- BEGIN: CenterPillElement -->
+<!-- Floating pill with overlapping circles as seen in IMAGE_3 -->
+<div class="pill-accent left-[48%] top-[52%] -translate-x-1/2 -translate-y-1/2 shadow-lg" data-purpose="decorative-pill">
+<div class="flex -space-x-3">
+<div class="w-8 h-8 rounded-full border-2 border-white/50"></div>
+<div class="w-8 h-8 rounded-full border-2 border-white/50"></div>
+<div class="w-8 h-8 rounded-full border-2 border-white/50"></div>
+<div class="w-8 h-8 rounded-full border-2 border-white/50"></div>
+</div>
+</div>
+<!-- END: CenterPillElement -->
+<!-- BEGIN: ImageThree (Bottom Center/Left) -->
+<!-- Represents the woman with megaphone from reference -->
+<div class="absolute bottom-12 left-0 w-6/12 aspect-[5/4] z-30 overflow-hidden shadow-2xl radius-bottom-left border-8 border-white bg-green-50" data-purpose="image-card">
+<img alt="Real estate contract signing" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0ugPMMGXlbpA_Z4u7CVwrmamgUo81q6ZOtKJPs7CVHNTzFYgIVmxY_TQ7q7XUt025Y9FzYsro6k6xq9CnEEs8uGoAnku9LpguQAbdD7yROvaFRRg4B7P5cHf_nKLHVPHdZzAEgT9Ev8Dz5KXmQqYGuCGmzxiBFZMnCA90hqdBr1jv5iXw_UojVqQD6jpRORHZEWbCx-fD8G_ZlRnz2N4hNp3U4-g5ihDCOFxNTqg1jq3X7JU6nMgM9Lt0JoBvmMJxh7scvvEmnuv0Q"/>
+</div>
+<!-- END: ImageThree -->
+</div>
+</main>
+<!-- END: MainGallerySection -->
+</body></html>

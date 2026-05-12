@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Modern+Antiqua&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Overlock+SC&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mozilla+Text:wght@200..700&display=swap');
+
+@import "tailwindcss";
+
+
+* {
+ 
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+};
+
+
+
+
+.overlock-sc-regular {
+  font-family: "Overlock SC", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.mozilla-text-Header {
+  font-family: "Mozilla Text", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 600;
+  font-style: normal;
+}
+

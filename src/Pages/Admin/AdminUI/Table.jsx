@@ -1,0 +1,656 @@
+/**
+ * AgGridTable.jsx  —  ag-grid-community v35 compatible
+ *
+ * BASE  : File 1 (ag-theme-alpine, computedColumnWidths, custom pagination,
+ *                  floating filters, column toggle, scroll wrapper, CSS block)
+ * ADDED : File 2's themeQuartz, BadgeCellRenderer / EmpIdCellRenderer /
+ *          ClassCellRenderer / BasicCellRenderer / ActionCellRenderer,
+ *          ToolbarButton, panel header, toolbar search + export/filter buttons.
+ */
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AgGridReact } from "ag-grid-react";
+import {
+  ModuleRegistry,
+  AllCommunityModule,
+  themeQuartz,
+} from "ag-grid-community";
+
+ModuleRegistry.registerModules([AllCommunityModule]);
+
+// ── Purple themeQuartz (from file 2) ────────────────────────
+const purpleTheme = themeQuartz.withParams({
+  fontFamily:                 "'Segoe UI', system-ui, sans-serif",
+  fontSize:                   13,
+  rowHeight:                  48,
+  headerHeight:               44,
+  headerBackgroundColor:      "#f9fafb",
+  headerTextColor:            "#6b7280",
+  headerFontSize:             11,
+  headerFontWeight:           700,
+  backgroundColor:            "#ffffff",
+  oddRowBackgroundColor:      "#fafaff",
+  rowHoverColor:              "rgba(139,92,246,0.05)",
+  selectedRowBackgroundColor: "#ede9fe",
+  borderColor:                "#f3f4f6",
+  cellHorizontalPaddingScale: 1.3,
+  accentColor:                "#6d28d9",
+  foregroundColor:            "#374151",
+  chromeBackgroundColor:      "rgba(249,250,251,0.5)",
+  borderRadius:               0,
+  wrapperBorderRadius:        0,
+  columnBorder:               false,
+  headerColumnBorder:         false,
+  sidePanelBorder:            false,
+});
+
+/* ── Cell Renderers (from file 2) ───────────────────────────── */
+
+function BadgeCellRenderer({ value }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      width: 28, height: 28, borderRadius: "50%",
+      background: "linear-gradient(135deg, #6d28d9, #4f46e5)",
+      color: "#fff", fontSize: 11, fontWeight: 700,
+      boxShadow: "0 2px 6px rgba(109,40,217,0.35)",
+      flexShrink: 0,
+    }}>
+      {value}
+    </span>
+  );
+}
+
+function EmpIdCellRenderer({ value }) {
+  return (
+    <span style={{
+      padding: "2px 8px", background: "#ede9fe", color: "#6d28d9",
+      borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
+    }}>
+      {value}
+    </span>
+  );
+}
+
+function ClassCellRenderer({ value }) {
+  const isSr1 = value === "SR-CLASS-I";
+  return (
+    <span style={{
+      padding: "2px 8px",
+      background: isSr1 ? "#dbeafe" : "#ffedd5",
+      color:      isSr1 ? "#1d4ed8" : "#c2410c",
+      borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
+    }}>
+      {value}
+    </span>
+  );
+}
+
+function BasicCellRenderer({ value }) {
+  return (
+    <span style={{ color: "#374151", fontWeight: 500, whiteSpace: "nowrap" }}>
+      ₹{Number(value).toLocaleString("en-IN")}
+    </span>
+  );
+}
+
+function ActionCellRenderer() {
+  return (
+    <button
+      style={{
+        padding: "4px 14px", fontSize: 11, fontWeight: 600,
+        color: "#fff", background: "linear-gradient(135deg, #6d28d9, #4f46e5)",
+        border: "none", borderRadius: 8, cursor: "pointer",
+        boxShadow: "0 1px 4px rgba(79,70,229,0.3)", transition: "opacity 0.15s",
+        whiteSpace: "nowrap",
+      }}
+      onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+      onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+    >
+      Review
+    </button>
+  );
+}
+
+const RENDERER_MAP = {
+  badge:  BadgeCellRenderer,
+  empId:  EmpIdCellRenderer,
+  class:  ClassCellRenderer,
+  basic:  BasicCellRenderer,
+  action: ActionCellRenderer,
+};
+
+/* ── Toolbar button (from file 2) ───────────────────────────── */
+function ToolbarButton({ iconPath, label, onClick }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "6px 14px", fontSize: 12, fontWeight: 500,
+        color: hov ? "#6d28d9" : "#6b7280",
+        background: "#fff",
+        border: `1px solid ${hov ? "#a78bfa" : "#e5e7eb"}`,
+        borderRadius: 10, cursor: "pointer", transition: "all 0.15s",
+      }}
+    >
+      <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={iconPath} />
+      </svg>
+      {label}
+    </button>
+  );
+}
+
+/* ── Main component ─────────────────────────────────────────── */
+export default function AgGridTable({
+  // ── File 1 props ──
+  columns,
+  rows,
+  rowKey,
+  emptyMessage     = "No records found.",
+  contentAutoWidth = true,
+  contentAlign     = "center",
+  // ── File 2 props (header / toolbar) ──
+  title      = "Data Table",
+  subtitle   = "",
+  badgeText  = "",
+  badgeLabel = "",
+  searchable = true,
+  pageSize   = 10,
+  showExport = true,
+  showFilter = true,
+}) {
+  const gridRef = useRef(null);
+  const [quickFilter,   setQuickFilter]   = useState("");
+  const [pageSizeState, setPageSizeState] = useState(pageSize);
+  const [pageLabel,     setPageLabel]     = useState("1 / 1");
+  const [rowRangeLabel, setRowRangeLabel] = useState("0–0 of 0");
+  const [showColMenu,   setShowColMenu]   = useState(false);
+  const [visibleCols,   setVisibleCols]   = useState(
+    () => new Set(columns.map((col) => col.key))
+  );
+
+  // ── Hard-coded width computation (file 1) ────────────────────
+  const computedColumnWidths = useMemo(() => {
+    const CHAR_PX      = 8;
+    const CELL_PADDING = 56;
+    const MAX_WIDTH    = 720;
+
+    return columns.reduce((acc, col) => {
+      if (col.key === "action" || col.renderer === "action") {
+        acc[col.key] = col.width || 220;
+        return acc;
+      }
+
+      const headerText = col.header || col.label || col.key || "";
+      const baseWidth = col.width || col.minWidth || 140;
+      let maxChars    = String(headerText).length;
+
+      for (const row of rows) {
+        const raw  = typeof col.value === "function" ? col.value(row) : row?.[col.key];
+        const text = raw == null ? "" : String(raw);
+        if (text.length > maxChars) maxChars = text.length;
+      }
+
+      const estimated = maxChars * CHAR_PX + CELL_PADDING;
+      acc[col.key]    = Math.max(baseWidth, Math.min(MAX_WIDTH, estimated));
+      return acc;
+    }, {});
+  }, [columns, rows]);
+
+  // ── Column definitions (file 1 logic + file 2 renderers) ────
+  const columnDefs = useMemo(
+    () => [
+      {
+        headerName:        "S.No",
+        field:             "__sno",
+        minWidth:          90,
+        width:             90,
+        suppressSizeToFit: true,
+        flex:              0,
+        sortable:          false,
+        filter:            false,
+        floatingFilter:    false,
+        suppressMenu:      true,
+        resizable:         false,
+        valueGetter:       (params) => params.node.rowIndex + 1,
+        pinned:            "left",
+      },
+      ...columns.map((col) => {
+        const isAction = col.key === "action" || col.renderer === "action";
+        const actionWidth = col.width || 220;
+        const computedWidth = isAction
+          ? actionWidth
+          : Math.max(col.minWidth || 140, computedColumnWidths[col.key] || col.width || 140);
+
+        const def = {
+          headerName:        col.header || col.label || col.key,
+          field:             col.key,
+          minWidth:          computedWidth,
+          width:             computedWidth,
+          flex:              0,
+          suppressSizeToFit: true,
+          sortable:          col.sortable !== false,
+          filter:            col.filterable === false ? false : "agTextColumnFilter",
+          floatingFilter:    col.filterable !== false,
+          suppressMenu:      false,
+          resizable:         false,
+          suppressMovable:   true,
+          valueGetter:
+            typeof col.value === "function"
+              ? (params) => col.value(params.data)
+              : undefined,
+        };
+
+        // ── Prefer RENDERER_MAP (file 2 chips/badges) then col.render ──
+        if (col.renderer && RENDERER_MAP[col.renderer]) {
+          def.cellRenderer = RENDERER_MAP[col.renderer];
+        } else if (typeof col.render === "function") {
+          def.cellRenderer = (params) => col.render(params.value, params.data, params);
+        }
+
+        if (col.pinned) def.pinned = col.pinned;
+
+        return def;
+      }),
+    ],
+    [columns, computedColumnWidths, contentAutoWidth]
+  );
+
+  const defaultColDef = useMemo(
+    () => ({
+      resizable:    false,
+      minWidth:     140,
+      filterParams: { buttons: ["reset"] },
+    }),
+    []
+  );
+
+  const getRowId = useMemo(() => {
+    if (!rowKey) return undefined;
+    return (params) => String(rowKey(params.data, params.rowIndex));
+  }, [rowKey]);
+
+  // ── Pagination labels (file 1) ───────────────────────────────
+  const updatePaginationLabels = useCallback(() => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    const totalRows  = api.getDisplayedRowCount();
+    const totalPages = Math.max(api.paginationGetTotalPages(), 1);
+    const currentPg  = api.paginationGetCurrentPage() + 1;
+    setPageLabel(`${currentPg}/${totalPages}`);
+    if (totalRows === 0) { setRowRangeLabel("0 of 0"); return; }
+    const start = api.paginationGetCurrentPage() * pageSizeState + 1;
+    const end   = Math.min(start + pageSizeState - 1, totalRows);
+    setRowRangeLabel(`${start}–${end} of ${totalRows}`);
+  }, [pageSizeState]);
+
+  const onGridReady         = useCallback(() => { updatePaginationLabels(); }, [updatePaginationLabels]);
+  const onFilterChanged     = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
+  const onPaginationChanged = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
+  const onModelUpdated      = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
+  const onGridSizeChanged   = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
+
+  const toggleColumn = useCallback((key) => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    setVisibleCols((prev) => {
+      const next       = new Set(prev);
+      const shouldShow = !next.has(key);
+      if (shouldShow) next.add(key); else next.delete(key);
+      api.setColumnsVisible([key], shouldShow);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    api.setGridOption("quickFilterText", quickFilter);
+  }, [quickFilter]);
+
+  useEffect(() => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    api.paginationSetPageSize(pageSizeState);
+    api.paginationGoToFirstPage();
+  }, [pageSizeState]);
+
+  useEffect(() => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    if (rows.length === 0) api.showNoRowsOverlay();
+    else api.hideOverlay();
+    api.refreshCells({ force: true });
+  }, [rows]);
+
+  const onExportCSV = useCallback(() => {
+    gridRef.current?.api?.exportDataAsCsv({
+      fileName: `${title.replace(/\s+/g, "_")}.csv`,
+    });
+  }, [title]);
+
+  const alignClass = contentAlign === "left" ? "lms-grid-align-left" : "lms-grid-align-center";
+
+  return (
+    <>
+      {/* ── All CSS from file 1 (untouched) ── */}
+      <style>{`
+        @media screen and (max-width: 1024px) { .lms-grid-root { font-size: 90%; } }
+        @media screen and (max-width: 700px)  { .lms-grid-root { font-size: 80%; } }
+        @media screen and (max-width: 640px)  { .lms-grid-root { font-size: 70%; } }
+
+        .lms-grid-scroll {
+          overflow-x: auto; overflow-y: hidden; width: 100%;
+          -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+        }
+        .lms-grid-scroll::-webkit-scrollbar { height: 4px; }
+        .lms-grid-scroll::-webkit-scrollbar-thumb { background: #c7c4f0; border-radius: 2px; }
+        .lms-grid-scroll::-webkit-scrollbar-track { background: transparent; }
+
+        .lms-grid { min-width: 100%; overflow: hidden; border-radius: 20px; }
+
+        .lms-grid .ag-root-wrapper {
+          width: max-content !important; min-width: 100% !important;
+          overflow: auto !important; border: none !important;
+          border-radius: 0 0 20px 20px !important;
+          font-family: inherit !important; background: #ffffff !important;
+        }
+
+        .lms-grid .ag-cell.ag-cell-last-left-pinned:not(.ag-cell-range-right):not(.ag-cell-range-single-cell) {
+          border-right: 1px solid #babfc7 !important;
+        }
+        .ag-body-horizontal-scroll-viewport { color: #463ca6; }
+        .ag-horizontal-left-spacer { overflow-x: hidden !important; }
+
+        .lms-grid .ag-header {
+          background: #463ca6 !important; border-bottom: 1px solid #f3f4f6 !important;
+          min-height: 44px !important;
+        }
+        .lms-grid .ag-header-cell-label { justify-content: center !important; }
+        .lms-grid .ag-header-cell {
+          font-size: 11px !important; font-weight: 800 !important;
+          letter-spacing: 0.1em !important; text-transform: uppercase !important;
+          color: #f5f5ff !important; padding: 0 24px !important;
+          border-right: 1px solid #f3f4f6 !important;
+        }
+        .lms-grid .ag-header-cell:last-child  { border-right: 1px solid #f5f5ff !important; }
+        .lms-grid .ag-header-cell-resize::after { display: none !important; }
+        .lms-grid .ag-sort-indicator-icon { color: #3e2ecab8 !important; }
+        .lms-grid .ag-header-icon { color: #d1d5db !important; }
+
+        .lms-grid .ag-floating-filter {
+          background: #ffffff !important; border-bottom: 1px solid #f3f4f6 !important;
+          padding: 0 16px !important; min-height: 40px !important;
+        }
+        .lms-grid .ag-floating-filter-input {
+          border: none !important; background: transparent !important;
+          box-shadow: none !important;
+        }
+        .lms-grid .ag-text-field-input-wrapper { border: none !important; background: transparent !important; }
+        .lms-grid .ag-floating-filter-button { color: #d1d5db !important; }
+
+        .lms-grid .ag-row { border-bottom: 1px solid #f3f4f6 !important; transition: background 0.1s !important; }
+        .lms-grid .ag-row-even  { background: #ffffff !important; }
+        .lms-grid .ag-row-odd   { background: #f3f4fb !important; }
+        .lms-grid .ag-row-hover { background: #e8eaf6 !important; }
+
+        .lms-grid .ag-cell {
+          justify-content: center !important; padding: 0 24px !important;
+          font-size: 13px !important; color: #374151 !important;
+          display: flex !important; align-items: center !important;
+          border-right: 1px solid #f3f4f6 !important;
+          line-height: 1.5 !important; word-break: break-word !important;
+        }
+        .lms-grid .ag-cell-value {
+          overflow: visible !important; text-overflow: clip !important; text-wrap: auto !important;
+        }
+        .lms-grid.lms-grid-align-left   .ag-cell       { justify-content: flex-start !important; }
+        .lms-grid.lms-grid-align-left   .ag-cell-value { text-align: left !important; }
+        .lms-grid.lms-grid-align-center .ag-cell       { justify-content: center !important; }
+        .lms-grid.lms-grid-align-center .ag-cell-value { text-align: center !important; }
+
+        .lms-grid .ag-cell-focus, .lms-grid .ag-cell:focus {
+          border: none !important; outline: none !important; box-shadow: none !important;
+        }
+        .lms-grid .ag-cell:last-child { border-right: none !important; }
+        .lms-grid .ag-paging-panel   { display: none !important; }
+        .lms-grid .ag-overlay-no-rows-wrapper { background: transparent !important; }
+        .lms-grid .ag-body-viewport::-webkit-scrollbar { width: 4px; height: 4px; }
+        .lms-grid .ag-body-viewport::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 2px; }
+        .lms-grid .ag-body-viewport::-webkit-scrollbar-track { background: transparent; }
+        .lms-grid .ag-selection-checkbox { display: none !important; }
+
+        .lms-pagination {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 10px 16px; border-top: 1px solid #f3f4f6;
+          background: #fff; gap: 8px; flex-wrap: wrap;
+        }
+        .lms-pagination-info { font-size: 11px; color: #9ca3af; white-space: nowrap; min-width: 0; }
+        .lms-pagination-controls { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+        .lms-pagination-controls button {
+          padding: 5px; border-radius: 8px; color: #9ca3af;
+          background: transparent; border: none; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          min-width: 30px; min-height: 30px; transition: background 0.15s, color 0.15s;
+        }
+        .lms-pagination-controls button:hover { background: #e0e7ff; color: #4f46e5; }
+        .lms-pagination-page-label {
+          font-size: 11px; font-weight: 600; color: #4b5563;
+          padding: 0 6px; white-space: nowrap;
+        }
+        @media screen and (max-width: 400px) {
+          .lms-pagination { justify-content: center; }
+          .lms-pagination-info { width: 100%; text-align: center; }
+        }
+          .lms-grid .ag-header-cell-resize { pointer-events: none !important; cursor: default !important; }
+      `}</style>
+
+      <div
+        className="lms-grid-root relative"
+        style={{
+          background: "#fff", borderRadius: 16,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          border: "1px solid #f3f4f6", overflow: "hidden",
+        }}
+      >
+        {/* ── Panel header (file 2) ── */}
+        <div style={{
+          background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)",
+          padding: "16px 24px", display: "flex",
+          alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div>
+            {subtitle && (
+              <p style={{
+                color: "#c4b5fd", fontSize: 10, fontWeight: 700,
+                letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 2,
+              }}>
+                {subtitle}
+              </p>
+            )}
+            <p style={{ color: "#fff", fontWeight: 700, fontSize: 15, margin: 0 }}>{title}</p>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {badgeText && (
+              <span style={{
+                padding: "5px 12px", background: "rgba(255,255,255,0.2)",
+                color: "#fff", fontSize: 12, fontWeight: 600, borderRadius: 8,
+              }}>
+                {badgeText}
+              </span>
+            )}
+            {badgeLabel && (
+              <span style={{
+                padding: "5px 12px", background: "#fff", color: "#6d28d9",
+                fontSize: 12, fontWeight: 600, borderRadius: 8,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+              }}>
+                {badgeLabel}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* ── Toolbar (file 2 search + export/filter buttons) ── */}
+        <div style={{
+          padding: "10px 24px", borderBottom: "1px solid #f3f4f6",
+          background: "rgba(249,250,251,0.6)", display: "flex",
+          alignItems: "center", gap: 10,
+        }}>
+          {searchable && (
+            <div style={{ position: "relative", maxWidth: 280, flex: 1 }}>
+              <svg style={{
+                position: "absolute", left: 10, top: "50%",
+                transform: "translateY(-50%)", width: 15, height: 15,
+                color: "#9ca3af", pointerEvents: "none",
+              }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search name, ID, app no..."
+                value={quickFilter}
+                onChange={(e) => setQuickFilter(e.target.value)}
+                style={{
+                  width: "100%", paddingLeft: 32, paddingRight: 12,
+                  paddingTop: 7, paddingBottom: 7, fontSize: 13,
+                  border: "1px solid #e5e7eb", borderRadius: 10,
+                  background: "#fff", outline: "none",
+                  color: "#374151", boxSizing: "border-box",
+                }}
+                onFocus={(e) => (e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.15)")}
+                onBlur={(e)  => (e.target.style.boxShadow = "none")}
+              />
+            </div>
+          )}
+
+          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+            {/* Column toggle (file 1) */}
+            <ToolbarButton
+              iconPath="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              label="Columns"
+              onClick={() => setShowColMenu((v) => !v)}
+            />
+            {showFilter && (
+              <ToolbarButton
+                iconPath="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                label="Filter"
+                onClick={() => gridRef.current?.api?.setFilterModel(null)}
+              />
+            )}
+            {showExport && (
+              <ToolbarButton
+                iconPath="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                label="Export CSV"
+                onClick={onExportCSV}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* ── Column toggle menu (file 1) ── */}
+        {showColMenu && (
+          <div style={{
+            position: "absolute", right: 16, zIndex: 20, marginTop: 4,
+            width: 208, background: "#fff", border: "1px solid #e5e7eb",
+            borderRadius: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.12)", padding: 12,
+          }}>
+            <p style={{
+              fontSize: 10, fontWeight: 700, textTransform: "uppercase",
+              letterSpacing: "0.1em", color: "#9ca3af", marginBottom: 8, paddingLeft: 4,
+            }}>
+              Toggle Columns
+            </p>
+            {columns.map((col) => (
+              <label key={col.key} style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "6px 4px", fontSize: 13, color: "#374151",
+                borderRadius: 8, cursor: "pointer",
+              }}>
+                <input
+                  type="checkbox"
+                  checked={visibleCols.has(col.key)}
+                  onChange={() => toggleColumn(col.key)}
+                  style={{ accentColor: "#6d28d9" }}
+                />
+                {col.header}
+              </label>
+            ))}
+          </div>
+        )}
+
+        {/* ── Grid scroll wrapper (file 1) ── */}
+        <div className="lms-grid-scroll">
+          <div
+            className={`lms-grid ${alignClass}`}
+            style={{ border: "3px solid #867beb60", borderRadius: "0 0 22px 22px" }}
+          >
+            <AgGridReact
+              ref={gridRef}
+              theme={purpleTheme}
+              domLayout="autoHeight"
+              rowData={rows}
+              columnDefs={columnDefs}
+              defaultColDef={defaultColDef}
+              getRowId={getRowId}
+              animateRows
+              rowSelection="multiple"
+              suppressRowClickSelection
+              pagination
+              paginationPageSize={pageSizeState}
+              suppressPaginationPanel
+              onGridReady={onGridReady}
+              onFilterChanged={onFilterChanged}
+              onPaginationChanged={onPaginationChanged}
+              onModelUpdated={onModelUpdated}
+              onGridSizeChanged={onGridSizeChanged}
+              overlayNoRowsTemplate={`
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px;color:#9ca3af;padding:40px 0">
+                  <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/>
+                  </svg>
+                  <span style="font-size:13px;font-weight:600;color:#6b7280">${emptyMessage}</span>
+                </div>
+              `}
+            />
+
+            {/* ── Custom pagination (file 1) ── */}
+            <div className="lms-pagination">
+              <span className="lms-pagination-info">{rowRangeLabel}</span>
+              <div className="lms-pagination-controls">
+                <button onClick={() => gridRef.current?.api?.paginationGoToFirstPage()} title="First">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/>
+                  </svg>
+                </button>
+                <button onClick={() => gridRef.current?.api?.paginationGoToPreviousPage()} title="Previous">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+                <span className="lms-pagination-page-label">{pageLabel}</span>
+                <button onClick={() => gridRef.current?.api?.paginationGoToNextPage()} title="Next">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </button>
+                <button onClick={() => gridRef.current?.api?.paginationGoToLastPage()} title="Last">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
