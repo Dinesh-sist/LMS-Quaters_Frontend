@@ -589,7 +589,7 @@ export default function AgGridTable({
         <div className="lms-grid-scroll">
           <div
             className={`lms-grid ${alignClass}`}
-            style={{ border: "3px solid #867beb60", borderRadius: "0 0 22px 22px" }}
+            style={{ border: "3px solid #867beb60", borderRadius: "0 0 16px 16px" }}
           >
             <AgGridReact
               ref={gridRef}
