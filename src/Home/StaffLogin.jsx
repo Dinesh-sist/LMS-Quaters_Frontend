@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import Image2 from "../assets/image2.png";
 
-const ROLES = ["Estate Officer", "Admin", "Finance", "Technical"];
+const ROLES = ["Admin", "Estate Officer", "Finance", "Technical"];
 const ADMIN_CREDENTIALS = { username: "admin", password: "admin123" };
 
 export default function StaffLogin() {
@@ -17,16 +17,8 @@ export default function StaffLogin() {
 
   const handleSubmit = () => {
     setError("");
-    if (!username || !password) {
-      setError("Enter username and password.");
-      return;
-    }
-
-    if (role !== "Admin") {
-      setError("Only Admin access is allowed here.");
-      return;
-    }
-
+    if (!username || !password) { setError("Enter username and password."); return; }
+    if (role !== "Admin") { setError("Only Admin access is allowed here."); return; }
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
@@ -39,9 +31,8 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-8 relative overflow-hidden">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-3 py-3 sm:px-4 sm:py-6 lg:px-6">
 
-      {/* Animated gradient background */}
       <style>{`
         @keyframes gradientMove {
           0%   { background-position: 0% 50%; }
@@ -49,9 +40,7 @@ export default function StaffLogin() {
           100% { background-position: 0% 50%; }
         }
         .sl-gradient-bg {
-          position: absolute;
-          inset: 0;
-          z-index: 0;
+          position: absolute; inset: 0; z-index: 0;
           background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #e87722, #1a2e5a);
           background-size: 300% 300%;
           animation: gradientMove 15s ease-in-out infinite;
@@ -61,60 +50,55 @@ export default function StaffLogin() {
           outline: none;
           box-shadow: 0 0 0 3px rgba(30,58,138,.12);
         }
-        .sl-submit:hover:not(:disabled) {
-          background: #2b4a8f !important;
-          transform: translateY(-1px);
-        }
       `}</style>
       <div className="sl-gradient-bg" />
 
-      {/* Outer white card */}
-      <div className="relative z-10 w-[88vw] max-w-[1200px] min-h-[82vh] bg-white rounded-[28px] shadow-2xl flex flex-col overflow-hidden">
+      {/* Outer white card — wider, auto height */}
+      <div className="relative z-10 flex h-[82vh] w-[min(98vw,1080px)] max-h-[1180px] max-w-[1800px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:rounded-[32px]">
 
         {/* Top Navbar */}
         <TopNavbar />
 
-        {/* Body — image left, form right */}
-        <div className="flex-1 grid grid-cols-2 min-h-0">
+        {/* Body */}
+        <div className="min-h-0 flex-1 flex-col lg:grid lg:grid-cols-2">
 
-          {/* ── LEFT: Image panel ── */}
-          <div className="flex items-center justify-center pl-10 pr-6 py-8">
+          {/* LEFT: Image — hidden on mobile, shown on lg+ */}
+          <div className="hidden lg:flex items-center justify-center px-8 py-8 xl:px-10">
             <img
               src={Image2}
               alt="Staff at desk"
-              className="w-full max-w-[560px] h-auto object-contain"
+              className="h-auto w-full max-w-[420px] object-contain xl:max-w-[500px]"
             />
           </div>
 
-          {/* ── RIGHT: Form panel ── */}
-          <div className="flex items-center justify-center px-12 py-10">
-            <div className="w-full max-w-[480px] bg-white border border-slate-200 rounded-3xl px-9 py-10 shadow-[0_4px_32px_rgba(30,58,138,0.09)] flex flex-col gap-5">
+          {/* RIGHT: Form */}
+          <div className="flex items-center justify-center px-3 pb-5 pt-2 sm:px-6 sm:pb-8 sm:pt-4 lg:px-10 lg:py-8 xl:px-12">
+            <div className="flex w-full max-w-[480px] flex-col gap-4 rounded-[24px] border border-slate-200 bg-white px-4 py-6 shadow-[0_4px_32px_rgba(30,58,138,0.09)] sm:rounded-3xl sm:px-6 sm:py-8 md:px-8 lg:px-9">
 
               {/* Heading */}
-              <div className="mb-0.5">
-                <h2 className="font-bold text-[26px] text-slate-900 m-0 mb-1" style={{ fontFamily: "Georgia, serif" }}>
+              <div>
+                <h2 className="m-0 mb-1 text-[24px] font-bold text-slate-900 sm:text-[26px]" style={{ fontFamily: "Georgia, serif" }}>
                   Sign In
                 </h2>
-                <p className="text-[13px] text-slate-400 m-0">
+                <p className="m-0  text-[13px] leading-5 text-slate-400">
                   Use your official PPA staff credentials
                 </p>
               </div>
 
               {/* Role selector */}
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">
-                  Role
-                </label>
-                <div className="flex gap-2 flex-wrap">
+                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">Role</label>
+                <div className="flex flex-wrap gap-2">
                   {ROLES.map(r => (
                     <button
                       key={r}
+                      type="button"
                       onClick={() => setRole(r)}
-                      className={`text-xs font-semibold px-4 py-1.5 rounded-full border-2 cursor-pointer transition-all duration-150
-                        ${role === r
+                      className={`min-h-[40px] rounded-full border-2 px-3 py-2 text-[11px] font-semibold transition-all duration-150 sm:px-4 sm:py-1.5 sm:text-xs ${
+                        role === r
                           ? "bg-blue-950 text-white border-blue-950 shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
                           : "bg-white text-slate-600 border-slate-200 hover:opacity-80"
-                        }`}
+                      }`}
                     >
                       {r}
                     </button>
@@ -124,9 +108,7 @@ export default function StaffLogin() {
 
               {/* Username */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">
-                  Username
-                </label>
+                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">Username</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -145,9 +127,7 @@ export default function StaffLogin() {
 
               {/* Password */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">
-                  Password
-                </label>
+                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">Password</label>
                 <div className="relative">
                   <input
                     type={showPass ? "text" : "password"}
@@ -157,6 +137,7 @@ export default function StaffLogin() {
                     placeholder="••••••••"
                   />
                   <button
+                    type="button"
                     onClick={() => setShowPass(p => !p)}
                     className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-slate-400 hover:text-slate-600 p-0.5 flex items-center"
                   >
@@ -171,7 +152,7 @@ export default function StaffLogin() {
 
               {/* Submit */}
               <button
-                className="sl-submit w-full text-sm font-bold py-3.5 rounded-2xl border-0 cursor-pointer bg-blue-950 text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3.5 text-sm font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                 onClick={handleSubmit}
                 disabled={loading}
               >
@@ -185,15 +166,7 @@ export default function StaffLogin() {
               )}
 
               {/* Dev notice */}
-              <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="shrink-0 mt-0.5">
-                  <circle cx="7" cy="7" r="6" stroke="#f97316" strokeWidth="1.4"/>
-                  <path d="M7 4v4M7 10v.5" stroke="#f97316" strokeWidth="1.4" strokeLinecap="round"/>
-                </svg>
-                <p className="m-0 text-[11.5px] text-orange-700 leading-relaxed">
-                  Use admin / admin123 to sign in as the Admin user and land on the Verify Quarter Applications page.
-                </p>
-              </div>
+              
 
               {/* Back to home */}
               <p className="text-center text-xs text-slate-400 m-0">
@@ -204,7 +177,6 @@ export default function StaffLogin() {
 
             </div>
           </div>
-
         </div>
       </div>
     </div>
