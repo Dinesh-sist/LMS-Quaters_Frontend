@@ -31,7 +31,7 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-3 py-3 sm:px-4 sm:py-6 lg:px-6">
+    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4">
 
       <style>{`
         @keyframes gradientMove {
@@ -54,30 +54,30 @@ export default function StaffLogin() {
       <div className="sl-gradient-bg" />
 
       {/* Outer white card — wider, auto height */}
-      <div className="relative z-10 flex h-[94vh] w-[min(98vw,2040px)] max-h-[1180px] max-w-[2040px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:rounded-[32px]">
+      <div className="relative z-10 flex h-[92vh] w-[min(99.5vw,1480px)] max-h-[1220px] max-w-[1800px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:h-[93vh] sm:rounded-[32px] lg:h-[94vh]">
 
         {/* Top Navbar */}
         <TopNavbar />
 
         {/* Body */}
-        <div className="min-h-0 flex-1 flex-col lg:grid lg:grid-cols-2">
+        <div className="min-h-0 flex-1 px-3 pb-4 pt-1 sm:px-5 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-8 lg:pb-8 lg:pt-1 xl:px-10">
 
           {/* LEFT: Image — hidden on mobile, shown on lg+ */}
-          <div className="hidden lg:flex items-center justify-center px-8 py-8 xl:px-10">
+          <div className="hidden lg:flex items-start justify-end pt-1 lg:h-[clamp(520px,64vh,680px)]">
             <img
               src={Image2}
               alt="Staff at desk"
-              className="h-auto w-full max-w-[420px] object-contain xl:max-w-[500px]"
+              className="h-full w-full max-w-[660px] object-contain xl:max-w-[740px]"
             />
           </div>
 
           {/* RIGHT: Form */}
-          <div className="flex items-center justify-center px-3 pb-5 pt-2 sm:px-6 sm:pb-8 sm:pt-4 lg:px-10 lg:py-8 xl:px-12">
-            <div className="flex w-full max-w-[480px] flex-col gap-4 rounded-[24px] border border-slate-200 bg-white px-4 py-6 shadow-[0_4px_32px_rgba(30,58,138,0.09)] sm:rounded-3xl sm:px-6 sm:py-8 md:px-8 lg:px-9">
+          <div className="flex items-start justify-start pt-3 sm:pt-4 lg:h-[clamp(580px,64vh,680px)] lg:pt-1">
+            <div className="flex h-full w-full max-w-[720px] flex-col gap-4 rounded-[24px] border border-slate-200 bg-white px-5 py-6 shadow-[0_4px_32px_rgba(30,58,138,0.09)] sm:rounded-3xl sm:px-7 sm:py-8 md:px-9 lg:px-10 xl:px-12">
 
               {/* Heading */}
               <div>
-                <h2 className="m-0 mb-1 text-[24px] font-bold text-slate-900 sm:text-[26px]" style={{ fontFamily: "Georgia, serif" }}>
+                <h2 className="m-0 mb-1 text-[24px] font-bold text-slate-900 sm:text-[38px]" style={{ fontFamily: "Georgia, serif" }}>
                   Sign In
                 </h2>
                 <p className="m-0  text-[13px] leading-5 text-slate-400">
@@ -94,7 +94,7 @@ export default function StaffLogin() {
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
-                      className={`min-h-[40px] rounded-full border-2 px-3 py-2 text-[11px] font-semibold transition-all duration-150 sm:px-4 sm:py-1.5 sm:text-xs ${
+                      className={`min-h-[50px] rounded-full border-2 px-3 py-2 text-[14px] font-semibold transition-all duration-150 sm:px-4 sm:py-1.5 sm:text-xs ${
                         role === r
                           ? "bg-blue-950 text-white border-blue-950 shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
                           : "bg-white text-slate-600 border-slate-200 hover:opacity-80"
@@ -166,10 +166,9 @@ export default function StaffLogin() {
               )}
 
               {/* Dev notice */}
-              
+              <div className="mt-4 text-center text-[12px] text-slate-400"></div>
 
               {/* Back to home */}
-
 
             </div>
           </div>
