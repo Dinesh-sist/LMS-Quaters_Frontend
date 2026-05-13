@@ -38,7 +38,7 @@ export default function Info({
     admin: "Authorized Admin",
     manager: "Authorized Manager",
     user: "Registered User",
-    newuser: "Temporary User",
+    newuser: "Temporary User",  
   };
 
   const roleColor = roleStyles[roleKey] || roleStyles.user;

@@ -247,7 +247,10 @@ const stats = [
   {
     label: "Total Requests",
     value: String(approvalRows.length),
-    tone: "bg-[#eef2ff] text-[#3344b6] border-[#d6defd]",
+    tone: "bg-[#eef2ff] border-[#d6defd]",
+    labelClass: "text-slate-700",
+    valueClass: "text-[#24389b]",
+    iconClass: "text-[#3344b6]",
     icon: (
       <path
         strokeLinecap="round"
@@ -260,7 +263,10 @@ const stats = [
   {
     label: "Approved",
     value: String(approvalRows.filter((row) => row.status === "Approved").length),
-    tone: "bg-[#e8fbef] text-[#14804a] border-[#bcf0cc]",
+    tone: "bg-[#e8fbef] border-[#bcf0cc]",
+    labelClass: "text-slate-700",
+    valueClass: "text-[#0f6a3d]",
+    iconClass: "text-[#14804a]",
     icon: (
       <path
         strokeLinecap="round"
@@ -275,7 +281,10 @@ const stats = [
     value: String(
       approvalRows.filter((row) => row.status === "Pending" || row.status === "Under Review").length
     ),
-    tone: "bg-[#fff5e8] text-[#b76a09] border-[#fed7aa]",
+    tone: "bg-[#fff5e8] border-[#fed7aa]",
+    labelClass: "text-slate-700",
+    valueClass: "text-[#8f5308]",
+    iconClass: "text-[#b76a09]",
     icon: (
       <path
         strokeLinecap="round"
@@ -288,7 +297,10 @@ const stats = [
   {
     label: "Clarifications",
     value: String(approvalRows.filter((row) => row.status === "Clarification Needed").length),
-    tone: "bg-[#fff1f2] text-[#c21d4a] border-[#fecdd3]",
+    tone: "bg-[#fff1f2] border-[#fecdd3]",
+    labelClass: "text-slate-700",
+    valueClass: "text-[#9f183d]",
+    iconClass: "text-[#c21d4a]",
     icon: (
       <path
         strokeLinecap="round"
@@ -328,14 +340,14 @@ export default function CheckApproval() {
                 <div key={card.label} className={`rounded-[20px] border px-4 py-4 ${card.tone}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className="text-[11px] font-bold uppercase tracking-[0.12em] opacity-80">
+                      <div className={`text-[11px] font-bold uppercase tracking-[0.12em] ${card.labelClass}`}>
                         {card.label}
                       </div>
-                      <div className="mt-2 text-[28px] font-extrabold leading-none">
+                      <div className={`mt-2 text-[28px] font-extrabold leading-none ${card.valueClass}`}>
                         {card.value}
                       </div>
                     </div>
-                    <div className="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center border border-white/70">
+                    <div className={`w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center border border-white/70 ${card.iconClass}`}>
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         {card.icon}
                       </svg>

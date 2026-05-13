@@ -247,56 +247,128 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
       </header>
 
       {showTermsModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 px-4 py-6">
-          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-[0_20px_60px_rgba(15,23,42,0.28)]">
-            <div className="border-b border-slate-200 px-6 py-4">
-              <h2 className="text-lg font-bold text-slate-900">Terms and Conditions</h2>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-[6px]">
+          <div className="w-full max-w-3xl overflow-hidden rounded-[32px] border border-white/60 bg-white shadow-[0_28px_90px_rgba(15,23,42,0.3)]">
+            <div className="border-b border-slate-200 bg-[linear-gradient(135deg,#eff4ff_0%,#ffffff_55%,#fff1e8_100%)] px-6 py-5 sm:px-8 sm:py-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-950 text-white shadow-[0_10px_30px_rgba(30,58,138,0.2)]">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 3l7 3.5v5.3c0 4.6-2.9 8.8-7 10.2-4.1-1.4-7-5.6-7-10.2V6.5L12 3z"
+                        stroke="currentColor"
+                        strokeWidth="1.7"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M9.5 12.1l1.7 1.7 3.5-3.8"
+                        stroke="currentColor"
+                        strokeWidth="1.7"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                   
+                    <h2 className="mt-3 text-[24px] font-bold leading-tight text-slate-900 sm:text-[28px]">
+                      Terms and Conditions
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                      Please review the access terms before continuing to the quarters application portal.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHasAcceptedTerms(false);
+                    setShowTermsModal(false);
+                  }}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-700"
+                  aria-label="Close terms and conditions"
+                >
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <div className="max-h-[60vh] overflow-y-auto px-6 py-5">
-              <div className="space-y-3 text-[13.5px] leading-[1.7] text-slate-600">
+            <div className="max-h-[48vh] overflow-y-auto bg-slate-50/70 px-6 py-5 sm:px-8">
+              <div className="grid gap-3">
                 {TERMS_AND_CONDITIONS.map((term, index) => (
-                  <p key={index}>
-                    {index + 1}. {term}
-                  </p>
+                  <div
+                    key={index}
+                    className="flex gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_6px_18px_rgba(15,23,42,0.04)]"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-xs font-bold text-blue-900">
+                      {index + 1}
+                    </div>
+                    <p className="text-[13.5px] leading-7 text-slate-600">{term}</p>
+                  </div>
                 ))}
               </div>
             </div>
 
-            <div className="border-t border-slate-200 px-6 py-4">
-              <label className="mb-4 flex items-start gap-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={hasAcceptedTerms}
-                  onChange={(e) => setHasAcceptedTerms(e.target.checked)}
-                  className="mt-1 h-4 w-4 accent-[#e87722]"
-                />
-                <span>I have read all the terms and conditions mentioned above.</span>
+            <div className="border-t border-slate-200 bg-white px-6 py-5 sm:px-8">
+              <label className="group flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700 transition-all duration-200 hover:border-blue-200 hover:bg-white">
+                <span className="relative mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center">
+                  <input
+                    type="checkbox"
+                    checked={hasAcceptedTerms}
+                    onChange={(e) => setHasAcceptedTerms(e.target.checked)}
+                    className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  />
+                  <span className="h-6 w-6 rounded-[8px] border border-slate-300 bg-white shadow-[inset_0_1px_2px_rgba(15,23,42,0.08)] transition-all duration-200 peer-checked:border-blue-950 peer-checked:bg-blue-950 peer-focus-visible:ring-4 peer-focus-visible:ring-blue-100" />
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    className="pointer-events-none absolute h-3.5 w-3.5 scale-75 text-white opacity-0 transition-all duration-200 peer-checked:scale-100 peer-checked:opacity-100"
+                  >
+                    <path
+                      d="M5 10.5l3.1 3.1L15 6.7"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span>
+                  <span className="block font-semibold text-slate-800">
+                    I have read and accept these terms.
+                  </span>
+                  <span className="mt-1 block text-[13px] leading-5 text-slate-500">
+                    You need to confirm this before proceeding to the application login.
+                  </span>
+                </span>
               </label>
 
-              <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setHasAcceptedTerms(false);
-                  setShowTermsModal(false);
-                }}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleAgree}
-                disabled={!hasAcceptedTerms}
-                className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors ${
-                  hasAcceptedTerms
-                    ? "bg-[#e87722] hover:bg-[#d56716]"
-                    : "cursor-not-allowed bg-slate-300"
-                }`}
-              >
-                Agree
-              </button>
+              <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHasAcceptedTerms(false);
+                    setShowTermsModal(false);
+                  }}
+                  className="rounded-2xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAgree}
+                  disabled={!hasAcceptedTerms}
+                  className={`rounded-2xl px-5 py-3 text-sm font-semibold text-white transition-all ${
+                    hasAcceptedTerms
+                      ? "bg-blue-950 shadow-[0_10px_24px_rgba(30,58,138,0.2)] hover:-translate-y-0.5 hover:bg-blue-900"
+                      : "cursor-not-allowed bg-slate-300"
+                  }`}
+                >
+                  Continue to Login
+                </button>
               </div>
             </div>
           </div>
