@@ -54,7 +54,7 @@ export default function StaffLogin() {
       <div className="sl-gradient-bg" />
 
       {/* Outer white card — wider, auto height */}
-      <div className="relative z-10 flex h-[82vh] w-[min(98vw,1080px)] max-h-[1180px] max-w-[1800px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:rounded-[32px]">
+      <div className="relative z-10 flex h-[94vh] w-[min(98vw,2040px)] max-h-[1180px] max-w-[2040px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:rounded-[32px]">
 
         {/* Top Navbar */}
         <TopNavbar />
@@ -169,11 +169,7 @@ export default function StaffLogin() {
               
 
               {/* Back to home */}
-              <p className="text-center text-xs text-slate-400 m-0">
-                <Link to="/" className="text-blue-950 no-underline font-semibold hover:underline">
-                  ← Back to Home
-                </Link>
-              </p>
+
 
             </div>
           </div>
