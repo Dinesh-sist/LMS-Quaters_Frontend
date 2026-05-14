@@ -95,7 +95,7 @@ const columns = [
   {
     key: "committeeHeld",
     label: "COMMITTEE HELD",
-    width: 500,
+    width:800,
     minWidth: 300,
     render: (val) => <CommitteeDateRenderer value={val} />,
   },
@@ -103,7 +103,7 @@ const columns = [
     key: "downloadLink",
     label: "DOWNLOAD LINK",
     sortable: false,
-    width: 615,
+    width: 800,
     minWidth: 300,
     render: (val) => <DownloadLinkRenderer value={val} />,
   },

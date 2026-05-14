@@ -170,6 +170,17 @@ export default function StaffLogin() {
 
               {/* Back to home */}
 
+
+               <div className="mt-auto pt-5 text-center text-[12px] text-slate-400">
+                  <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
+                    &larr; Back to Home
+                  </Link>
+                </div>
+
+                <p className="m-0 text-center text-[11px] text-slate-400">
+                  &copy; 2026 Paradip Port Authority. All rights reserved.
+                </p>
+
             </div>
           </div>
         </div>

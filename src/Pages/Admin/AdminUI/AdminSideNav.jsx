@@ -36,6 +36,9 @@ const sidebarNav = [
 export default function AdminSideNav({ onNavigate }) {
   const location = useLocation();
 
+
+
+
   return (
     <aside className="h-full w-[252px] shrink-0 bg-white flex flex-col overflow-hidden border-r border-[#dde3ee]">
       <div className="px-5 pt-[22px] pb-[5px] text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em]">

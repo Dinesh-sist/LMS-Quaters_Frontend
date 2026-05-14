@@ -169,7 +169,7 @@ function QuarterRenderer({ value, data }) {
 
 function StatusRenderer({ value }) {
   const styles = {
-    Approved: { color: "#118747", background: "#d8f7df", border: "#c0efcb" },
+    Approved: { color: "#118747", background: "#d8f7df", border : "#c0efcb" },
     Rejected: { color: "#d81d2f", background: "#ffe4e7", border: "#fec7cd" },
     Pending: { color: "#b76a09", background: "#fff1d6", border: "#fed7aa" },
     "Under Review": { color: "#3151da", background: "#e6ecff", border: "#cfd8ff" },
@@ -241,75 +241,85 @@ const columns = [
     minWidth: 180,
     render: (value) => <StatusRenderer value={value} />,
   },
+
 ];
 
 const stats = [
-  {
-    label: "Total Requests",
-    value: String(approvalRows.length),
-    tone: "bg-[#eef2ff] border-[#d6defd]",
-    labelClass: "text-slate-700",
-    valueClass: "text-[#24389b]",
-    iconClass: "text-[#3344b6]",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-      />
-    ),
-  },
+{
+  label: "Total Requests",
+  value: String(approvalRows.length),
+
+  // Card Background
+  tone: "bg-gradient-to-r from-purple-600 to-indigo-600 border-0",
+
+  // Label Text
+  labelClass: "text-white font-semibold",
+
+  // Value Text
+  valueClass: "text-white text-4xl font-bold",
+
+  // Icon Color
+  iconClass: "text-white",
+
+  icon: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    />
+  ),
+},
   {
     label: "Approved",
     value: String(approvalRows.filter((row) => row.status === "Approved").length),
-    tone: "bg-[#e8fbef] border-[#bcf0cc]",
-    labelClass: "text-slate-700",
-    valueClass: "text-[#0f6a3d]",
-    iconClass: "text-[#14804a]",
+    tone: "bg-gradient-to-r from-emerald-500 to-emerald-600 border-0",
+    labelClass: "text-white font-semibold",
+    valueClass: "text-white text-4xl font-bold",
+    iconClass: "text-white",
     icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    ),
-  },
-  {
-    label: "In Progress",
-    value: String(
-      approvalRows.filter((row) => row.status === "Pending" || row.status === "Under Review").length
-    ),
-    tone: "bg-[#fff5e8] border-[#fed7aa]",
-    labelClass: "text-slate-700",
-    valueClass: "text-[#8f5308]",
-    iconClass: "text-[#b76a09]",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    ),
-  },
-  {
-    label: "Clarifications",
-    value: String(approvalRows.filter((row) => row.status === "Clarification Needed").length),
-    tone: "bg-[#fff1f2] border-[#fecdd3]",
-    labelClass: "text-slate-700",
-    valueClass: "text-[#9f183d]",
-    iconClass: "text-[#c21d4a]",
-    icon: (
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
-      />
-    ),
-  },
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  ),
+},
+{
+  label: "In Progress",
+  value: String(
+    approvalRows.filter((row) => row.status === "Pending" || row.status === "Under Review").length
+  ),
+  tone: "bg-gradient-to-r from-amber-500 to-orange-500 border-0",
+  labelClass: "text-white font-semibold",
+  valueClass: "text-white text-4xl font-bold",
+  iconClass: "text-white",
+  icon: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  ),
+},
+{
+  label: "Clarifications",
+  value: String(approvalRows.filter((row) => row.status === "Clarification Needed").length),
+  tone: "bg-gradient-to-r from-rose-500 to-pink-600 border-0",
+  labelClass: "text-white font-semibold",
+  valueClass: "text-white text-4xl font-bold",
+  iconClass: "text-white",
+  icon: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
+    />
+  ),
+},
 ];
 
 export default function CheckApproval() {
@@ -340,11 +350,15 @@ export default function CheckApproval() {
                 <div key={card.label} className={`rounded-[20px] border px-4 py-4 ${card.tone}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <div className={`text-[11px] font-bold uppercase tracking-[0.12em] ${card.labelClass}`}>
-                        {card.label}
-                      </div>
-                      <div className={`mt-2 text-[28px] font-extrabold leading-none ${card.valueClass}`}>
+                      <div className={`text-[28px] font-extrabold leading-none ${card.valueClass}`}>
                         {card.value}
+                      </div>
+                      <div className="mt-2">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${card.labelClass}`}
+                        >
+                          {card.label}
+                        </span>
                       </div>
                     </div>
                     <div className={`w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center border border-white/70 ${card.iconClass}`}>
