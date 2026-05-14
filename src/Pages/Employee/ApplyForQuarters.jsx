@@ -72,7 +72,7 @@ export default function ApplyForQuarters() {
         <TopHeader
           role="newuser"
           description="Outsider Services"
-          welcomeName="Applicant"
+          welcomeName="Employee"
           showNotifications={false}
           logoutTo="/QuartersApplyLogin"
         />

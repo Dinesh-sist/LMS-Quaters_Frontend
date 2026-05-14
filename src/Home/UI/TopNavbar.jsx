@@ -312,6 +312,7 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
               </div>
             </div>
 
+
             <div className="border-t border-slate-200 bg-white px-6 py-5 sm:px-8">
               <label className="group flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700 transition-all duration-200 hover:border-blue-200 hover:bg-white">
                 <span className="relative mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center">
@@ -340,6 +341,7 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
                   <span className="block font-semibold text-slate-800">
                     I have read and accept these terms.
                   </span>
+                  
                   <span className="mt-1 block text-[13px] leading-5 text-slate-500">
                     You need to confirm this before proceeding to the application login.
                   </span>
