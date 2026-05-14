@@ -17,6 +17,7 @@ const DROPDOWN_ITEMS = [
   { label: "Licence", to: null, active: false },
 ];
 
+
 const TERMS_AND_CONDITIONS = [
   "This is the official website of Paradip Port Authority under the Ministry of Shipping, Government of India.",
   "The information contained in this Web Site (http://www.paradipport.gov.in) has been prepared solely for the purpose of providing information about Paradip Port Authority to interested parties, and is not in any way binding on Paradip Port Authority.",

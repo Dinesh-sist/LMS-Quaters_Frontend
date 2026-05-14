@@ -176,11 +176,9 @@ export default function StaffLogin() {
                     &larr; Back to Home
                   </Link>
                 </div>
-
                 <p className="m-0 text-center text-[11px] text-slate-400">
                   &copy; 2026 Paradip Port Authority. All rights reserved.
                 </p>
-
             </div>
           </div>
         </div>
