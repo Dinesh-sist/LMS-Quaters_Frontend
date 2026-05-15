@@ -57,7 +57,7 @@ export default function StaffLogin() {
       <div className="relative z-10 flex h-[92vh] w-[min(99.5vw,1480px)] max-h-[1220px] max-w-[1800px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:h-[93vh] sm:rounded-[32px] lg:h-[94vh]">
 
         {/* Top Navbar */}
-        <TopNavbar />
+        <TopNavbar navTextColor="dark" />
 
         {/* Body */}
         <div className="min-h-0 flex-1 px-3 pb-4 pt-1 sm:px-5 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-8 lg:pb-8 lg:pt-1 xl:px-10">
@@ -176,11 +176,9 @@ export default function StaffLogin() {
                     &larr; Back to Home
                   </Link>
                 </div>
-
                 <p className="m-0 text-center text-[11px] text-slate-400">
                   &copy; 2026 Paradip Port Authority. All rights reserved.
                 </p>
-
             </div>
           </div>
         </div>

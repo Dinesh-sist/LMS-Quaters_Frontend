@@ -1,69 +1,287 @@
 import TopNavbar from "./UI/TopNavbar";
 
 export default function About() {
-
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div style={{ minHeight: "100vh", width: "100%", position: "relative", overflowX: "hidden" }}>
       <style>{`
-        @keyframes gradientMove {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+        .gradient-bg {
+          background: linear-gradient(
+            135deg,
+            #08142b 0%,
+            #10264d 35%,
+            #163564 65%,
+            #e87722 100%
+          );
         }
-        .gradient-animated {
-          background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #e87722, #1a2e5a);
-          background-size: 300% 300%;
-          animation: gradientMove 15s ease-in-out infinite;
+
+        .geo-overlay {
+          position: fixed;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+          background-size: 72px 72px;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .glow-orb {
+          position: fixed;
+          width: 520px;
+          height: 520px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(232,119,34,0.14) 0%, transparent 68%);
+          bottom: -140px;
+          right: -100px;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .glow-orb-2 {
+          position: fixed;
+          width: 340px;
+          height: 340px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(16,38,77,0.5) 0%, transparent 70%);
+          top: -80px;
+          left: -80px;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .about-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: clamp(10px, 1.2vw, 11px);
+          font-weight: 500;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          color: #f4a55a;
+        }
+
+        .about-label .dot {
+          width: 5px; height: 5px;
+          border-radius: 50%;
+          background: #e87722;
+          display: inline-block;
+          flex-shrink: 0;
+        }
+
+        .accent-rule {
+          display: flex;
+          align-items: center;
+          margin: 14px 0 22px;
+        }
+        .accent-rule .bar {
+          width: 44px; height: 2px;
+          background: #e87722;
+          border-radius: 2px;
+          flex-shrink: 0;
+        }
+        .accent-rule .line {
+          flex: 1; height: 1px;
+          background: rgba(255,255,255,0.10);
+        }
+
+        .about-card {
+          border: 1px solid rgba(255,255,255,0.09);
+          background: rgba(255,255,255,0.055);
+          border-radius: 20px;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          padding: clamp(20px, 3vw, 36px) clamp(20px, 3.5vw, 40px);
+        }
+
+        .section-tag {
+          font-size: clamp(10px, 1.1vw, 11px);
+          font-weight: 500;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.35);
+          margin: 0 0 10px;
+        }
+
+        .card-subtitle {
+          font-size: clamp(14px, 1.6vw, 20px);
+          font-weight: 500;
+          color: #ffffff;
+          margin: 0 0 16px;
+          line-height: 1.35;
+        }
+
+        .body-text {
+          font-size: clamp(12px, 1.3vw, 14px);
+          font-weight: 400;
+          line-height: 1.85;
+          color: rgba(255,255,255,0.72);
+          margin: 0;
+        }
+
+        .body-text + .body-text {
+          margin-top: 12px;
+        }
+
+        .text-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0 36px;
+        }
+
+        @media (max-width: 700px) {
+          .text-grid {
+            grid-template-columns: 1fr;
+            gap: 12px 0;
+          }
+        }
+
+        .tags-row {
+          display: flex;
+          gap: 8px;
+          margin-top: 22px;
+          padding-top: 18px;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          flex-wrap: wrap;
+        }
+
+        .tag-pill {
+          font-size: clamp(9px, 1vw, 11px);
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.45);
+          padding: 5px 13px;
+          border: 1px solid rgba(255,255,255,0.10);
+          border-radius: 100px;
+          background: rgba(255,255,255,0.04);
+          white-space: nowrap;
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .fu1 { animation: fadeUp 0.6s ease both; }
+        .fu2 { animation: fadeUp 0.6s 0.1s ease both; }
+        .fu3 { animation: fadeUp 0.6s 0.2s ease both; }
+        .fu4 { animation: fadeUp 0.6s 0.32s ease both; }
+
+        .about-main {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          justify-content: center;
+          padding: clamp(24px, 4vh, 48px) clamp(16px, 4vw, 48px);
+        }
+
+        .about-inner {
+          width: 100%;
+          max-width: 900px;
         }
       `}</style>
-      <div className="gradient-animated absolute inset-0 -z-10" />
-      <div className="relative h-full w-full overflow-hidden">
-        <div className="relative z-10 flex h-full flex-col">
-          <TopNavbar titleColor="text-white" />
 
-          {/* Page Content */}
-          <main className="flex-1 flex flex-col items-center justify-center px-8 py-12 gap-8">
+      {/* Fixed background layers */}
+      <div className="gradient-bg" style={{ position: "fixed", inset: 0, zIndex: -1 }} />
+      <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.18)", zIndex: -1 }} />
+      <div className="geo-overlay" />
+      <div className="glow-orb" />
+      <div className="glow-orb-2" />
 
-            {/* Decorative blueprint grid background */}
-            <div className="relative flex flex-col items-center gap-6 w-full max-w-lg">
+      {/* Page content */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        <TopNavbar titleColor="text-white" />
 
-              {/* Icon */}
-              <div className="w-20 h-20 rounded-2xl bg-blue-950 flex items-center justify-center shadow-lg">
-                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                  <rect x="4" y="4" width="28" height="28" rx="4" stroke="#f97316" strokeWidth="2" strokeDasharray="4 3" />
-                  <circle cx="18" cy="18" r="5" stroke="white" strokeWidth="2" />
-                  <path d="M18 8v3M18 25v3M8 18h3M25 18h3" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+        <main className="about-main">
+          <div className="about-inner">
+
+           
+
+            {/* Page title — same font as dashboard (system sans, bold) */}
+            <h1
+              className="fu2"
+              style={{
+                fontSize: "clamp(24px, 4vw, 40px)",
+                fontWeight: 700,
+                color: "#ffffff",
+                margin: "8px 0 0",
+                lineHeight: 1.15,
+                letterSpacing: "-0.01em",
+                fontFamily: "inherit",
+              }}
+            >
+              Land Data Management System
+            </h1>
+
+            {/* Sub-label matching dashboard "About" eyebrow */}
+            <p
+              className="fu2"
+              style={{
+                fontSize: "clamp(10px, 1.1vw, 11px)",
+                fontWeight: 600,
+                letterSpacing: "4px",
+                textTransform: "uppercase",
+              color: "#fb923c",
+                margin: "10px 0 0",
+              }}
+            >
+              About
+            </p>
+
+            {/* Accent rule */}
+            <div className="accent-rule fu2">
+              <div className="bar" />
+              <div className="line" />
+            </div>
+
+            {/* Overview card */}
+            <div className="about-card fu3">
+
+              <p className="section-tag">Overview</p>
+
+              <p className="card-subtitle">
+                A centralized platform for managing port land records,
+                lease data, and estate operations efficiently.
+              </p>
+
+              <div className="text-grid">
+                <div>
+                  <p className="body-text">
+                    Land management is the process by which the resources of
+                    land are utilized effectively from both environmental and
+                    economic perspectives. It includes activities related to
+                    farming, mineral extraction, property management, estate
+                    administration, and urban planning.
+                  </p>
+                  <p className="body-text">
+                    Land management systems play a major role in handling lease
+                    data, ownership records, permits, land tracking, and well
+                    information — helping organizations maintain accurate records
+                    and streamline operational activities through a centralized
+                    digital environment.
+                  </p>
+                </div>
+                <div>
+                  <p className="body-text">
+                    The system reduces manual administrative effort by
+                    organizing important data in a structured and reliable
+                    format. It enables teams and departments to access, manage,
+                    and monitor information efficiently while improving
+                    transparency and coordination across all port authority
+                    divisions.
+                  </p>
+                  <p className="body-text">
+                    Designed to serve the operational needs of Paradip Port
+                    Authority, this platform ensures that every land record —
+                    from allotments and renewals to lease approvals — is tracked,
+                    auditable, and accessible to authorized personnel at any time.
+                  </p>
+                </div>
               </div>
 
-              {/* Badge */}
-              <span className="text-xs font-semibold tracking-widest uppercase text-orange-400 bg-orange-50 border border-orange-200 rounded-full px-4 py-1">
-                Under Development
-              </span>
-
-              {/* Heading */}
-              <h1 className="modern-antiqua-regular text-[2.2rem] font-extrabold text-white text-center leading-tight m-0">
-                About Paradip Port<br />Authority
-              </h1>
-
-              {/* Description */}
-
-
-              {/* Progress bar */}
-
-
             </div>
 
-            {/* Floating bottom note */}
-            <div className="flex items-center gap-2 bg-blue-950 text-white rounded-2xl px-5 py-3 text-xs font-medium shadow-lg">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="6" stroke="#f97316" strokeWidth="1.5" />
-                <path d="M7 4v4M7 10v.5" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              Check back soon
-            </div>
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );
