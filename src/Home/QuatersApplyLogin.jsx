@@ -2,31 +2,37 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import adminBuilding from "../assets/AdminBuilding.jpg";
 import Logo from "../assets/Logo.png";
+import { login } from "../api";
+import { setAuth } from "../auth";
 
 export default function QuartersApplyLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [loaded] = useState(true);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e?.preventDefault();
     setError("");
-    setErrorMessage("");
-    setIsSubmitting(true);
 
-    if (username.trim() !== "employee" || password !== "employee123") {
-      setError("Invalid username or password.");
-      setIsSubmitting(false);
-      return;
+    setIsLoading(true);
+    try {
+      const data = await login(username.trim(), password);
+      if (data?.user?.role !== "employee") {
+        setError("This account is not an employee.");
+        return;
+      }
+      setAuth({ token: data.token, user: data.user });
+      localStorage.setItem("lmsq_terms_accepted", "1");
+      navigate("/Quarters/Apply", { replace: true });
+    } catch (e2) {
+      setError(e2?.message || "Login failed.");
+    } finally {
+      setIsLoading(false);
     }
-
-    navigate("/Quarters/Apply", { replace: true });
   };
 
   return (

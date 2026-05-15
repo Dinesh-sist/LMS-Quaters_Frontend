@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
+const TERMS_ACCEPTED_KEY = "lmsq_terms_accepted";
+
 const sidebarNav = [
   {
     key: "apply",
     label: "Apply for Quarters",
-    to: "/QuartersApplyLogin",
+    to: "/Quarters/Apply",
     icon: (
       <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
         <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
@@ -57,6 +59,13 @@ export default function Sidebar() {
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
 
   const handleApplyClick = () => {
+    if (location.pathname === "/Quarters/Apply") return;
+    const accepted = localStorage.getItem(TERMS_ACCEPTED_KEY) === "1";
+    if (accepted) {
+      navigate("/Quarters/Apply");
+      return;
+    }
+
     setHasAcceptedTerms(false);
     setShowTermsModal(true);
   };
@@ -64,7 +73,8 @@ export default function Sidebar() {
   const handleAgree = () => {
     if (!hasAcceptedTerms) return;
     setShowTermsModal(false);
-    navigate("/QuartersApplyLogin");
+    localStorage.setItem(TERMS_ACCEPTED_KEY, "1");
+    navigate("/Quarters/Apply");
   };
 
   return (
@@ -86,7 +96,7 @@ export default function Sidebar() {
           {sidebarNav.map((item) => {
             const active =
               item.key === "apply"
-                ? location.pathname === "/Quarters/Apply" || location.pathname === "/QuartersApplyLogin"
+                ? location.pathname === "/Quarters/Apply"
                 : location.pathname === item.to;
 
             const className = `flex w-full items-center gap-[11px] px-[13px] py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] text-left transition-all duration-150 ${

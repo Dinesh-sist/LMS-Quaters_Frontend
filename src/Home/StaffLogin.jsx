@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import Image2 from "../assets/image2.png";
+import { login } from "../api";
+import { setAuth } from "../auth";
 
 const ROLES = ["Admin", "Estate Officer", "Finance", "Technical"];
-const ADMIN_CREDENTIALS = { username: "admin", password: "admin123" };
 
 export default function StaffLogin() {
   const [username, setUsername] = useState("");
@@ -15,19 +16,24 @@ export default function StaffLogin() {
   const [error, setError]       = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("");
     if (!username || !password) { setError("Enter username and password."); return; }
     if (role !== "Admin") { setError("Only Admin access is allowed here."); return; }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        navigate("/admin/verify", { replace: true });
-      } else {
-        setError("Invalid admin credentials. Use admin / admin123.");
+    try {
+      const data = await login(username.trim(), password);
+      if (data?.user?.role !== "admin") {
+        setError("This account is not an admin.");
+        return;
       }
-    }, 1200);
+      setAuth({ token: data.token, user: data.user });
+      navigate("/admin/verify", { replace: true });
+    } catch (e) {
+      setError(e?.message || "Login failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
