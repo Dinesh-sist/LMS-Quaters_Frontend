@@ -33,13 +33,14 @@ const TERMS_AND_CONDITIONS = [
   "Prior permission is required before hyperlinks are directed from any website to this website. Permission for the same, stating the nature of the content on the pages from where the link has to be given and the exact language of the hyperlink should be obtained by sending a request at dmmsppt@paradipport.gov.in.",
 ];
 
-export default function TopNavbar({ titleColor = "text-blue-950" }) {
+export default function TopNavbar({ titleColor = "text-blue-950", navTextColor = "light" }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
+  const isDarkText = navTextColor === "dark";
 
   const dropdownPaths = [...DROPDOWN_ITEMS.filter((item) => item.to).map((item) => item.to), "/Quarters/Apply"];
   const isDropdownActive = dropdownPaths.includes(location.pathname);
@@ -65,7 +66,7 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
   return (
     <>
       <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-4 px-1 py-2 sm:px-0 lg:px-0">
           <div className="flex min-w-0 items-center gap-3">
             <img src={Logo} alt="Logo" className="w-11 rounded-2xl sm:w-12 lg:w-14" />
             <div className="min-w-0 leading-tight">
@@ -84,7 +85,11 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
                 setMobileMenuOpen(true);
               }
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
+            className={`flex h-11 w-11 items-center justify-center rounded-2xl border bg-transparent transition lg:hidden ${
+              isDarkText
+                ? "border-slate-300 text-slate-700 hover:bg-slate-100"
+                : "border-white/20 text-white hover:bg-white/10"
+            }`}
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
           >
@@ -101,7 +106,7 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
             </svg>
           </button>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-[#e2e8f0] bg-white px-2 py-1.5 shadow-sm lg:flex">
+          <nav className="hidden items-center gap-1 lg:flex">
             {NAV_ITEMS.map(({ label, to, dropdown }) => {
               if (dropdown) {
                 return (
@@ -112,7 +117,9 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
                       className={`flex min-h-[40px] items-center gap-1.5 rounded-full border-0 px-5 py-2 text-sm font-semibold transition-all ${
                         isDropdownActive || dropdownOpen
                           ? "bg-orange-400 text-white"
-                          : "bg-transparent text-slate-700 hover:bg-orange-100"
+                          : isDarkText
+                            ? "bg-transparent text-slate-700 hover:text-slate-950"
+                            : "bg-transparent text-white/85 hover:text-white"
                       }`}
                     >
                       {label}
@@ -128,14 +135,14 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
                     </button>
 
                     {dropdownOpen && (
-                      <div className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[160px] rounded-2xl bg-[#1a2e5a] px-2 py-3 shadow-xl">
+                      <div className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[180px] rounded-2xl border border-slate-200 bg-white px-2 py-3 shadow-xl">
                         {DROPDOWN_ITEMS.map(({ label: dropdownLabel, to: dropdownTo, active }) =>
                           active && dropdownTo ? (
                             <Link
                               key={dropdownLabel}
                               to={dropdownTo}
                               onClick={dropdownLabel === "Quarters" ? handleQuartersClick : () => setDropdownOpen(false)}
-                              className="block rounded-xl px-4 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-white/10"
+                              className="block rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 no-underline transition-colors hover:bg-orange-50 hover:text-orange-600"
                             >
                               {dropdownLabel}
                             </Link>
@@ -162,7 +169,11 @@ export default function TopNavbar({ titleColor = "text-blue-950" }) {
                   to={to}
                   onClick={() => setDropdownOpen(false)}
                   className={`rounded-full px-5 py-2 text-sm font-semibold no-underline transition-all ${
-                    isActive ? "bg-orange-400 text-white" : "text-slate-700 hover:bg-orange-100"
+                    isActive
+                      ? "bg-orange-400 text-white"
+                      : isDarkText
+                        ? "text-slate-700 hover:text-slate-950"
+                        : "text-white/85 hover:text-white"
                   }`}
                 >
                   {label}
