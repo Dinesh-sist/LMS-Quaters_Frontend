@@ -5,7 +5,7 @@ import Image2 from "../assets/image2.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
 
-const ROLES = ["Admin", "Estate Officer", "Finance", "Technical"];
+const ROLES = ["Admin"];
 
 export default function StaffLogin() {
   const [username, setUsername] = useState("");
@@ -83,7 +83,7 @@ export default function StaffLogin() {
 
               {/* Heading */}
               <div>
-                <h2 className="m-0 mb-1 text-[24px] font-bold text-slate-900 sm:text-[38px]" style={{ fontFamily: "Georgia, serif" }}>
+                <h2 className="m-0 mb-1 text-[24px] font-bold text-slate-900 sm:text-[38px]" style={{ fontFamily: "TIMESNEWROMAN, serif" }}>
                   Sign In
                 </h2>
                 <p className="m-0  text-[13px] leading-5 text-slate-400">
