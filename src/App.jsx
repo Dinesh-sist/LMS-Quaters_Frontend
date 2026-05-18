@@ -16,18 +16,17 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"                    element={<Home />} />
-        <Route path="/about"               element={<About />} />
-        <Route path="/dashboard"           element={<Dashboard />} />
-        <Route path="/QuartersApplyLogin"  element={<QuartersApplyLogin />} />
+        <Route path="/"                  element={<Home />} />
+        <Route path="/about"             element={<About />} />
+        <Route path="/dashboard"         element={<Dashboard />} />
+        <Route path="/QuartersApplyLogin" element={<QuartersApplyLogin />} />
         <Route path="/Quarters/Apply"    element={<ApplyForQuarters />} />
-        <Route path="/StaffLogin"          element={<StaffLogin />} />
-        <Route path="/Quarters/Approval"    element={<CheckApproval />} />
-        <Route path="/admin"               element={<Navigate to="/admin/verify" replace />} />
-        <Route path="/admin/verify"        element={<VerifyQuarterApplication />} />
-        <Route path="/admin/status"        element={<StatusOfApplications />} />
-        <Route path="/admin/history"       element={<HouseAllotmentCommitteeHistory />} />
-        
+        <Route path="/StaffLogin"        element={<StaffLogin />} />
+        <Route path="/Quarters/Approval" element={<CheckApproval />} />
+        <Route path="/admin"             element={<Navigate to="/admin/verify" replace />} />
+        <Route path="/admin/verify"      element={<VerifyQuarterApplication />} />
+        <Route path="/admin/status"      element={<StatusOfApplications />} />
+        <Route path="/admin/history"     element={<HouseAllotmentCommitteeHistory />} />
       </Routes>
     </BrowserRouter>
   )

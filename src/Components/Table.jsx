@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
+import { TableSectionSkeleton } from "./PageSkeleton";
 import {
   ModuleRegistry,
   AllCommunityModule,
@@ -139,6 +140,7 @@ export default function AgGridTable({
   pageSize   = 10,
   showExport = true,
   showFilter = true,
+  loading    = false,
 }) {
   const gridRef = useRef(null);
   const [quickFilter,   setQuickFilter]   = useState("");
@@ -311,6 +313,16 @@ export default function AgGridTable({
 
   const alignClass = contentAlign === "left" ? "lms-grid-align-left" : "lms-grid-align-center";
 
+  if (loading) {
+    return (
+      <TableSectionSkeleton
+        searchable={searchable}
+        rowCount={pageSizeState}
+        columnCount={columns.length + 1}
+      />
+    );
+  }
+
   return (
     <>
       {/* ── All CSS from file 1 (untouched) ── */}
@@ -343,7 +355,7 @@ export default function AgGridTable({
         .ag-horizontal-left-spacer { overflow-x: hidden !important; }
 
         .lms-grid .ag-header {
-          background: #463ca6 !important; border-bottom: 1px solid #f3f4f6 !important;
+          background: #1b2d69 !important; border-bottom: 1px solid #f3f4f6 !important;
           min-height: 44px !important;
         }
         .lms-grid .ag-header-cell-label { justify-content: center !important; }
@@ -428,7 +440,7 @@ export default function AgGridTable({
       <div
         className="lms-grid-root relative"
         style={{
-          background: "#fff", borderRadius: 16,
+          background: "#fefdfb", borderRadius: 16,
           boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
           border: "1px solid #f3f4f6", overflow: "hidden",
         }}
@@ -468,7 +480,7 @@ export default function AgGridTable({
                   width: "100%", paddingLeft: 32, paddingRight: 12,
                   paddingTop: 7, paddingBottom: 7, fontSize: 13,
                   border: "1px solid #e5e7eb", borderRadius: 10,
-                  background: "#fff", outline: "none",
+                  background: "#ffffff", outline: "none",
                   color: "#374151", boxSizing: "border-box",
                 }}
                 onFocus={(e) => (e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.15)")}
@@ -514,7 +526,7 @@ export default function AgGridTable({
         <div className="lms-grid-scroll">
           <div
             className={`lms-grid ${alignClass}`}
-            style={{ border: "3px solid #867beb60", borderRadius: "0 0 16px 16px" }}
+            style={{ border: "3px solid #1d3171a5", borderRadius: "0 0 16px 16px" }}
           >
             <AgGridReact
               ref={gridRef}

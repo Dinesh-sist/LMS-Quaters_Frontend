@@ -29,3 +29,118 @@
   font-style: normal;
 }
 
+@keyframes lms-skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.lms-skeleton-block {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.92) 0%,
+    rgba(248, 250, 252, 1) 50%,
+    rgba(226, 232, 240, 0.92) 100%
+  );
+  background-size: 200% 100%;
+  animation: lms-skeleton-shimmer 1.2s linear infinite;
+}
+
+.lms-skeleton-public,
+.lms-skeleton-auth {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #08142b 0%, #10264d 35%, #163564 65%, #e87722 100%);
+}
+
+.lms-skeleton-public::before,
+.lms-skeleton-auth::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 72px 72px;
+  pointer-events: none;
+}
+
+.lms-skeleton-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at right bottom, rgba(232, 119, 34, 0.22), transparent 34%),
+    radial-gradient(circle at left top, rgba(17, 38, 76, 0.38), transparent 28%),
+    rgba(0, 0, 0, 0.14);
+}
+
+.lms-skeleton-public-inner,
+.lms-skeleton-auth-card {
+  position: relative;
+  z-index: 1;
+}
+
+.lms-skeleton-public-inner {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+  padding: 20px 24px 32px;
+}
+
+.lms-skeleton-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.lms-skeleton-hero {
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+  padding: 40px 0 30px;
+}
+
+.lms-skeleton-auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.lms-skeleton-auth-card {
+  width: min(99.5vw, 1480px);
+  min-height: 92vh;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+@media (max-width: 700px) {
+  .lms-skeleton-public-inner {
+    padding: 18px 16px 28px;
+  }
+
+  .lms-skeleton-navbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lms-skeleton-auth {
+    padding: 10px;
+  }
+
+  .lms-skeleton-auth-card {
+    min-height: 94vh;
+    border-radius: 24px;
+    padding: 16px;
+  }
+}
