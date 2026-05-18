@@ -4,10 +4,22 @@ const sidebarNav = [
   {
     key: "apply",
     label: "Apply for Quarters",
-    to: "/QuartersApplyLogin",
+    to: "/Quarters/Apply",
     icon: (
       <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
         <path d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+      </svg>
+    ),
+  },
+  {
+    key: "applyEmp",
+    label: "Apply Quarters for Employees",
+    to: "/Quarters/ApplyEmployees",
+    icon: (
+      <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M19 8v6M22 11h-6" />
       </svg>
     ),
   },
@@ -39,6 +51,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   const handleApplyClick = () => {
+    if (location.pathname === "/Quarters/Apply") return;
     navigate("/Quarters/Apply");
   };
 
@@ -60,7 +73,9 @@ export default function Sidebar() {
           {sidebarNav.map((item) => {
             const active =
               item.key === "apply"
-                ? location.pathname === "/Quarters/Apply" || location.pathname === "/QuartersApplyLogin"
+                ? location.pathname === "/Quarters/Apply"
+                : item.key === "applyEmp"
+                  ? location.pathname === "/Quarters/ApplyEmployees"
                 : location.pathname === item.to;
 
             const className = `flex w-full items-center gap-[11px] px-[13px] py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] text-left transition-all duration-150 ${

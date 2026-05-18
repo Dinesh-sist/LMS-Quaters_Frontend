@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import Image2 from "../assets/image2.png";
+import { login } from "../api";
+import { setAuth } from "../auth";
 
 const ROLES = ["Admin", "Estate Officer", "Finance", "Technical"];
-const ADMIN_CREDENTIALS = { username: "admin", password: "admin123" };
 
 export default function StaffLogin() {
   const [username, setUsername] = useState("");
@@ -15,19 +16,24 @@ export default function StaffLogin() {
   const [error, setError]       = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setError("");
     if (!username || !password) { setError("Enter username and password."); return; }
     if (role !== "Admin") { setError("Only Admin access is allowed here."); return; }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        navigate("/admin/verify", { replace: true });
-      } else {
-        setError("Invalid admin credentials. Use admin / admin123.");
+    try {
+      const data = await login(username.trim(), password);
+      if (data?.user?.role !== "admin") {
+        setError("This account is not an admin.");
+        return;
       }
-    }, 1200);
+      setAuth({ token: data.token, user: data.user });
+      navigate("/admin/verify", { replace: true });
+    } catch (e) {
+      setError(e?.message || "Login failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -73,7 +79,7 @@ export default function StaffLogin() {
 
           {/* RIGHT: Form */}
           <div className="flex items-start justify-start pt-3 sm:pt-4 lg:h-[clamp(580px,64vh,680px)] lg:pt-1">
-            <div className="flex h-full w-full max-w-[720px] flex-col gap-4 rounded-[24px] border border-slate-200 bg-white px-5 py-6 shadow-[0_4px_32px_rgba(30,58,138,0.09)] sm:rounded-3xl sm:px-7 sm:py-8 md:px-9 lg:px-10 xl:px-12">
+            <div className="flex h-full w-full overflow-auto max-w-[720px] flex-col gap-4 rounded-[24px] border border-slate-200 bg-white px-5 py-6 shadow-[0_4px_32px_rgba(30,58,138,0.09)] sm:rounded-3xl sm:px-7 sm:py-8 md:px-9 lg:px-10 xl:px-12">
 
               {/* Heading */}
               <div>
