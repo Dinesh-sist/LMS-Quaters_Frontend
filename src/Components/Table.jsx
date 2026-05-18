@@ -24,6 +24,7 @@ const purpleTheme = themeQuartz.withParams({
   fontFamily:                 "'Segoe UI', system-ui, sans-serif",
   fontSize:                   13,
   rowHeight:                  48,
+  rowVerticalPaddingScale:    0,
   headerHeight:               44,
   headerBackgroundColor:      "#f9fafb",
   headerTextColor:            "#6b7280",
@@ -144,7 +145,7 @@ export default function AgGridTable({
 }) {
   const gridRef = useRef(null);
   const [quickFilter,   setQuickFilter]   = useState("");
-  const [pageSizeState, setPageSizeState] = useState(pageSize);
+  const [pageSizeState] = useState(pageSize);
   const [pageLabel,     setPageLabel]     = useState("1 / 1");
   const [rowRangeLabel, setRowRangeLabel] = useState("0–0 of 0");
   const [showColMenu,   setShowColMenu]   = useState(false);
@@ -180,6 +181,20 @@ export default function AgGridTable({
     }, {});
   }, [columns, rows]);
 
+  const serialValueGetter = useCallback(
+    (params) => {
+      const api = gridRef.current?.api;
+      const idx = typeof params?.node?.rowIndex === "number" ? params.node.rowIndex : 0;
+      if (!api?.paginationGetCurrentPage) return idx + 1;
+      const page = api.paginationGetCurrentPage();
+      const size = api.paginationGetPageSize ? api.paginationGetPageSize() : pageSizeState;
+      return page * size + idx + 1;
+    },
+    [pageSizeState]
+  );
+
+
+
   // ── Column definitions (file 1 logic + file 2 renderers) ────
   const columnDefs = useMemo(
     () => [
@@ -195,7 +210,7 @@ export default function AgGridTable({
         floatingFilter:    false,
         suppressMenu:      true,
         resizable:         false,
-        valueGetter:       (params) => params.node.rowIndex + 1,
+        valueGetter:       serialValueGetter,
         pinned:            "left",
       },
       ...columns.map((col) => {
@@ -224,6 +239,11 @@ export default function AgGridTable({
               : undefined,
         };
 
+        if (!contentAutoWidth) {
+          def.flex = typeof col.flex === "number" ? col.flex : 1;
+          delete def.width;
+        }
+
         // ── Prefer RENDERER_MAP (file 2 chips/badges) then col.render ──
         if (col.renderer && RENDERER_MAP[col.renderer]) {
           def.cellRenderer = RENDERER_MAP[col.renderer];
@@ -236,7 +256,7 @@ export default function AgGridTable({
         return def;
       }),
     ],
-    [columns, computedColumnWidths, contentAutoWidth]
+    [columns, computedColumnWidths, contentAutoWidth, serialValueGetter]
   );
 
   const defaultColDef = useMemo(
@@ -249,9 +269,15 @@ export default function AgGridTable({
   );
 
   const getRowId = useMemo(() => {
-    if (!rowKey) return undefined;
-    return (params) => String(rowKey(params.data, params.rowIndex));
+    if (typeof rowKey === "function") {
+      return (params) => {
+        const id = rowKey(params.data, params.rowIndex);
+        return id == null || id === "" ? String(params.rowIndex) : String(id);
+      };
+    }
+    return undefined;
   }, [rowKey]);
+
 
   // ── Pagination labels (file 1) ───────────────────────────────
   const updatePaginationLabels = useCallback(() => {
@@ -381,16 +407,20 @@ export default function AgGridTable({
         .lms-grid .ag-text-field-input-wrapper { border: none !important; background: transparent !important; }
         .lms-grid .ag-floating-filter-button { color: #d1d5db !important; }
 
-        .lms-grid .ag-row { border-bottom: 1px solid #f3f4f6 !important; transition: background 0.1s !important; }
+        .lms-grid .ag-row { border-bottom: none !important; transition: background 0.1s !important; }
         .lms-grid .ag-row-even  { background: #ffffff !important; }
         .lms-grid .ag-row-odd   { background: #f3f4fb !important; }
         .lms-grid .ag-row-hover { background: #e8eaf6 !important; }
+        .lms-grid .ag-row { margin: 0 !important; }
+        .lms-grid .ag-row::before, .lms-grid .ag-row::after { display: none !important; }
+        .lms-grid .ag-cell { margin: 0 !important; }
 
         .lms-grid .ag-cell {
           justify-content: center !important; padding: 0 24px !important;
           font-size: 13px !important; color: #374151 !important;
           display: flex !important; align-items: center !important;
           border-right: 1px solid #f3f4f6 !important;
+          border-bottom: 1px solid #f3f4f6 !important;
           line-height: 1.5 !important; word-break: break-word !important;
         }
         .lms-grid .ag-cell-value {
@@ -526,7 +556,7 @@ export default function AgGridTable({
         <div className="lms-grid-scroll">
           <div
             className={`lms-grid ${alignClass}`}
-            style={{ border: "3px solid #1d3171a5", borderRadius: "0 0 16px 16px" }}
+            style={{ border: "3px solid #1d31715b", borderRadius: "0 0 16px 16px" }}
           >
             <AgGridReact
               ref={gridRef}

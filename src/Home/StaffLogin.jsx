@@ -1,46 +1,64 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
-import Image2 from "../assets/image2.png";
+import Image2 from "../assets/image7.png";
+import { login } from "../api";
+import { setAuth } from "../auth";
 
 const ROLES = ["Admin", "Estate Officer", "Finance", "Technical"];
-const ADMIN_CREDENTIALS = { username: "admin", password: "admin123" };
 
 export default function StaffLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole]         = useState(ROLES[0]);
+  const [role, setRole] = useState(ROLES[0]);
   const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = () => {
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
     setError("");
-    if (!username || !password) { setError("Enter username and password."); return; }
-    if (role !== "Admin") { setError("Only Admin access is allowed here."); return; }
+
+    if (!username || !password) {
+      setError("Enter username and password.");
+      return;
+    }
+
+    if (role !== "Admin") {
+      setError("Only Admin access is allowed here.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        navigate("/admin/verify", { replace: true });
-      } else {
-        setError("Invalid admin credentials. Use admin / admin123.");
+    try {
+      const data = await login(username.trim(), password);
+      if (data?.user?.role !== "admin") {
+        setError("This account is not an admin.");
+        return;
       }
-    }, 1200);
+
+      setAuth({ token: data.token, user: data.user });
+      navigate("/admin/verify", { replace: true });
+    } catch (e2) {
+      setError(e2?.message || "Login failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4">
-
+    <div className="relative h-screen w-full overflow-hidden">
       <style>{`
         @keyframes gradientMove {
-          0%   { background-position: 0% 50%; }
-          50%  { background-position: 100% 50%; }
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
         .sl-gradient-bg {
-          position: absolute; inset: 0; z-index: 0;
+          position: absolute;
+          inset: 0;
+          z-index: 0;
           background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #e87722, #1a2e5a);
           background-size: 300% 300%;
           animation: gradientMove 15s ease-in-out infinite;
@@ -48,56 +66,53 @@ export default function StaffLogin() {
         .sl-input:focus {
           border-color: #1e3a8a !important;
           outline: none;
-          box-shadow: 0 0 0 3px rgba(30,58,138,.12);
+          box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
         }
       `}</style>
+
       <div className="sl-gradient-bg" />
 
-      {/* Outer white card — wider, auto height */}
-      <div className="relative z-10 flex h-[92vh] w-[min(99.5vw,1480px)] max-h-[1220px] max-w-[1800px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:h-[93vh] sm:rounded-[32px] lg:h-[94vh]">
-
-        {/* Top Navbar */}
+      <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
         <TopNavbar navTextColor="dark" />
 
-        {/* Body */}
-        <div className="min-h-0 flex-1 px-3 pb-4 pt-1 sm:px-5 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-8 lg:pb-8 lg:pt-1 xl:px-10">
-
-          {/* LEFT: Image — hidden on mobile, shown on lg+ */}
-          <div className="hidden lg:flex items-start justify-end pt-1 lg:h-[clamp(520px,64vh,680px)]">
+        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
+          <div className="hidden items-center justify-center lg:flex lg:self-stretch">
             <img
               src={Image2}
               alt="Staff at desk"
-              className="h-full w-full max-w-[660px] object-contain xl:max-w-[740px]"
+              className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] object-contain"
             />
           </div>
 
-          {/* RIGHT: Form */}
-          <div className="flex items-start justify-start pt-3 sm:pt-4 lg:h-[clamp(580px,64vh,680px)] lg:pt-1">
-            <div className="flex h-full w-full max-w-[720px] flex-col gap-4 rounded-[24px] border border-slate-200 bg-white px-5 py-6 shadow-[0_4px_32px_rgba(30,58,138,0.09)] sm:rounded-3xl sm:px-7 sm:py-8 md:px-9 lg:px-10 xl:px-12">
-
-              {/* Heading */}
+          <div className="flex items-center justify-center lg:justify-start">
+            <form
+              className="flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8"
+              onSubmit={handleSubmit}
+            >
               <div>
-                <h2 className="m-0 mb-1 text-[24px] font-bold text-slate-900 sm:text-[38px]" style={{ fontFamily: "Georgia, serif" }}>
+                <h2
+                  className="m-0 mb-1 text-[clamp(22px,2.5vw,38px)] font-bold text-slate-900"
+                  style={{ fontFamily: "Georgia, serif" }}
+                >
                   Sign In
                 </h2>
-                <p className="m-0  text-[13px] leading-5 text-slate-400">
+                <p className="m-0 text-[clamp(12px,1vw,13px)] leading-5 text-slate-400">
                   Use your official PPA staff credentials
                 </p>
               </div>
 
-              {/* Role selector */}
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">Role</label>
-                <div className="flex flex-wrap gap-2">
-                  {ROLES.map(r => (
+                <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Role</label>
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                  {ROLES.map((r) => (
                     <button
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
-                      className={`min-h-[50px] rounded-full border-2 px-3 py-2 text-[14px] font-semibold transition-all duration-150 sm:px-4 sm:py-1.5 sm:text-xs ${
+                      className={`min-h-[clamp(38px,4.2vh,44px)] rounded-full border-2 px-2 py-1.5 text-center text-[clamp(11px,0.95vw,13px)] font-semibold transition-all duration-150 sm:px-3 sm:py-1 ${
                         role === r
-                          ? "bg-blue-950 text-white border-blue-950 shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
-                          : "bg-white text-slate-600 border-slate-200 hover:opacity-80"
+                          ? "border-blue-950 bg-blue-950 text-white shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
+                          : "border-slate-200 bg-white text-slate-600 hover:opacity-80"
                       }`}
                     >
                       {r}
@@ -106,80 +121,91 @@ export default function StaffLogin() {
                 </div>
               </div>
 
-              {/* Username */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">Username</label>
+                <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Username</label>
                 <div className="relative">
                   <input
                     type="text"
-                    className="sl-input w-full text-[13px] px-4 py-3 pr-10 rounded-xl border-2 border-slate-200 bg-blue-50 text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    autoComplete="username"
+                    className="sl-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                     value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    onChange={(e) => setUsername(e.target.value)}
                     placeholder="staff.username"
                   />
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                    width="16" height="16" viewBox="0 0 20 20" fill="none">
-                    <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.6"/>
-                    <path d="M3 18c0-4 3.134-6 7-6s7 2 7 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  <svg
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                  >
+                    <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" />
+                    <path
+                      d="M3 18c0-4 3.134-6 7-6s7 2 7 6"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
                   </svg>
                 </div>
               </div>
 
-              {/* Password */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold tracking-[2px] uppercase text-slate-400">Password</label>
+                <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Password</label>
                 <div className="relative">
                   <input
                     type={showPass ? "text" : "password"}
-                    className="sl-input w-full text-[13px] px-4 py-3 pr-10 rounded-xl border-2 border-slate-200 bg-blue-50 text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    autoComplete="current-password"
+                    className="sl-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPass(p => !p)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-slate-400 hover:text-slate-600 p-0.5 flex items-center"
+                    onClick={() => setShowPass((p) => !p)}
+                    className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600"
+                    aria-label={showPass ? "Hide password" : "Show password"}
                   >
                     <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
-                      <path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z" stroke="currentColor" strokeWidth="1.6"/>
-                      <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6"/>
-                      {!showPass && <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>}
+                      <path
+                        d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"
+                        stroke="currentColor"
+                        strokeWidth="1.6"
+                      />
+                      <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+                      {!showPass && (
+                        <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                      )}
                     </svg>
                   </button>
                 </div>
               </div>
 
-              {/* Submit */}
               <button
-                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3.5 text-sm font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
-                onClick={handleSubmit}
+                type="submit"
+                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={loading}
               >
-                {loading ? "Verifying…" : `Login as ${role}`}
+                {loading ? "Verifying..." : `Login as ${role}`}
               </button>
 
               {error && (
-                <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {error}
                 </div>
               )}
 
-              {/* Dev notice */}
-              <div className="mt-4 text-center text-[12px] text-slate-400"></div>
+              <div className="mt-auto pt-5 text-center text-[12px] text-slate-400">
+                <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
+                  &larr; Back to Home
+                </Link>
+              </div>
 
-              {/* Back to home */}
-
-
-               <div className="mt-auto pt-5 text-center text-[12px] text-slate-400">
-                  <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
-                    &larr; Back to Home
-                  </Link>
-                </div>
-                <p className="m-0 text-center text-[11px] text-slate-400">
-                  &copy; 2026 Paradip Port Authority. All rights reserved.
-                </p>
-            </div>
+              <p className="m-0 text-center text-[11px] text-slate-400">
+                &copy; 2026 Paradip Port Authority. All rights reserved.
+              </p>
+            </form>
           </div>
         </div>
       </div>
