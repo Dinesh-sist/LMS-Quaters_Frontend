@@ -167,10 +167,6 @@ export default function VerifyQuarterApplications() {
       <AgGridTable
         columns={columns}
         rows={mockData}
-        title="Verification Queue"
-        subtitle="Quarter Review Dashboard"
-        badgeText={`${mockData.length} records`}
-        badgeLabel="Verification"
         searchable
         pageSize={8}
         showExport

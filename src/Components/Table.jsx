@@ -121,29 +121,7 @@ const RENDERER_MAP = {
 };
 
 /* ── Toolbar button (from file 2) ───────────────────────────── */
-function ToolbarButton({ iconPath, label, onClick }) {
-  const [hov, setHov] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
-      style={{
-        display: "flex", alignItems: "center", gap: 6,
-        padding: "6px 14px", fontSize: 12, fontWeight: 500,
-        color: hov ? "#6d28d9" : "#6b7280",
-        background: "#fff",
-        border: `1px solid ${hov ? "#a78bfa" : "#e5e7eb"}`,
-        borderRadius: 10, cursor: "pointer", transition: "all 0.15s",
-      }}
-    >
-      <svg style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={iconPath} />
-      </svg>
-      {label}
-    </button>
-  );
-}
+
 
 /* ── Main component ─────────────────────────────────────────── */
 export default function AgGridTable({
@@ -155,8 +133,6 @@ export default function AgGridTable({
   contentAutoWidth = true,
   contentAlign     = "center",
   // ── File 2 props (header / toolbar) ──
-  title      = "Data Table",
-  subtitle   = "",
   badgeText  = "",
   badgeLabel = "",
   searchable = true,
@@ -330,9 +306,8 @@ export default function AgGridTable({
 
   const onExportCSV = useCallback(() => {
     gridRef.current?.api?.exportDataAsCsv({
-      fileName: `${title.replace(/\s+/g, "_")}.csv`,
     });
-  }, [title]);
+  });
 
   const alignClass = contentAlign === "left" ? "lms-grid-align-left" : "lms-grid-align-center";
 
@@ -459,53 +434,25 @@ export default function AgGridTable({
         }}
       >
         {/* ── Panel header (file 2) ── */}
-        <div style={{
-          background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)",
-          padding: "16px 24px", display: "flex",
-          alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div>
-            {subtitle && (
-              <p style={{
-                color: "#c4b5fd", fontSize: 10, fontWeight: 700,
-                letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 2,
-              }}>
-                {subtitle}
-              </p>
-            )}
-            <p style={{ color: "#fff", fontWeight: 700, fontSize: 15, margin: 0 }}>{title}</p>
-          </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            {badgeText && (
-              <span style={{
-                padding: "5px 12px", background: "rgba(255,255,255,0.2)",
-                color: "#fff", fontSize: 12, fontWeight: 600, borderRadius: 8,
-              }}>
-                {badgeText}
-              </span>
-            )}
-            {badgeLabel && (
-              <span style={{
-                padding: "5px 12px", background: "#fff", color: "#6d28d9",
-                fontSize: 12, fontWeight: 600, borderRadius: 8,
-                boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
-              }}>
-                {badgeLabel}
-              </span>
-            )}
-          </div>
-        </div>
+
+
+    
 
         {/* ── Toolbar (file 2 search + export/filter buttons) ── */}
-        <div style={{
-          padding: "10px 24px", borderBottom: "1px solid #f3f4f6",
-          background: "rgba(249,250,251,0.6)", display: "flex",
-          alignItems: "center", gap: 10,
-        }}>
+
           {searchable && (
-            <div style={{ position: "relative", maxWidth: 280, flex: 1 }}>
+            <div
+              style={{
+                position: "relative",
+                maxWidth: 280,
+                flex: 1,
+                paddingTop: 10,
+                paddingBottom: 10,
+                paddingLeft: 16,
+              }}
+            >
               <svg style={{
-                position: "absolute", left: 10, top: "50%",
+                position: "absolute",  left: 20, top: "50%",
                 transform: "translateY(-50%)", width: 15, height: 15,
                 color: "#9ca3af", pointerEvents: "none",
               }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -530,29 +477,7 @@ export default function AgGridTable({
             </div>
           )}
 
-          <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-            {/* Column toggle (file 1) */}
-            <ToolbarButton
-              iconPath="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              label="Columns"
-              onClick={() => setShowColMenu((v) => !v)}
-            />
-            {showFilter && (
-              <ToolbarButton
-                iconPath="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                label="Filter"
-                onClick={() => gridRef.current?.api?.setFilterModel(null)}
-              />
-            )}
-            {showExport && (
-              <ToolbarButton
-                iconPath="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                label="Export CSV"
-                onClick={onExportCSV}
-              />
-            )}
-          </div>
-        </div>
+
 
         {/* ── Column toggle menu (file 1) ── */}
         {showColMenu && (
@@ -577,7 +502,7 @@ export default function AgGridTable({
                   type="checkbox"
                   checked={visibleCols.has(col.key)}
                   onChange={() => toggleColumn(col.key)}
-                  style={{ accentColor: "#6d28d9" }}
+                  style={{ accentColor: "#6a696b" }}
                 />
                 {col.header}
               </label>
@@ -625,23 +550,23 @@ export default function AgGridTable({
             <div className="lms-pagination">
               <span className="lms-pagination-info">{rowRangeLabel}</span>
               <div className="lms-pagination-controls">
-                <button onClick={() => gridRef.current?.api?.paginationGoToFirstPage()} title="First">
+                <button onClick={() => gridRef.current?.api?.paginationGoToFirstPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/>
                   </svg>
                 </button>
-                <button onClick={() => gridRef.current?.api?.paginationGoToPreviousPage()} title="Previous">
+                <button onClick={() => gridRef.current?.api?.paginationGoToPreviousPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="15 18 9 12 15 6"/>
                   </svg>
                 </button>
                 <span className="lms-pagination-page-label">{pageLabel}</span>
-                <button onClick={() => gridRef.current?.api?.paginationGoToNextPage()} title="Next">
+                <button onClick={() => gridRef.current?.api?.paginationGoToNextPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="9 18 15 12 9 6"/>
                   </svg>
                 </button>
-                <button onClick={() => gridRef.current?.api?.paginationGoToLastPage()} title="Last">
+                <button onClick={() => gridRef.current?.api?.paginationGoToLastPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>
                   </svg>

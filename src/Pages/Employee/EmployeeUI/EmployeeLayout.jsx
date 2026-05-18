@@ -1,24 +1,33 @@
 import { useState } from "react";
-import AdminSideNav from "./AdminSideNav";
 import TopHeader from "../../../Components/TopHeader";
+import EmployeeSideNav from "./EmployeeSideNav";
 
-export default function AdminLayout({ title, subtitle, children }) {
+export default function EmployeeLayout({
+  title,
+  subtitle,
+  children,
+  role = "user",
+  description = "Outsider Services",
+  welcomeName = "Employee",
+  logoutTo = "/QuartersApplyLogin",
+}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen bg-[#f5f7fb] text-slate-900">
+    <div className="h-screen bg-[#f5f7fb] font-['Segoe_UI',system-ui,sans-serif] text-slate-900">
       <div className="flex h-full flex-col overflow-hidden">
         <TopHeader
-          role="admin"
-          description="Quarter Management Portal"
-          welcomeName="Admin"
+          role={role}
+          description={description}
+          welcomeName={welcomeName}
           showNotifications={false}
+          logoutTo={logoutTo}
           onOpenMenu={() => setSidebarOpen(true)}
         />
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
           <div className="hidden h-full lg:flex">
-            <AdminSideNav />
+            <EmployeeSideNav />
           </div>
 
           {sidebarOpen ? (
@@ -30,12 +39,12 @@ export default function AdminLayout({ title, subtitle, children }) {
                 aria-label="Close sidebar overlay"
               />
               <div className="relative h-full bg-white shadow-xl">
-                <AdminSideNav onNavigate={() => setSidebarOpen(false)} />
+                <EmployeeSideNav onNavigate={() => setSidebarOpen(false)} />
               </div>
             </div>
           ) : null}
 
-          <main className="flex-1 bg-indigo-50 overflow-y-auto px-5 py-7 md:px-8 xl:px-10">
+          <main className="flex-1 overflow-y-auto px-5 py-7 md:px-8 xl:px-10">
             <div className="mx-auto w-full max-w-[1540px] space-y-6">
               {(title || subtitle) && (
                 <div>

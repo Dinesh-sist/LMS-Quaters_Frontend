@@ -138,10 +138,6 @@ export default function HistoryOfHouseAllotmentCommittee() {
       <AgGridTable
         columns={columns}
         rows={mockData}
-        title="House Allotment Committee History"
-        subtitle="PPA Committee Records"
-        badgeText={`${mockData.length} meetings`}
-        badgeLabel="Records available"
         searchable
         pageSize={10}
         showExport

@@ -1,6 +1,5 @@
 import AgGridTable from "../../Components/Table";
-import TopHeader from "../../Components/TopHeader";
-import Sidebar from "./EmployeeUI/EmployeeSideNav";
+import EmployeeLayout from "./EmployeeUI/EmployeeLayout";
 
 const approvalRows = [
   {
@@ -63,8 +62,6 @@ const approvalRows = [
     qtrType: "TYPE-D",
     status: "Clarification Needed",
   },
-  
-
   {
     id: 5,
     priorityNo: 5,
@@ -169,7 +166,7 @@ function QuarterRenderer({ value, data }) {
 
 function StatusRenderer({ value }) {
   const styles = {
-    Approved: { color: "#118747", background: "#d8f7df", border : "#c0efcb" },
+    Approved: { color: "#118747", background: "#d8f7df", border: "#c0efcb" },
     Rejected: { color: "#d81d2f", background: "#ffe4e7", border: "#fec7cd" },
     Pending: { color: "#b76a09", background: "#fff1d6", border: "#fed7aa" },
     "Under Review": { color: "#3151da", background: "#e6ecff", border: "#cfd8ff" },
@@ -241,35 +238,25 @@ const columns = [
     minWidth: 180,
     render: (value) => <StatusRenderer value={value} />,
   },
-
 ];
 
 const stats = [
-{
-  label: "Total Requests",
-  value: String(approvalRows.length),
-
-  // Card Background
-  tone: "bg-gradient-to-r from-purple-600 to-indigo-600 border-0",
-
-  // Label Text
-  labelClass: "text-white font-semibold",
-
-  // Value Text
-  valueClass: "text-white text-4xl font-bold",
-
-  // Icon Color
-  iconClass: "text-white",
-
-  icon: (
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-    />
-  ),
-},
+  {
+    label: "Total Requests",
+    value: String(approvalRows.length),
+    tone: "bg-gradient-to-r from-purple-600 to-indigo-600 border-0",
+    labelClass: "text-white font-semibold",
+    valueClass: "text-white text-4xl font-bold",
+    iconClass: "text-white",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+      />
+    ),
+  },
   {
     label: "Approved",
     value: String(approvalRows.filter((row) => row.status === "Approved").length),
@@ -278,121 +265,102 @@ const stats = [
     valueClass: "text-white text-4xl font-bold",
     iconClass: "text-white",
     icon: (
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  ),
-},
-{
-  label: "In Progress",
-  value: String(
-    approvalRows.filter((row) => row.status === "Pending" || row.status === "Under Review").length
-  ),
-  tone: "bg-gradient-to-r from-amber-500 to-orange-500 border-0",
-  labelClass: "text-white font-semibold",
-  valueClass: "text-white text-4xl font-bold",
-  iconClass: "text-white",
-  icon: (
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  ),
-},
-{
-  label: "Clarifications",
-  value: String(approvalRows.filter((row) => row.status === "Clarification Needed").length),
-  tone: "bg-gradient-to-r from-rose-500 to-pink-600 border-0",
-  labelClass: "text-white font-semibold",
-  valueClass: "text-white text-4xl font-bold",
-  iconClass: "text-white",
-  icon: (
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
-    />
-  ),
-},
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+  },
+  {
+    label: "In Progress",
+    value: String(
+      approvalRows.filter((row) => row.status === "Pending" || row.status === "Under Review").length
+    ),
+    tone: "bg-gradient-to-r from-amber-500 to-orange-500 border-0",
+    labelClass: "text-white font-semibold",
+    valueClass: "text-white text-4xl font-bold",
+    iconClass: "text-white",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    ),
+  },
+  {
+    label: "Clarifications",
+    value: String(approvalRows.filter((row) => row.status === "Clarification Needed").length),
+    tone: "bg-gradient-to-r from-rose-500 to-pink-600 border-0",
+    labelClass: "text-white font-semibold",
+    valueClass: "text-white text-4xl font-bold",
+    iconClass: "text-white",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"
+      />
+    ),
+  },
 ];
 
 export default function CheckApproval() {
   return (
-    <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[linear-gradient(180deg,#e6eeff_0%,#f5f8ff_36%,#edf3ff_100%)]">
-      <div className="h-full bg-[#f7faff] overflow-hidden flex flex-col">
-        <TopHeader
-          role="user"
-          description="Approval Tracking"
-          welcomeName="Applicant"
-          showNotifications={false}
-          logoutTo="/QuartersApplyLogin"
-        />
-
-        <div className="flex-1 flex overflow-hidden min-h-0">
-          <Sidebar />
-
-          <main className="flex-1 overflow-y-auto px-9 py-7 bg-[#f4f6fa]">
-            <div className="mb-[22px]">
-              <h2 className="text-xl font-extrabold text-slate-800 tracking-[-0.02em] mb-1.5">
-                Check Approval status
-              </h2>
-              <div className="h-[3px] w-[52px] rounded-sm bg-[#e87722]" />
-            </div>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4 mb-6">
-              {stats.map((card) => (
-                <div key={card.label} className={`rounded-[20px] border px-4 py-4 ${card.tone}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className={`text-[28px] font-extrabold leading-none ${card.valueClass}`}>
-                        {card.value}
-                      </div>
-                      <div className="mt-2">
-                        <span
-                          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${card.labelClass}`}
-                        >
-                          {card.label}
-                        </span>
-                      </div>
-                    </div>
-                    <div className={`w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center border border-white/70 ${card.iconClass}`}>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {card.icon}
-                      </svg>
-                    </div>
-                  </div>
+    <EmployeeLayout
+      title="Check Approval Status"
+      subtitle="Land Data Management System - Approval Tracker"
+      role="user"
+      description="Approval Tracking"
+      welcomeName="Applicant"
+      logoutTo="/QuartersApplyLogin"
+    >
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {stats.map((card) => (
+          <div key={card.label} className={`rounded-[20px] border px-4 py-4 ${card.tone}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className={`text-[28px] font-extrabold leading-none ${card.valueClass}`}>
+                  {card.value}
                 </div>
-              ))}
+                <div className="mt-2">
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${card.labelClass}`}
+                  >
+                    {card.label}
+                  </span>
+                </div>
+              </div>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border border-white/70 bg-white/80 ${card.iconClass}`}>
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {card.icon}
+                </svg>
+              </div>
             </div>
-
-            <AgGridTable
-              columns={columns}
-              rows={approvalRows}
-              title="Approval Queue Register"
-              badgeText={`${approvalRows.length} requests`}
-              badgeLabel="Approval Tracker"
-              searchable
-              pageSize={8}
-              showExport
-              showFilter
-              contentAlign="center"
-              variant="soft"
-              searchPlaceholder="Search employee, category, location..."
-            />
-
-            <div className="flex flex-col gap-2 px-1 pt-4 text-[13px] text-slate-500 md:flex-row md:items-center md:justify-between">
-              <span>© 2026 Paradip Port Authority</span>
-              <span>Real Estate Management System</span>
-            </div>
-          </main>
-        </div>
+          </div>
+        ))}
       </div>
-    </div>
+
+      <AgGridTable
+        columns={columns}
+        rows={approvalRows}
+        searchable
+        pageSize={8}
+        showExport
+        showFilter
+        contentAlign="center"
+        variant="soft"
+        searchPlaceholder="Search employee, category, location..."
+      />
+
+      <div className="flex flex-col gap-2 px-1 text-[13px] text-slate-500 md:flex-row md:items-center md:justify-between">
+        <span>Copyright 2026 Paradip Port Authority</span>
+        <span>Real Estate Management System</span>
+      </div>
+    </EmployeeLayout>
   );
 }

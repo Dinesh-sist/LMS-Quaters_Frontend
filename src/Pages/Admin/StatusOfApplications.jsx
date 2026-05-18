@@ -447,10 +447,6 @@ export default function StatusOfApplications() {
       <AgGridTable
         columns={columns}
         rows={mockData}
-        title="Application Status Register"
-        subtitle="Quarter Review Dashboard"
-        badgeText={`${mockData.length} applications`}
-        badgeLabel="Live status"
         searchable
         pageSize={8}
         showExport
