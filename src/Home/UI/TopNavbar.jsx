@@ -75,7 +75,6 @@ export default function TopNavbar({ titleColor = "text-blue-950", navTextColor =
               </span>
             </div>
           </div>
-
           <button
             type="button"
             onClick={() => {
@@ -93,6 +92,7 @@ export default function TopNavbar({ titleColor = "text-blue-950", navTextColor =
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
           >
+
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
               {mobileMenuOpen ? (
                 <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
@@ -104,6 +104,7 @@ export default function TopNavbar({ titleColor = "text-blue-950", navTextColor =
                 </>
               )}
             </svg>
+            
           </button>
 
           <nav className="hidden items-center gap-1 lg:flex">

@@ -20,7 +20,6 @@ const sidebarNav = [
         <path d="M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
       </svg>
     ),
-
   },
   {
     key: "demand",
@@ -41,6 +40,7 @@ export default function Sidebar() {
   const handleApplyClick = () => {
     navigate("/Quarters/Apply");
   };
+
 
   return (
     <aside className="w-[252px] shrink-0 bg-white flex flex-col overflow-hidden border-r border-[#dde3ee]">
