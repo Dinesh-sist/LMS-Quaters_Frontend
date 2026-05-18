@@ -49,7 +49,7 @@ export default function QuartersApplyLogin() {
       <div className="employee-gradient-bg" />
 
       <div className="relative z-10 flex h-[92vh] w-[min(99.5vw,1480px)] max-h-[1220px] max-w-[1800px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:h-[93vh] sm:rounded-[32px] lg:h-[94vh]">
-        <TopNavbar />
+        <TopNavbar navTextColor="dark" />
 
         <div className="min-h-0 flex-1 px-3 pb-4 pt-1 sm:px-5 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-8 lg:pb-8 lg:pt-1 xl:px-10">
           <div className="hidden items-start justify-end pt-1 lg:flex lg:h-[clamp(580px,72vh,760px)]">
