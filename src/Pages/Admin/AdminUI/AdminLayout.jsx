@@ -12,6 +12,7 @@ export default function AdminLayout({ title, subtitle, children }) {
           role="admin"
           description="Quarter Management Portal"
           welcomeName="Admin"
+          showNotifications={false}
           onOpenMenu={() => setSidebarOpen(true)}
         />
 

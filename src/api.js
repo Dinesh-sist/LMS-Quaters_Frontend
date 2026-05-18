@@ -29,5 +29,16 @@ export function login(username, password) {
   return request("/api/auth/login", { method: "POST", body: { username, password } });
 }
 
-export { API_BASE, request };
+export function registerEmployee(payload) {
+  return request("/api/auth/register-employee", { method: "POST", body: payload });
+}
 
+export function lookupEmployee(employeeId, dateOfBirth) {
+  return request("/api/employee/lookup", { method: "POST", body: { employeeId, dateOfBirth } });
+}
+
+export function getEmployeeClasses() {
+  return request("/api/employee/classes");
+}
+
+export { API_BASE, request };

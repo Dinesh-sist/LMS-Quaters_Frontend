@@ -7,6 +7,7 @@ import Dashboard from './Home/Dashboard'
 import QuartersApplyLogin from './Home/QuatersApplyLogin'
 import StaffLogin from './Home/StaffLogin'
 import ApplyForQuarters from './Pages/Employee/ApplyForQuarters'
+import ApplyForQuartersEmployees from './Pages/Employee/ApplyForQuartersEmployees'
 import CheckApproval from './Pages/Employee/CheckforApproval'
 import DemandNote from './Pages/Employee/DemandNote'
 import VerifyQuarterApplication from './Pages/Admin/VerifyQuaterApplication'
@@ -27,6 +28,14 @@ function App() {
           element={
             <ProtectedRoute role="employee">
               <ApplyForQuarters />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Quarters/ApplyEmployees"
+          element={
+            <ProtectedRoute role="employee">
+              <ApplyForQuartersEmployees />
             </ProtectedRoute>
           }
         />

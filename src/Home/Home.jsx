@@ -80,20 +80,22 @@ export default function Home() {
                 online applications, and estate administration.
               </p>
 
+              
+
               {/* CTA buttons */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mt-1">
-                <Link
+                {/* <Link
                   to="/QuartersApplyLogin"
                   className="text-xs sm:text-sm font-semibold rounded-full px-5 sm:px-6 py-2 sm:py-2.5 no-underline text-white bg-gradient-to-br from-orange-400 to-orange-600 shadow-[0_6px_22px_rgba(249,115,22,0.42)] hover:brightness-110 transition-all"
                 >
                   Apply for Quarters
-                </Link>
-                <Link
+                </Link> */}
+                {/* <Link
                   to="/StaffLogin"
                   className="text-xs sm:text-sm font-semibold rounded-full px-5 sm:px-6 py-2 sm:py-2.5 no-underline text-white bg-white/10 backdrop-blur-md border border-white/25 hover:bg-white/20 transition-all"
                 >
                   Staff Login
-                </Link>
+                </Link> */}
               </div>
 
             </section>
