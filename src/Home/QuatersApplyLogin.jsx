@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
-import adminBuilding from "../assets/AdminBuilding.jpg";
+import Image from "../assets/Image8.png";
 import Logo from "../assets/Logo.png";
 import { getEmployeeClasses, login, lookupEmployee, registerEmployee } from "../api";
 import { setAuth } from "../auth";
@@ -176,77 +176,76 @@ export default function QuartersApplyLogin() {
 
   if (mode === "register") {
     return (
-      <div className="relative min-h-screen w-full overflow-hidden">
+      <div className="relative h-screen w-full overflow-hidden">
         <style>{`
-          .about-gradient-bg {
-            background: linear-gradient(
-              135deg,
-              #08142b 0%,
-              #10264d 35%,
-              #163564 65%,
-              #e87722 100%
-            );
+          @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
           }
-
-          .about-geo-overlay {
-            background-image:
-              linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-            background-size: 72px 72px;
-            pointer-events: none;
+          .ql-gradient-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #e87722, #1a2e5a);
+            background-size: 300% 300%;
+            animation: gradientMove 15s ease-in-out infinite;
           }
-
-          .about-glow-orb {
-            width: 520px;
-            height: 520px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(232,119,34,0.14) 0%, transparent 68%);
-            pointer-events: none;
-          }
-
-          .about-glow-orb-2 {
-            width: 340px;
-            height: 340px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(16,38,77,0.5) 0%, transparent 70%);
-            pointer-events: none;
-          }
-
-          .employee-input:focus {
+          .ql-input:focus {
             border-color: #1e3a8a !important;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(30,58,138,.12);
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
           }
         `}</style>
 
-        <div className="about-gradient-bg absolute inset-0 -z-10" />
-        <div className="absolute inset-0 bg-black/20 -z-10" />
-        <div className="about-geo-overlay absolute inset-0 -z-10" />
-        <div className="about-glow-orb absolute bottom-[-140px] right-[-100px] -z-10" />
-        <div className="about-glow-orb-2 absolute top-[-80px] left-[-80px] -z-10" />
+        <div className="ql-gradient-bg" />
 
-        <div className="relative z-10 flex min-h-screen flex-col">
-          <TopNavbar titleColor="text-white" />
+        <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
+          <TopNavbar navTextColor="dark" />
 
-          <div className="mx-auto w-full max-w-[980px] px-4 pb-8 sm:px-6 sm:pb-10">
-            <h1
-              className="m-0 text-[26px] font-bold text-white sm:text-[32px] lg:text-[40px]"
-              style={{ fontFamily: "Georgia, serif" }}
-            >
-              New Register
-            </h1>
-            <p className="mt-2 text-[13px] leading-6 text-white/70">
-              Fill the details below to create your employee login.
-            </p>
+          <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
+            <div className="hidden items-center justify-center lg:flex lg:self-stretch">
+              <img
+                src={Image}
+                alt="Paradip Port Authority building"
+                className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] object-contain"
+              />
+            </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/95 p-6 shadow-2xl backdrop-blur sm:p-8">
-              <form className="flex flex-col gap-5" onSubmit={handleRegister}>
+            <div className="flex items-center justify-center lg:justify-start">
+              <form
+                className="flex max-h-full w-full max-w-[min(100%,560px)] flex-col gap-[clamp(12px,1.7vh,18px)] overflow-y-auto rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8"
+                onSubmit={handleRegister}
+              >
+                <div>
+                  <div className="mb-4 flex items-center gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
+                      <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
+                    </div>
+                    <div>
+                      <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-orange-500">
+                        Paradip Port Authority
+                      </p>
+                      <h1
+                        className="m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[32px]"
+                        style={{ fontFamily: "Georgia, serif" }}
+                      >
+                        Employee Registration
+                      </h1>
+                    </div>
+                  </div>
+
+                  <p className="m-0 text-[12px] leading-5 text-slate-400 sm:text-[13px]">
+                    Fill in your employee details to create access for the quarters application portal.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Employee ID</label>
                     <input
                       type="text"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.employeeId}
                       onChange={(e) => setReg((r) => ({ ...r, employeeId: e.target.value }))}
                       placeholder="Employee ID"
@@ -260,7 +259,7 @@ export default function QuartersApplyLogin() {
                     <div className="flex items-center gap-2">
                       <input
                         type="date"
-                        className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.dateOfBirth}
                         onChange={(e) => setReg((r) => ({ ...r, dateOfBirth: e.target.value }))}
                       />
@@ -282,7 +281,7 @@ export default function QuartersApplyLogin() {
                   </label>
                   <input
                     type="text"
-                    className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                     value={reg.employeeName}
                     onChange={(e) => setReg((r) => ({ ...r, employeeName: e.target.value }))}
                     placeholder="Employee name"
@@ -297,7 +296,7 @@ export default function QuartersApplyLogin() {
                     </label>
                     <input
                       type="date"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.dateOfJoining}
                       onChange={(e) => setReg((r) => ({ ...r, dateOfJoining: e.target.value }))}
                       readOnly
@@ -308,7 +307,7 @@ export default function QuartersApplyLogin() {
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Class Name</label>
                     <input
                       type="text"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.className}
                       onChange={(e) => setReg((r) => ({ ...r, className: e.target.value }))}
                       placeholder="Class name"
@@ -320,7 +319,7 @@ export default function QuartersApplyLogin() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Choose a class</label>
                   <select
-                    className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200"
+                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200"
                     value={reg.classChoice}
                     onChange={(e) => setReg((r) => ({ ...r, classChoice: e.target.value }))}
                   >
@@ -338,7 +337,7 @@ export default function QuartersApplyLogin() {
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Mobile number</label>
                     <input
                       type="tel"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.mobile}
                       onChange={(e) => setReg((r) => ({ ...r, mobile: e.target.value }))}
                       placeholder="Mobile"
@@ -350,7 +349,7 @@ export default function QuartersApplyLogin() {
                     <input
                       type="email"
                       autoComplete="email"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.email}
                       onChange={(e) => setReg((r) => ({ ...r, email: e.target.value }))}
                       placeholder="name@domain.com"
@@ -365,7 +364,7 @@ export default function QuartersApplyLogin() {
                       <input
                         type={showRegPass ? "text" : "password"}
                         autoComplete="new-password"
-                        className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.password}
                         onChange={(e) => setReg((r) => ({ ...r, password: e.target.value }))}
                         placeholder="Create password"
@@ -404,7 +403,7 @@ export default function QuartersApplyLogin() {
                       <input
                         type={showRegConfirmPass ? "text" : "password"}
                         autoComplete="new-password"
-                        className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.confirmPassword}
                         onChange={(e) => setReg((r) => ({ ...r, confirmPassword: e.target.value }))}
                         placeholder="Re-enter password"
@@ -442,7 +441,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="submit"
-                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3.5 text-sm font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isLoading}
                 >
                   {isLoading ? "Registering..." : "Submit Registration"}
@@ -450,7 +449,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="button"
-                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
                   onClick={() => {
                     setError("");
                     setMode("login");
@@ -458,6 +457,10 @@ export default function QuartersApplyLogin() {
                 >
                   Back to Login
                 </button>
+
+                <p className="m-0 text-center text-[11px] text-slate-400">
+                  &copy; 2026 Paradip Port Authority. All rights reserved.
+                </p>
               </form>
             </div>
           </div>
@@ -476,7 +479,7 @@ export default function QuartersApplyLogin() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4">
+    <div className="relative h-screen w-full overflow-hidden">
       <style>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
@@ -484,7 +487,9 @@ export default function QuartersApplyLogin() {
           100% { background-position: 0% 50%; }
         }
         .employee-gradient-bg {
-          position: absolute; inset: 0; z-index: 0;
+          position: absolute;
+          inset: 0;
+          z-index: 0;
           background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #e87722, #1a2e5a);
           background-size: 300% 300%;
           animation: gradientMove 15s ease-in-out infinite;
@@ -497,20 +502,20 @@ export default function QuartersApplyLogin() {
       `}</style>
       <div className="employee-gradient-bg" />
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-1rem)] w-[min(96vw,1320px)] max-w-[1320px] flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl sm:min-h-[calc(100vh-1.5rem)] sm:rounded-[28px] lg:min-h-[calc(100vh-2rem)]">
+      <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
         <TopNavbar navTextColor="dark" />
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-1 sm:px-4 sm:pb-5 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-5 lg:px-6 lg:pb-6 lg:pt-1 xl:px-8">
-          <div className="hidden items-start justify-end pt-1 lg:flex lg:self-center">
+        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
+          <div className="hidden items-center justify-center lg:flex lg:self-stretch">
             <img
-              src={adminBuilding}
+              src={Image}
               alt="Paradip Port Authority building"
-              className="h-auto max-h-[min(60vh,640px)] w-full max-w-[720px] rounded-[24px] object-cover xl:max-w-[780px]"
+              className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] object-contain"
             />
           </div>
 
-          <div className="flex items-start justify-start pt-2 sm:pt-3 lg:pt-1">
-            <div className="flex w-full max-w-[500px] flex-col gap-3.5 rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
+          <div className="flex items-center justify-center lg:justify-start">
+            <div className="flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
               <div>
                 <div className="mb-4 flex items-center gap-4">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
@@ -541,7 +546,7 @@ export default function QuartersApplyLogin() {
                     <input
                       type="text"
                       autoComplete="username"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-2.5 pr-10 text-[12.5px] text-blue-950 transition-all duration-200 placeholder:text-slate-300 sm:text-[13px]"
+                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -571,7 +576,7 @@ export default function QuartersApplyLogin() {
                     <input
                       type={showPass ? "text" : "password"}
                       autoComplete="current-password"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-2.5 pr-10 text-[12.5px] text-blue-950 transition-all duration-200 placeholder:text-slate-300 sm:text-[13px]"
+                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -604,7 +609,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="submit"
-                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3 text-[13px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : "Login as Employee"}
@@ -612,7 +617,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="button"
-                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-[13px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 sm:text-sm"
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
                   onClick={async () => {
                     setError("");
                     await fetchClasses();

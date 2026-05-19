@@ -33,7 +33,11 @@ const TERMS_AND_CONDITIONS = [
   "Prior permission is required before hyperlinks are directed from any website to this website. Permission for the same, stating the nature of the content on the pages from where the link has to be given and the exact language of the hyperlink should be obtained by sending a request at dmmsppt@paradipport.gov.in.",
 ];
 
-export default function TopNavbar({ titleColor = "text-blue-950", navTextColor = "light" }) {
+export default function TopNavbar({
+  titleColor = "text-blue-950",
+  navTextColor = "light",
+  subtitle,
+}) {
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -41,6 +45,7 @@ export default function TopNavbar({ titleColor = "text-blue-950", navTextColor =
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const isDarkText = navTextColor === "dark";
+  const brandSubtitle = subtitle ?? (location.pathname === "/" ? "" : "Land Management System");
 
   const dropdownPaths = [...DROPDOWN_ITEMS.filter((item) => item.to).map((item) => item.to), "/Quarters/Apply"];
   const isDropdownActive = dropdownPaths.includes(location.pathname);
@@ -73,6 +78,15 @@ export default function TopNavbar({ titleColor = "text-blue-950", navTextColor =
               <span className={`mozilla-text-Header block text-base font-bold leading-tight sm:text-[20px] lg:text-[25px] ${titleColor}`}>
                 PARADIP PORT AUTHORITY
               </span>
+              {brandSubtitle ? (
+                <span
+                  className={`mt-0.5 block text-[10px] font-medium leading-tight sm:text-[11px] lg:text-[12px] ${
+                    isDarkText ? "text-blue-950/75" : "text-white/80"
+                  }`}
+                >
+                  {brandSubtitle}
+                </span>
+              ) : null}
             </div>
           </div>
 

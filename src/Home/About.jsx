@@ -14,23 +14,12 @@ export default function About() {
 
         <main className="relative z-10 flex justify-center px-4 py-8 sm:px-6 md:px-8 lg:px-12">
           <div className="w-full max-w-[900px]">
-            <h1 className="mt-2 text-[24px] font-bold leading-tight tracking-[-0.01em] text-blue-950 sm:text-[32px] lg:text-[40px]">
-              Land Data Management System
-            </h1>
 
-            <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.32em] text-[#e87722] sm:text-[11px]">
-              About
-            </p>
-
-            <div className="my-4 flex items-center sm:my-5">
-              <div className="h-[2px] w-11 shrink-0 rounded-sm bg-[#e87722]" />
-              <div className="h-px flex-1 bg-slate-900/10" />
-            </div>
 
             <section className="rounded-[20px] border border-slate-900/10 bg-white/90 px-5 py-5 shadow-[0_20px_48px_rgba(15,23,42,0.08)] backdrop-blur-[10px] sm:px-7 sm:py-7 lg:px-10 lg:py-9">
-              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-blue-950/55 sm:text-[11px]">
-                Overview
-              </p>
+            <h1 className="mt-2 text-[24px] font-bold leading-tight tracking-[-0.01em] text-blue-950 sm:text-[32px] lg:text-[40px]">
+              About
+            </h1>
 
               <p className="mb-4 text-[14px] font-medium leading-[1.35] text-blue-950 sm:text-[18px] lg:text-[20px]">
                 A centralized platform for managing port land records, lease data, and estate
