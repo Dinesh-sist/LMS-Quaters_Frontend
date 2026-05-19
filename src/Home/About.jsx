@@ -10,7 +10,7 @@ export default function About() {
       <div className="fixed left-[-80px] top-[-80px] -z-10 h-[340px] w-[340px] rounded-full bg-[radial-gradient(circle,rgba(30,58,138,0.10)_0%,transparent_70%)]" />
 
       <div className="relative z-10">
-        <TopNavbar navTextColor="dark" />
+        <TopNavbar navTextColor="light" />
 
         <main className="relative z-10 flex justify-center px-4 py-8 sm:px-6 md:px-8 lg:px-12">
           <div className="w-full max-w-[900px]">

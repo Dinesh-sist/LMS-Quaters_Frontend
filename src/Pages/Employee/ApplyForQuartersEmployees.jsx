@@ -143,10 +143,12 @@ export default function ApplyForQuartersEmployees() {
 
           <main className="flex-1 overflow-y-auto px-9 py-7 bg-[#f4f6fa]">
             <div className="mb-[22px]">
-              <h2 className="text-xl font-extrabold text-slate-800 tracking-[-0.02em] mb-1.5">
+              <h1 className="text-2xl font-bold text-slate-900">
                 Application Form for Quarter Allotment for Employees
-              </h2>
-              <div className="h-[3px] w-[52px] rounded-sm bg-[#e87722]" />
+              </h1>
+              <p className="mt-1 text-sm text-slate-500">
+                Land Data Management System - Employee Application
+              </p>
             </div>
 
             <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] px-8 py-7">

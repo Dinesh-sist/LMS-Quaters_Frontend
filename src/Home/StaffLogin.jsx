@@ -5,7 +5,8 @@ import Image2 from "../assets/image7.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
 
-const ROLES = ["Admin", "Estate Officer", "Finance", "Technical"];
+
+const ROLES = ["Admin"];
 
 export default function StaffLogin() {
   const [username, setUsername] = useState("");
@@ -39,7 +40,7 @@ export default function StaffLogin() {
       }
 
       setAuth({ token: data.token, user: data.user });
-      navigate("/admin/verify", { replace: true });
+      navigate("/admin/dashboard", { replace: true });
     } catch (e2) {
       setError(e2?.message || "Login failed.");
     } finally {
@@ -73,7 +74,7 @@ export default function StaffLogin() {
       <div className="sl-gradient-bg" />
 
       <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
-        <TopNavbar navTextColor="dark" />
+        <TopNavbar navTextColor="light" />
 
         <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
           <div className="hidden items-center justify-center lg:flex lg:self-stretch">
@@ -138,7 +139,7 @@ export default function StaffLogin() {
                     height="16"
                     viewBox="0 0 20 20"
                     fill="none"
-                  >
+                                      >
                     <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" />
                     <path
                       d="M3 18c0-4 3.134-6 7-6s7 2 7 6"

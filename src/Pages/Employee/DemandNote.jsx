@@ -15,7 +15,6 @@ export default function DemandNote() {
 
         <div className="flex-1 flex overflow-hidden min-h-0">
           <Sidebar />
-
           <main className="flex-1 overflow-y-auto px-9 py-7 bg-[#f4f6fa]">
             <div className="mb-[22px]">
               <h2 className="text-xl font-extrabold text-slate-800 tracking-[-0.02em] mb-1.5">

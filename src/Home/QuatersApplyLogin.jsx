@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
-import Image from "../assets/Image8.png";
+import Image from "../assets/Image10.png";
 import Logo from "../assets/Logo.png";
 import { getEmployeeClasses, login, lookupEmployee, registerEmployee } from "../api";
 import { setAuth } from "../auth";
@@ -201,7 +201,7 @@ export default function QuartersApplyLogin() {
         <div className="ql-gradient-bg" />
 
         <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
-          <TopNavbar navTextColor="dark" />
+          <TopNavbar navTextColor="light" />
 
           <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
             <div className="hidden items-center justify-center lg:flex lg:self-stretch">
@@ -503,7 +503,7 @@ export default function QuartersApplyLogin() {
       <div className="employee-gradient-bg" />
 
       <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
-        <TopNavbar navTextColor="dark" />
+        <TopNavbar navTextColor="light" />
 
         <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
           <div className="hidden items-center justify-center lg:flex lg:self-stretch">
