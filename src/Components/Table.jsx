@@ -142,6 +142,7 @@ export default function AgGridTable({
   showExport = true,
   showFilter = true,
   loading    = false,
+  searchPlaceholder = "Search name, ID, app no...",
 }) {
   const gridRef = useRef(null);
   const [quickFilter,   setQuickFilter]   = useState("");
@@ -228,9 +229,9 @@ export default function AgGridTable({
           flex:              0,
           suppressSizeToFit: true,
           sortable:          col.sortable !== false,
-          filter:            col.filterable === false ? false : "agTextColumnFilter",
-          floatingFilter:    col.filterable !== false,
-          suppressMenu:      false,
+          filter:            showFilter && col.filterable !== false ? "agTextColumnFilter" : false,
+          floatingFilter:    showFilter && col.filterable !== false,
+          suppressMenu:      !showFilter,
           resizable:         false,
           suppressMovable:   true,
           valueGetter:
@@ -256,7 +257,7 @@ export default function AgGridTable({
         return def;
       }),
     ],
-    [columns, computedColumnWidths, contentAutoWidth, serialValueGetter]
+    [columns, computedColumnWidths, contentAutoWidth, serialValueGetter, showFilter]
   );
 
   const defaultColDef = useMemo(
@@ -503,7 +504,7 @@ export default function AgGridTable({
               </svg>
               <input
                 type="text"
-                placeholder="Search name, ID, app no..."
+                placeholder={searchPlaceholder}
                 value={quickFilter}
                 onChange={(e) => setQuickFilter(e.target.value)}
                 style={{

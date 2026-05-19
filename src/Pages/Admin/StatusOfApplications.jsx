@@ -71,253 +71,6 @@ const mockData = [
     rosterNo: "RST-103",
     result: "Rejected",
   },
-   {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  },
-   {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  }, {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  }, {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  },
-   {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  },
-   {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  }, {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  }, {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  }, {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  }, {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  }, {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  },
-  
   {
     id: 4,
     appNo: 2601,
@@ -345,50 +98,19 @@ const mockData = [
 
 const statusStyles = {
   Approved: "bg-emerald-100 text-emerald-700",
-  Rejected: "bg-rose-100 text-rose-700",
-  Pending: "bg-amber-100 text-amber-700",
+  Rejected:  "bg-rose-100 text-rose-700",
+  Pending:   "bg-amber-100 text-amber-700",
 };
 
-const approved = mockData.filter((item) => item.result === "Approved").length;
-const pending = mockData.filter((item) => item.result === "Pending").length;
-const rejected = mockData.filter((item) => item.result === "Rejected").length;
-
-const statCards = [
-  {
-    label: "Total Applications",
-    value: String(mockData.length),
-    color: "from-[#7c2df6] to-[#4f36f5]",
-    icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
-  },
-  {
-    label: "Pending Review",
-    value: String(pending),
-    color: "from-[#3776f3] to-[#2563eb]",
-    icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
-  },
-  {
-    label: "Under Scrutiny",
-    value: String(rejected),
-    color: "from-[#ff1461] to-[#ef0059]",
-    icon: "M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z",
-  },
-  {
-    label: "Shortlisted",
-    value: String(approved),
-    color: "from-[#ff9f11] to-[#ff7a00]",
-    icon: "M5 10l4 4L19 4",
-  },
-];
-
 const columns = [
-  { key: "appNo", header: "APP NO", minWidth: 130 },
-  { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
-  { key: "empName", header: "EMP NAME", minWidth: 220 },
-  { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
-  { key: "dept", header: "DEPARTMENT", minWidth: 180 },
-  { key: "currentQtr", header: "CURRENT QTR", minWidth: 145 },
-  { key: "reqQtr", header: "REQUESTED QTR", minWidth: 145 },
-  { key: "reqDate", header: "REQUEST DATE", minWidth: 140 },
+  { key: "appNo",      header: "APP NO",         minWidth: 130 },
+  { key: "empId",      header: "EMP ID",         renderer: "empId", minWidth: 135 },
+  { key: "empName",    header: "EMP NAME",       minWidth: 220 },
+  { key: "class",      header: "CLASS",          renderer: "class", minWidth: 155 },
+  { key: "dept",       header: "DEPARTMENT",     minWidth: 180 },
+  { key: "currentQtr", header: "CURRENT QTR",    minWidth: 145 },
+  { key: "reqQtr",     header: "REQUESTED QTR",  minWidth: 145 },
+  { key: "reqDate",    header: "REQUEST DATE",   minWidth: 140 },
   {
     key: "result",
     header: "STATUS",
@@ -405,34 +127,32 @@ const columns = [
   },
 ];
 
-function StatCards() {
+/* ── Option 2: Title row with inline metric badges ── */
+function PageSummaryBar() {
+
+  const Shortlished =  mockData.filter((d) => d.result === "Shortlisted").length;
+
+    const Roster = mockData.filter((d) => d.result === "Approved").length;
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {statCards.map((card) => (
-        <div
-          key={card.label}
-          className={`relative overflow-hidden rounded-[22px] bg-gradient-to-r ${card.color} px-6 py-5 text-white shadow-[0_10px_28px_rgba(15,23,42,0.16)]`}
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[18px] font-extrabold leading-none sm:text-[20px]">
-                {card.value}
-              </p>
-              <p className="mt-3 text-base font-semibold leading-tight text-white/95">
-                {card.label}
-              </p>
-            </div>
-            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/16">
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
-              </svg>
-            </div>
-          </div>
-          <div className="absolute -bottom-5 -right-3 h-16 w-16 rounded-full bg-white/10" />
-          <div className="absolute -bottom-1 right-6 h-8 w-8 rounded-full bg-white/10" />
-        </div>
-      ))}
-    </div>
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
+      <span className="flex-1 text-sm font-semibold text-slate-700 min-w-[160px]">
+        Status of Applications
+      </span>
+      <div className="flex flex-wrap gap-2">
+      
+      
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          {Shortlished} Shortlisted
+        </span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+          {Roster} Roster
+        </span>
+        
+      </div>
+    </div>  
   );
 }
 
@@ -442,16 +162,18 @@ export default function StatusOfApplications() {
       title="Status of Applications"
       subtitle="Land Data Management System - Application Tracker"
     >
-      <StatCards />
+      <PageSummaryBar />
 
-      <AgGridTable
-        columns={columns}
-        rows={mockData}
-        searchable
-        pageSize={8}
-        showExport
-        showFilter
-      />
+      <div className="w-full overflow-x-auto rounded-xl">
+        <AgGridTable
+          columns={columns}
+          rows={mockData}
+          searchable
+          pageSize={8}
+          showExport
+          showFilter
+        />
+      </div>
     </AdminLayout>
   );
 }

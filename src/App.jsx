@@ -3,7 +3,6 @@ import './App.css'
 import './index.css'
 import Home from './Home/Home'
 import About from './Home/About'
-import Dashboard from './Home/Dashboard'
 import QuartersApplyLogin from './Home/QuatersApplyLogin'
 import StaffLogin from './Home/StaffLogin'
 import ApplyForQuarters from './Pages/Employee/ApplyForQuarters'
@@ -13,7 +12,9 @@ import DemandNote from './Pages/Employee/DemandNote'
 import VerifyQuarterApplication from './Pages/Admin/VerifyQuaterApplication'
 import StatusOfApplications from './Pages/Admin/StatusOfApplications'
 import HouseAllotmentCommitteeHistory from './Pages/Admin/HouseAllotmentCommitteeHistory'
+import AdminDashboard from './Pages/Admin/AdminUI/dashboard'
 import ProtectedRoute from './Pages/ProtectedRoute'
+
 
 function App() {
   return (
@@ -21,7 +22,14 @@ function App() {
       <Routes>
         <Route path="/"                    element={<Home />} />
         <Route path="/about"               element={<About />} />
-        <Route path="/dashboard"           element={<Dashboard />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/QuartersApplyLogin"  element={<QuartersApplyLogin />} />
         <Route
           path="/Quarters/Apply"
@@ -60,7 +68,15 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute role="admin">
-              <Navigate to="/admin/verify" replace />
+              <Navigate to="/admin/dashboard" replace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />
