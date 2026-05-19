@@ -2,6 +2,18 @@ import { Link, useLocation } from "react-router-dom";
 
 const sidebarNav = [
   {
+    key: "dashboard",
+    label: "Dashboard",
+    to: "/admin/dashboard",
+    icon: (
+      <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+
+
+  },
+  {
     key: "verify",
     label: "Verify Quarter Applications",
     to: "/admin/verify",
@@ -41,13 +53,10 @@ export default function AdminSideNav({ onNavigate }) {
 
   return (
     <aside className="h-full w-[252px] shrink-0 bg-white flex flex-col overflow-hidden border-r border-[#dde3ee]">
-      <div className="px-5 pt-[22px] pb-[5px] text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em]">
+      <div className="px-5 pt-[22px] pb-[15px] text-[13px] font-bold text-slate-500 uppercase tracking-[0.5px]">
         Admin Management
       </div>
 
-      <div className="px-5 pt-1 pb-4 text-sm font-bold text-slate-800">
-        Admin Services
-      </div>
 
       <nav className="px-2.5 flex-1">
         {sidebarNav.map((item) => {
@@ -73,29 +82,6 @@ export default function AdminSideNav({ onNavigate }) {
         })}
       </nav>
 
-      <div className="h-px bg-[#e9eef4] mx-4 my-1" />
-
-      <div className="mx-3 mb-4 rounded-[10px] bg-slate-50 border border-[#e2e8f0] px-4 py-3.5">
-        <div className="text-[13px] font-bold text-slate-800 mb-1">Need Help?</div>
-        <div className="text-[11.5px] text-slate-500 leading-[1.55] mb-2.5">
-          Contact our support team for assistance
-        </div>
-
-        <div className="flex items-center gap-1.5 text-[11.5px] text-slate-600 mb-[5px]">
-          <svg width="13" height="13" fill="none" stroke="#e87722" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 2.08 5.18 2 2 0 0 1 4.11 3h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 17.92z" />
-          </svg>
-          1800-111-XXXX
-        </div>
-
-        <div className="flex items-center gap-1.5 text-[11.5px] text-slate-600">
-          <svg width="13" height="13" fill="none" stroke="#e87722" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-          </svg>
-          support@ppa.gov.in
-        </div>
-      </div>
     </aside>
   );
 }

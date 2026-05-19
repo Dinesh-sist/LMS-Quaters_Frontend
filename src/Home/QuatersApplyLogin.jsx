@@ -476,7 +476,7 @@ export default function QuartersApplyLogin() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4">
+    <div className="relative min-h-screen w-full overflow-hidden px-2 py-2 sm:px-3 sm:py-3 lg:px-4 lg:py-4">
       <style>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
@@ -497,23 +497,23 @@ export default function QuartersApplyLogin() {
       `}</style>
       <div className="employee-gradient-bg" />
 
-      <div className="relative z-10 flex h-[92vh] w-[min(99.5vw,1480px)] max-h-[1220px] max-w-[1800px] flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl sm:h-[93vh] sm:rounded-[32px] lg:h-[94vh]">
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-1rem)] w-[min(96vw,1320px)] max-w-[1320px] flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl sm:min-h-[calc(100vh-1.5rem)] sm:rounded-[28px] lg:min-h-[calc(100vh-2rem)]">
         <TopNavbar navTextColor="dark" />
 
-        <div className="min-h-0 overflow-auto flex-1 px-3 pb-4 pt-1 sm:px-5 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[1.08fr_0.92fr] lg:gap-6 lg:px-8 lg:pb-8 lg:pt-1 xl:px-10">
-          <div className="hidden items-start justify-end pt-1 lg:flex lg:h-[clamp(580px,72vh,760px)]">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-1 sm:px-4 sm:pb-5 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-5 lg:px-6 lg:pb-6 lg:pt-1 xl:px-8">
+          <div className="hidden items-start justify-end pt-1 lg:flex lg:self-center">
             <img
               src={adminBuilding}
               alt="Paradip Port Authority building"
-              className="h-full w-full max-w-[660px] rounded-[28px] object-cover xl:max-w-[760px]"
+              className="h-auto max-h-[min(60vh,640px)] w-full max-w-[720px] rounded-[24px] object-cover xl:max-w-[780px]"
             />
           </div>
 
-          <div className="flex items-start justify-start pt-3 sm:pt-4 lg:h-[clamp(580px,64vh,680px)] lg:pt-1">
-            <div className="flex h-full w-full max-w-[720px] flex-col gap-4 rounded-[24px] border border-slate-200 bg-white px-5 py-6 shadow-[0_4px_32px_rgba(30,58,138,0.09)] sm:rounded-3xl sm:px-7 sm:py-8 md:px-9 lg:px-10 xl:px-12">
+          <div className="flex items-start justify-start pt-2 sm:pt-3 lg:pt-1">
+            <div className="flex w-full max-w-[500px] flex-col gap-3.5 rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
               <div>
                 <div className="mb-4 flex items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2.5 shadow-sm">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
                     <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
                   </div>
                   <div>
@@ -521,7 +521,7 @@ export default function QuartersApplyLogin() {
                       Paradip Port Authority
                     </p>
                     <h1
-                      className="m-0 mt-2 text-[24px] font-bold text-slate-900 sm:text-[28px] lg:text-[38px]"
+                      className="m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[32px]"
                       style={{ fontFamily: "Georgia, serif" }}
                     >
                       Employee Login
@@ -529,19 +529,19 @@ export default function QuartersApplyLogin() {
                   </div>
                 </div>
 
-                <p className="m-0 text-[13px] leading-6 text-slate-400">
+                <p className="m-0 text-[12px] leading-5 text-slate-400 sm:text-[13px]">
                   Sign in to access the quarters application portal with your employee credentials.
                 </p>
               </div>
 
-              <form className="flex flex-1 flex-col gap-5" onSubmit={handleLogin}>
+              <form className="flex flex-1 flex-col gap-4" onSubmit={handleLogin}>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Username</label>
                   <div className="relative">
                     <input
                       type="text"
                       autoComplete="username"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-2.5 pr-10 text-[12.5px] text-blue-950 transition-all duration-200 placeholder:text-slate-300 sm:text-[13px]"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -571,7 +571,7 @@ export default function QuartersApplyLogin() {
                     <input
                       type={showPass ? "text" : "password"}
                       autoComplete="current-password"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-4 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-2.5 pr-10 text-[12.5px] text-blue-950 transition-all duration-200 placeholder:text-slate-300 sm:text-[13px]"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -604,7 +604,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="submit"
-                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3.5 text-sm font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3 text-[13px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : "Login as Employee"}
@@ -612,7 +612,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="button"
-                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-[13px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 sm:text-sm"
                   onClick={async () => {
                     setError("");
                     await fetchClasses();

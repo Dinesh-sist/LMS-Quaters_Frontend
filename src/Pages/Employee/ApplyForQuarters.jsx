@@ -16,19 +16,19 @@ const QUARTER_TYPES = [
 ];
 
 const CATEGORIES = [
-  "Category A – Central Govt. Undertaking",
-  "Category B – State Govt. Undertaking",
-  "Category C – Private / Others",
+  "Category A - Central Govt. Undertaking",
+  "Category B - State Govt. Undertaking",
+  "Category C - Private / Others",
 ];
 
 const HODS = [
-  "HOD – Civil Engineering",
-  "HOD – Mechanical Engineering",
-  "HOD – Electrical Engineering",
-  "HOD – Finance & Accounts",
-  "HOD – Human Resources",
-  "HOD – Operations",
-  "HOD – Security",
+  "HOD - Civil Engineering",
+  "HOD - Mechanical Engineering",
+  "HOD - Electrical Engineering",
+  "HOD - Finance & Accounts",
+  "HOD - Human Resources",
+  "HOD - Operations",
+  "HOD - Security",
 ];
 
 const HOD_DEPTS_FALLBACK = HODS.map((h) =>
@@ -82,10 +82,9 @@ function allowedHodSetForCategory(category) {
 
 const inputCls = (focused, id) =>
   `w-full box-border rounded-[7px] px-3 py-[9px] text-[13.5px] text-slate-800 bg-white outline-none transition-all duration-200 font-[inherit]
-  ${
-    focused === id
-      ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
-      : "border-[1.5px] border-[#e2e8f0]"
+  ${focused === id
+    ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
+    : "border-[1.5px] border-[#e2e8f0]"
   }`;
 
 const selectCls = (focused, id) =>

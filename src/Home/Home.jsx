@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import bgImage from "../assets/AdminBuilding.jpg";
 
+
+
+
 export default function Home() {
   return (
     <div className="relative h-screen w-full overflow-hidden">

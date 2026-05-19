@@ -45,13 +45,14 @@ const sidebarNav = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }) {
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleApplyClick = () => {
     if (location.pathname === "/Quarters/Apply") return;
     navigate("/Quarters/Apply");
+    onNavigate?.();
   };
 
 
@@ -104,6 +105,7 @@ export default function Sidebar() {
               <Link
                 key={item.key}
                 to={item.to}
+                onClick={onNavigate}
                 className={className}
               >
                 <span className={`flex items-center shrink-0 ${active ? "text-[#e87722]" : "text-slate-500"}`}>

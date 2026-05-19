@@ -36,7 +36,7 @@ export default function TopHeader({
   const initials = initial || getInitials(displayName);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-blue-950 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-5 lg:px-6">
         <div className="flex min-w-0 items-center gap-3">
           {typeof onOpenMenu === "function" && (
@@ -60,9 +60,9 @@ export default function TopHeader({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <span className="hidden text-sm text-gray-600 sm:block">
+          <span className="hidden text-sm text-white sm:block">
             Welcome{" "}
-            <span className="tinos-regular text-[18px] font-semibold text-indigo-900 lg:text-[24px]">
+            <span className="tinos-regular text-[18px] font-semibold text-orange-400 lg:text-[24px]">
               {displayName}
             </span>
           </span>
