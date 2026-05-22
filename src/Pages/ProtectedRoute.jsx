@@ -6,7 +6,6 @@ export default function ProtectedRoute({ children, role }) {
     const to = role === "admin" ? "/StaffLogin" : role === "employee" ? "/QuartersApplyLogin" : "/";
     return <Navigate to={to} replace />;
   }
-
   if (role) {
     const user = getUser();
     if (!user?.role || user.role !== role) return <Navigate to="/" replace />;
@@ -14,3 +13,7 @@ export default function ProtectedRoute({ children, role }) {
 
   return children;
 }
+
+
+
+
