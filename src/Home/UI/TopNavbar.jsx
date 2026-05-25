@@ -3,17 +3,17 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png";
 
 const NAV_ITEMS = [
-  { label: "Home",         to: "/",             dropdown: false },
-  { label: "About",        to: "/about",        dropdown: false },
-  { label: "Apply Online", to: null,            dropdown: true  },
-  { label: "Staff Login",  to: "/StaffLogin",   dropdown: false },
+  { label: "Home", to: "/", dropdown: false },
+  { label: "About", to: "/about", dropdown: false },
+  { label: "Apply Online", to: null, dropdown: true },
+  { label: "Staff Login", to: "/StaffLogin", dropdown: false },
 ];
 
 const DROPDOWN_ITEMS = [
-  { label: "Quarters", to: "/QuartersApplyLogin", active: true  },
-  { label: "Market",   to: null,                  active: false },
-  { label: "Lease",    to: null,                  active: false },
-  { label: "Licence",  to: null,                  active: false },
+  { label: "Quarters", to: "/QuartersApplyLogin", active: true },
+  { label: "Market", to: null, active: false },
+  { label: "Lease", to: null, active: false },
+  { label: "Licence", to: null, active: false },
 ];
 
 const TERMS_AND_CONDITIONS = [
@@ -36,22 +36,25 @@ export default function TopNavbar({
   navTextColor = "light",
   transparent = false,
 }) {
-  const location  = useLocation();
-  const navigate  = useNavigate();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [dropdownOpen,     setDropdownOpen]     = useState(false);
-  const [mobileMenuOpen,   setMobileMenuOpen]   = useState(false);
-  const [showTermsModal,   setShowTermsModal]   = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
-  const [hasReadAll,       setHasReadAll]       = useState(false);
+  const [hasReadAll, setHasReadAll] = useState(false);
 
   const scrollRef = useRef(null);
   const isDarkText = navTextColor === "dark";
 
-  const dropdownPaths    = DROPDOWN_ITEMS.filter((i) => i.to).map((i) => i.to);
+  const dropdownPaths = DROPDOWN_ITEMS.filter((i) => i.to).map((i) => i.to);
   const isDropdownActive = [...dropdownPaths, "/Quarters/Apply"].includes(location.pathname);
 
-  const closeAllMenus = () => { setDropdownOpen(false); setMobileMenuOpen(false); };
+  const closeAllMenus = () => {
+    setDropdownOpen(false);
+    setMobileMenuOpen(false);
+  };
 
   const handleQuartersClick = (e) => {
     e.preventDefault();
@@ -73,7 +76,6 @@ export default function TopNavbar({
     setShowTermsModal(false);
   };
 
-  // Detect when user has scrolled to the bottom of the terms list
   const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
@@ -81,12 +83,10 @@ export default function TopNavbar({
     if (atBottom) setHasReadAll(true);
   };
 
-  // Reset scroll state every time modal opens
   useEffect(() => {
     if (showTermsModal) {
       setHasReadAll(false);
       setHasAcceptedTerms(false);
-      // Scroll back to top each open
       setTimeout(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = 0;
       }, 0);
@@ -96,52 +96,83 @@ export default function TopNavbar({
   return (
     <>
       <style>{`
-        /* ── Scrollbar styling for terms box ── */
         .terms-scroll::-webkit-scrollbar { width: 6px; }
         .terms-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
         .terms-scroll::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 6px; }
 
-        /* ── Scroll hint fade ── */
+        @keyframes brandShimmerSweep {
+          0% {
+            transform: translate(-68%, -68%) rotate(18deg);
+          }
+          100% {
+            transform: translate(68%, 68%) rotate(18deg);
+          }
+        }
+
         .scroll-fade-wrap { position: relative; }
         .scroll-fade-wrap::after {
           content: "";
           position: absolute;
-          bottom: 0; left: 0; right: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
           height: 40px;
           background: linear-gradient(transparent, #f8fafc);
           pointer-events: none;
           transition: opacity 0.3s;
         }
         .scroll-fade-wrap.read::after { opacity: 0; }
+
+        .brand-shimmer {
+          position: relative;
+          overflow: hidden;
+          isolation: isolate;
+        }
+
+        .brand-shimmer::after {
+          content: "";
+          position: absolute;
+          inset: -62%;
+          background: linear-gradient(
+            135deg,
+            transparent 35%,
+            rgba(255, 255, 255, 0.05) 44%,
+            rgba(255, 255, 255, 0.38) 50%,
+            rgba(255, 255, 255, 0.05) 56%,
+            transparent 65%
+          );
+          animation: brandShimmerSweep 3.8s linear infinite;
+          pointer-events: none;
+          z-index: 2;
+        }
+
+        .brand-shimmer > * {
+          position: relative;
+          z-index: 1;
+        }
       `}</style>
 
-      {/* ════════════════════════════════
-          NAVBAR
-      ════════════════════════════════ */}
       <header
-        className={`px-4 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-6 ${
+        className={`px-4 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-2 ${
           transparent ? "border-0 bg-transparent" : "border-b border-white/10 bg-[#0b1f44]"
         }`}
       >
         <div className="flex items-center justify-between gap-4 px-1 py-2 sm:px-0 lg:px-0">
-
-          {/* Logo */}
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="brand-shimmer flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1">
             <img src={Logo} alt="Logo" className="w-11 rounded-2xl sm:w-12 lg:w-14" />
             <div className="min-w-0 leading-tight">
               <span className={`mozilla-text-Header block text-base font-bold leading-tight sm:text-[20px] lg:text-[25px] ${titleColor}`}>
                 PARADIP PORT AUTHORITY
               </span>
-              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white sm:text-[11px] lg:text-[12px]">
+              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.15em] text-white sm:text-[11px] lg:text-[14px]">
                 Land Management System
               </span>
             </div>
           </div>
 
-          {/* Mobile hamburger */}
           <button
             type="button"
-            onClick={() => mobileMenuOpen ? closeAllMenus() : setMobileMenuOpen(true)}
+            onClick={() => (mobileMenuOpen ? closeAllMenus() : setMobileMenuOpen(true))}
             className={`flex h-11 w-11 items-center justify-center rounded-2xl border bg-transparent transition lg:hidden ${
               isDarkText ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/20 text-white hover:bg-white/10"
             }`}
@@ -153,7 +184,7 @@ export default function TopNavbar({
                 <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
               ) : (
                 <>
-                  <path d="M3 5h14"  stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M3 5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   <path d="M3 10h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                   <path d="M3 15h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                 </>
@@ -161,7 +192,6 @@ export default function TopNavbar({
             </svg>
           </button>
 
-          {/* Desktop nav */}
           <nav className="hidden items-center gap-1 lg:flex">
             {NAV_ITEMS.map(({ label, to, dropdown }) => {
               if (dropdown) {
@@ -179,8 +209,13 @@ export default function TopNavbar({
                       }`}
                     >
                       {label}
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-                        className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}>
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                      >
                         <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
@@ -189,12 +224,18 @@ export default function TopNavbar({
                       <div className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[180px] rounded-2xl border border-slate-200 bg-white px-2 py-3 shadow-xl">
                         {DROPDOWN_ITEMS.map(({ label: dl, to: dt, active }) =>
                           active && dt ? (
-                            <Link key={dl} to={dt}
+                            <Link
+                              key={dl}
+                              to={dt}
                               onClick={dl === "Quarters" ? handleQuartersClick : () => setDropdownOpen(false)}
                               className="block rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 no-underline transition-colors hover:bg-orange-50 hover:text-orange-600"
-                            >{dl}</Link>
+                            >
+                              {dl}
+                            </Link>
                           ) : (
-                            <span key={dl} className="block cursor-not-allowed rounded-xl px-4 py-2 text-sm italic text-slate-400">{dl}</span>
+                            <span key={dl} className="block cursor-not-allowed rounded-xl px-4 py-2 text-sm italic text-slate-400">
+                              {dl}
+                            </span>
                           )
                         )}
                       </div>
@@ -205,18 +246,21 @@ export default function TopNavbar({
 
               const isActive = location.pathname === to && !isDropdownActive;
               return (
-                <Link key={label} to={to} onClick={() => setDropdownOpen(false)}
+                <Link
+                  key={label}
+                  to={to}
+                  onClick={() => setDropdownOpen(false)}
                   className={`rounded-full px-5 py-2 text-sm font-semibold no-underline transition-all ${
-                    isActive ? "bg-orange-400 text-white"
-                    : isDarkText ? "text-slate-700 hover:text-slate-950" : "text-white/85 hover:text-white"
+                    isActive ? "bg-orange-400 text-white" : isDarkText ? "text-slate-700 hover:text-slate-950" : "text-white/85 hover:text-white"
                   }`}
-                >{label}</Link>
+                >
+                  {label}
+                </Link>
               );
             })}
           </nav>
         </div>
 
-        {/* Mobile menu panel */}
         {mobileMenuOpen && (
           <div className="mt-4 ml-auto w-full max-w-[240px] rounded-[24px] border border-slate-200 bg-white p-2.5 shadow-lg sm:max-w-[260px] sm:p-3 lg:hidden">
             <nav className="flex flex-col gap-1.5 sm:gap-2">
@@ -224,13 +268,21 @@ export default function TopNavbar({
                 if (dropdown) {
                   return (
                     <div key={label} className="flex flex-col gap-1.5 sm:gap-2">
-                      <button type="button" onClick={() => setDropdownOpen((p) => !p)}
+                      <button
+                        type="button"
+                        onClick={() => setDropdownOpen((p) => !p)}
                         className={`flex min-h-[40px] w-full items-center justify-between rounded-[18px] px-3 py-2.5 text-left text-xs font-semibold transition-all sm:min-h-[42px] sm:px-3.5 sm:text-[13px] ${
                           isDropdownActive || dropdownOpen ? "bg-orange-400 text-white" : "bg-slate-50 text-slate-700 hover:bg-orange-100"
-                        }`}>
+                        }`}
+                      >
                         <span>{label}</span>
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-                          className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                        >
                           <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </button>
@@ -238,12 +290,18 @@ export default function TopNavbar({
                         <div className="rounded-[18px] bg-[#1a2e5a] p-1.5 sm:p-2">
                           {DROPDOWN_ITEMS.map(({ label: dl, to: dt, active }) =>
                             active && dt ? (
-                              <Link key={dl} to={dt}
+                              <Link
+                                key={dl}
+                                to={dt}
                                 onClick={dl === "Quarters" ? handleQuartersClick : closeAllMenus}
                                 className="block rounded-xl px-3 py-2.5 text-xs font-semibold text-white no-underline transition-colors hover:bg-white/10 sm:px-3.5 sm:text-[13px]"
-                              >{dl}</Link>
+                              >
+                                {dl}
+                              </Link>
                             ) : (
-                              <span key={dl} className="block cursor-not-allowed rounded-xl px-3 py-2.5 text-xs italic text-slate-400 sm:px-3.5 sm:text-[13px]">{dl}</span>
+                              <span key={dl} className="block cursor-not-allowed rounded-xl px-3 py-2.5 text-xs italic text-slate-400 sm:px-3.5 sm:text-[13px]">
+                                {dl}
+                              </span>
                             )
                           )}
                         </div>
@@ -253,11 +311,16 @@ export default function TopNavbar({
                 }
                 const isActive = location.pathname === to && !isDropdownActive;
                 return (
-                  <Link key={label} to={to} onClick={closeAllMenus}
+                  <Link
+                    key={label}
+                    to={to}
+                    onClick={closeAllMenus}
                     className={`flex min-h-[40px] items-center rounded-[18px] px-3 py-2.5 text-xs font-semibold no-underline transition-all sm:min-h-[42px] sm:px-3.5 sm:text-[13px] ${
                       isActive ? "bg-orange-400 text-white" : "bg-slate-50 text-slate-700 hover:bg-orange-100"
                     }`}
-                  >{label}</Link>
+                  >
+                    {label}
+                  </Link>
                 );
               })}
             </nav>
@@ -265,29 +328,30 @@ export default function TopNavbar({
         )}
       </header>
 
-      {/* ════════════════════════════════
-          TERMS & CONDITIONS MODAL
-      ════════════════════════════════ */}
       {showTermsModal && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-[4px]"
-          onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleCloseModal();
+          }}
         >
           <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-
-            {/* ── Modal Header ── */}
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08142b]">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 3l7 3.5v5.3c0 4.6-2.9 8.8-7 10.2-4.1-1.4-7-5.6-7-10.2V6.5L12 3z"
-                      stroke="#fff" strokeWidth="1.7" strokeLinejoin="round" />
+                    <path
+                      d="M12 3l7 3.5v5.3c0 4.6-2.9 8.8-7 10.2-4.1-1.4-7-5.6-7-10.2V6.5L12 3z"
+                      stroke="#fff"
+                      strokeWidth="1.7"
+                      strokeLinejoin="round"
+                    />
                     <path d="M9.5 12.1l1.7 1.7 3.5-3.8" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </div>
                 <div>
                   <h2 className="text-[17px] font-bold text-slate-900">Terms and Conditions</h2>
-                  <p className="text-[12px] text-slate-500">Paradip Port Authority — Official Notice</p>
+                  <p className="text-[12px] text-slate-500">Paradip Port Authority - Official Notice</p>
                 </div>
               </div>
               <button
@@ -302,7 +366,6 @@ export default function TopNavbar({
               </button>
             </div>
 
-            {/* ── Scroll hint banner ── */}
             {!hasReadAll && (
               <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-6 py-2.5">
                 <svg width="15" height="15" viewBox="0 0 20 20" fill="none" className="shrink-0 text-amber-600">
@@ -327,7 +390,6 @@ export default function TopNavbar({
               </div>
             )}
 
-            {/* ── Scrollable Terms ── */}
             <div className={`scroll-fade-wrap ${hasReadAll ? "read" : ""}`}>
               <div
                 ref={scrollRef}
@@ -335,13 +397,20 @@ export default function TopNavbar({
                 className="terms-scroll max-h-[42vh] overflow-y-auto bg-white px-6 py-4"
               >
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                  <thead>
-
-                  </thead>
+                  <thead />
                   <tbody>
                     {TERMS_AND_CONDITIONS.map((term, i) => (
                       <tr key={i} style={{ borderBottom: "1px solid #f1f5f9", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
-                        <td style={{ padding: "10px 12px", textAlign: "center", color: "#64748b", fontWeight: 600, verticalAlign: "top", fontSize: 12 }}>
+                        <td
+                          style={{
+                            padding: "10px 12px",
+                            textAlign: "center",
+                            color: "#64748b",
+                            fontWeight: 600,
+                            verticalAlign: "top",
+                            fontSize: 12,
+                          }}
+                        >
                           {i + 1}
                         </td>
                         <td style={{ padding: "10px 12px", color: "#374151", lineHeight: 1.7, verticalAlign: "top" }}>
@@ -354,10 +423,7 @@ export default function TopNavbar({
               </div>
             </div>
 
-            {/* ── Footer: Checkbox + Buttons ── */}
             <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
-
-              {/* Checkbox row */}
               <label
                 className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-all ${
                   !hasReadAll
@@ -394,7 +460,7 @@ export default function TopNavbar({
                   <span className="block text-[13px] font-semibold text-slate-800">
                     I have read and accept all the terms and conditions.
                   </span>
-                  <span className="block text-[12px] text-slate-500 mt-0.5">
+                  <span className="mt-0.5 block text-[12px] text-slate-500">
                     {hasReadAll
                       ? "You may now tick this box to confirm your acceptance."
                       : "Scroll through all terms above to enable this checkbox."}
@@ -402,7 +468,6 @@ export default function TopNavbar({
                 </span>
               </label>
 
-              {/* Action buttons */}
               <div className="mt-4 flex items-center justify-end gap-3">
                 <button
                   type="button"
@@ -426,7 +491,6 @@ export default function TopNavbar({
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       )}

@@ -118,30 +118,7 @@ export default function Sidebar({ onNavigate }) {
         </nav>
 
         {/* Divider */}
-        <div className="h-px bg-[#e9eef4] mx-4 my-1" />
-
-        {/* Need Help box */}
-        <div className="mx-3 mb-4 rounded-[10px] bg-slate-50 border border-[#e2e8f0] px-4 py-3.5">
-          <div className="text-[13px] font-bold text-slate-800 mb-1">Need Help?</div>
-          <div className="text-[11.5px] text-slate-500 leading-[1.55] mb-2.5">
-            Contact our support team for assistance
-          </div>
-
-          <div className="flex items-center gap-1.5 text-[11.5px] text-slate-600 mb-[5px]">
-            <svg width="13" height="13" fill="none" stroke="#e87722" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 2.08 5.18 2 2 0 0 1 4.11 3h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 10.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.35 1.85.59 2.81.72A2 2 0 0 1 22 17.92z" />
-            </svg>
-            1800-111-XXXX
-          </div>
-
-          <div className="flex items-center gap-1.5 text-[11.5px] text-slate-600">
-            <svg width="13" height="13" fill="none" stroke="#e87722" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-            support@ppa.gov.in
-          </div>
-        </div>
+        
       </aside>
   );
 }

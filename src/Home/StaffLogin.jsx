@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
-import Image2 from "../assets/image7.png";
+import Image2 from "../assets/image8.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
 
@@ -56,6 +56,16 @@ export default function StaffLogin() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+        @keyframes loginCardEnter {
+          0% {
+            opacity: 0;
+            transform: translate3d(75px, 0, 0);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+          }
+        }
         .sl-gradient-bg {
           position: absolute;
           inset: 0;
@@ -64,10 +74,20 @@ export default function StaffLogin() {
           background-size: 300% 300%;
           animation: gradientMove 15s ease-in-out infinite;
         }
+        .sl-login-card {
+          animation: loginCardEnter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+          will-change: transform, opacity;
+        }
         .sl-input:focus {
           border-color: #1e3a8a !important;
           outline: none;
           box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sl-gradient-bg,
+          .sl-login-card {
+            animation: none !important;
+          }
         }
       `}</style>
 
@@ -87,7 +107,7 @@ export default function StaffLogin() {
 
           <div className="flex items-center justify-center lg:justify-start">
             <form
-              className="flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8"
+              className="sl-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8"
               onSubmit={handleSubmit}
             >
               <div>

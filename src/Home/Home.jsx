@@ -15,10 +15,53 @@ export default function Home() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+        @keyframes heroBgFadeIn {
+          0% {
+            opacity: 0.18;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+        @keyframes heroHeadingSlideIn {
+          0% {
+            opacity: 0;
+            transform: translateX(-48px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes navbarDropIn {
+          0% {
+            opacity: 0;
+            transform: translateY(-36px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
         .gradient-animated {
           background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #c17f2f, #1a2e5a);
           background-size: 300% 300%;
           animation: gradientMove 15s ease-in-out infinite;
+        }
+        .hero-bg-image {
+          opacity: 0.18;
+          animation: heroBgFadeIn 0.85s ease-out forwards;
+          will-change: opacity;
+        }
+        .hero-heading {
+          opacity: 0;
+          animation: heroHeadingSlideIn 0.9s ease-out 0.8s forwards;
+          will-change: opacity, transform;
+        }
+        .hero-navbar {
+          opacity: 0;
+          animation: navbarDropIn 0.9s ease-out 0.8s forwards;
+          will-change: opacity, transform;
         }
       `}</style>
 
@@ -33,7 +76,10 @@ export default function Home() {
           src={bgImage}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-cover object-center brightness-100 saturate-[1.2]"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          className="hero-bg-image absolute inset-0 w-full h-full object-cover object-center brightness-100 saturate-[1.2]"
         />
 
         {/* Dark gradient overlay */}
@@ -58,15 +104,17 @@ export default function Home() {
         <div className="relative z-10 flex h-full flex-col">
 
           {/* Navbar */}
-          <TopNavbar titleColor="text-white" transparent />
+          <div className="hero-navbar">
+            <TopNavbar titleColor="text-white" transparent />
+          </div>
 
           {/* Hero body */}
-          <main className="flex-1 flex items-end pb-8 px-6 sm:pb-10 sm:px-10 md:pb-12 md:px-12">
+          <main className="flex-1 flex items-center pb-8 px-6 sm:pb-10 sm:px-10 md:pb-12 md:px-12">
             <section className="flex flex-col gap-3 sm:gap-4 max-w-[90%] sm:max-w-[480px]">
 
               {/* Heading */}
               <h1
-                className="font-extrabold leading-[1.05] text-white/80 tracking-tight"
+                className="hero-heading font-extrabold leading-[1.05] text-white/80 tracking-tight"
                 style={{ fontSize: "clamp(1.8rem, 5vw, 5rem)", textShadow: "0 2px 24px rgba(0,0,0,0.35)" }}
               >
                 Land Management
@@ -75,14 +123,7 @@ export default function Home() {
               </h1>
 
               {/* Description */}
-              <p
-                className="text-sm sm:text-sm leading-relaxed text-blue-100 max-w-[360px]"
-                style={{ textShadow: "0 1px 8px rgba(0,0,0,0.4)" }}
-              >
-                A unified land data management portal for vacancy discovery,
-                online applications, and estate administration.
-              </p>
-
+              
               
 
               {/* CTA buttons */}
