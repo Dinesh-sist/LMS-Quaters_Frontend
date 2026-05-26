@@ -31,7 +31,11 @@ const TERMS_AND_CONDITIONS = [
   "Prior permission is required before hyperlinks are directed from any website to this website. Permission for the same, stating the nature of the content on the pages from where the link has to be given and the exact language of the hyperlink should be obtained by sending a request at dmmsppt@paradipport.gov.in.",
 ];
 
-export default function TopNavbar({ titleColor = "text-blue-950", navTextColor = "light" }) {
+export default function TopNavbar({
+  titleColor = "text-white",
+  navTextColor = "light",
+  transparent = false,
+}) {
   const location  = useLocation();
   const navigate  = useNavigate();
 
@@ -114,7 +118,11 @@ export default function TopNavbar({ titleColor = "text-blue-950", navTextColor =
       {/* ════════════════════════════════
           NAVBAR
       ════════════════════════════════ */}
-      <header className="px-4 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-6">
+      <header
+        className={`px-4 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-6 ${
+          transparent ? "border-0 bg-transparent" : "border-b border-white/10 bg-[#0b1f44]"
+        }`}
+      >
         <div className="flex items-center justify-between gap-4 px-1 py-2 sm:px-0 lg:px-0">
 
           {/* Logo */}
@@ -123,6 +131,9 @@ export default function TopNavbar({ titleColor = "text-blue-950", navTextColor =
             <div className="min-w-0 leading-tight">
               <span className={`mozilla-text-Header block text-base font-bold leading-tight sm:text-[20px] lg:text-[25px] ${titleColor}`}>
                 PARADIP PORT AUTHORITY
+              </span>
+              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-white sm:text-[11px] lg:text-[12px]">
+                Land Management System
               </span>
             </div>
           </div>

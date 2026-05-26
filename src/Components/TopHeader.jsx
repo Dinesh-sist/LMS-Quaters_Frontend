@@ -36,14 +36,14 @@ export default function TopHeader({
   const initials = initial || getInitials(displayName);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-blue-950 shadow-sm">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1f44] shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-5 lg:px-6">
         <div className="flex min-w-0 items-center gap-3">
           {typeof onOpenMenu === "function" && (
             <button
               type="button"
               onClick={onOpenMenu}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white lg:hidden"
               aria-label="Open sidebar"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ export default function TopHeader({
               {displayName}
             </span>
           </span>
-          <div className="hidden h-7 w-px bg-gray-200 lg:block" />
+          <div className="hidden h-7 w-px bg-white/20 lg:block" />
           <Info
             initial={initials}
             role={roleKey}

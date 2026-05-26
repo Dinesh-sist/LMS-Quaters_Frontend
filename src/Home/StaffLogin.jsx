@@ -74,7 +74,7 @@ export default function StaffLogin() {
       <div className="sl-gradient-bg" />
 
       <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
-        <TopNavbar navTextColor="dark" />
+        <TopNavbar navTextColor="light" />
 
         <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
           <div className="hidden items-center justify-center lg:flex lg:self-stretch">

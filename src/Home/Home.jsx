@@ -58,7 +58,7 @@ export default function Home() {
         <div className="relative z-10 flex h-full flex-col">
 
           {/* Navbar */}
-          <TopNavbar titleColor="text-white" />
+          <TopNavbar titleColor="text-white" transparent />
 
           {/* Hero body */}
           <main className="flex-1 flex items-end pb-8 px-6 sm:pb-10 sm:px-10 md:pb-12 md:px-12">
