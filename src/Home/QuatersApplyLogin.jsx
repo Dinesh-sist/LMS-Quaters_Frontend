@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
-import Image from "../assets/Image10.png";
+import Image from "../assets/Image13.png";
 import Logo from "../assets/Logo.png";
 import { getEmployeeClasses, login, lookupEmployee, registerEmployee } from "../api";
 import { setAuth } from "../auth";
@@ -486,6 +486,16 @@ export default function QuartersApplyLogin() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
+        @keyframes loginCardEnter {
+          0% {
+            opacity: 0;
+            transform: translate3d(75px, 0, 0);
+          }
+          100% {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+          }
+        }
         .employee-gradient-bg {
           position: absolute;
           inset: 0;
@@ -494,15 +504,25 @@ export default function QuartersApplyLogin() {
           background-size: 300% 300%;
           animation: gradientMove 15s ease-in-out infinite;
         }
+        .employee-login-card {
+          animation: loginCardEnter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+          will-change: transform, opacity;
+        }
         .employee-input:focus {
           border-color: #1e3a8a !important;
           outline: none;
           box-shadow: 0 0 0 3px rgba(30,58,138,.12);
         }
+        @media (prefers-reduced-motion: reduce) {
+          .employee-gradient-bg,
+          .employee-login-card {
+            animation: none !important;
+          }
+        }
       `}</style>
       <div className="employee-gradient-bg" />
 
-      <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
+      <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-[#fcfefd] shadow-2xl">
         <TopNavbar navTextColor="light" />
 
         <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
@@ -510,21 +530,17 @@ export default function QuartersApplyLogin() {
             <img
               src={Image}
               alt="Paradip Port Authority building"
-              className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] object-contain"
+              className="h-auto max-h-[calc(100vh-100px)] w-full max-w-[min(70vw,880px)] object-contain"
             />
           </div>
 
           <div className="flex items-center justify-center lg:justify-start">
-            <div className="flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
+            <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
               <div>
                 <div className="mb-4 flex items-center gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
-                    <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
-                  </div>
+                  
                   <div>
-                    <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-orange-500">
-                      Paradip Port Authority
-                    </p>
+                    
                     <h1
                       className="m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[32px]"
                       style={{ fontFamily: "Georgia, serif" }}
