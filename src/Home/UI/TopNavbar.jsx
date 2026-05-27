@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png";
 
@@ -93,6 +94,188 @@ export default function TopNavbar({
     }
   }, [showTermsModal]);
 
+  useEffect(() => {
+    if (!showTermsModal) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showTermsModal]);
+
+  const termsModal =
+    showTermsModal && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            className="fixed inset-0 z-[1000] flex items-start justify-center overflow-y-auto bg-slate-950/60 px-4 py-4 backdrop-blur-[4px] sm:items-center sm:py-6"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) handleCloseModal();
+            }}
+          >
+            <div className="my-4 w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:my-6">
+              <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08142b]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 3l7 3.5v5.3c0 4.6-2.9 8.8-7 10.2-4.1-1.4-7-5.6-7-10.2V6.5L12 3z"
+                        stroke="#fff"
+                        strokeWidth="1.7"
+                        strokeLinejoin="round"
+                      />
+                      <path d="M9.5 12.1l1.7 1.7 3.5-3.8" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-[17px] font-bold text-slate-900">Terms and Conditions</h2>
+                    <p className="text-[12px] text-slate-500">Paradip Port Authority - Official Notice</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100"
+                  aria-label="Close"
+                >
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                    <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              {!hasReadAll && (
+                <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-6 py-2.5">
+                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none" className="shrink-0 text-amber-600">
+                    <circle cx="10" cy="10" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M10 6v4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                    <circle cx="10" cy="13.5" r="0.8" fill="currentColor" />
+                  </svg>
+                  <p className="text-[12px] font-medium text-amber-800">
+                    Please scroll down and read all terms before accepting.
+                  </p>
+                </div>
+              )}
+              {hasReadAll && (
+                <div className="flex items-center gap-2 border-b border-green-200 bg-green-50 px-6 py-2.5">
+                  <svg width="15" height="15" viewBox="0 0 20 20" fill="none" className="shrink-0 text-green-600">
+                    <circle cx="10" cy="10" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+                    <path d="M6.5 10.5l2.2 2.2 4.8-5.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <p className="text-[12px] font-medium text-green-800">
+                    You have read all the terms. You may now accept below.
+                  </p>
+                </div>
+              )}
+
+              <div className={`scroll-fade-wrap ${hasReadAll ? "read" : ""}`}>
+                <div
+                  ref={scrollRef}
+                  onScroll={handleScroll}
+                  className="terms-scroll max-h-[42vh] overflow-y-auto bg-white px-6 py-4 sm:max-h-[46vh]"
+                >
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead />
+                    <tbody>
+                      {TERMS_AND_CONDITIONS.map((term, i) => (
+                        <tr key={i} style={{ borderBottom: "1px solid #f1f5f9", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                          <td
+                            style={{
+                              padding: "10px 12px",
+                              textAlign: "center",
+                              color: "#64748b",
+                              fontWeight: 600,
+                              verticalAlign: "top",
+                              fontSize: 12,
+                            }}
+                          >
+                            {i + 1}
+                          </td>
+                          <td style={{ padding: "10px 12px", color: "#374151", lineHeight: 1.7, verticalAlign: "top" }}>
+                            {term}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
+                <label
+                  className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-all ${
+                    !hasReadAll
+                      ? "cursor-not-allowed border-slate-200 bg-slate-100 opacity-60"
+                      : hasAcceptedTerms
+                        ? "border-green-300 bg-green-50"
+                        : "border-slate-300 bg-white hover:border-slate-400"
+                  }`}
+                  title={!hasReadAll ? "Please read all terms first" : ""}
+                >
+                  <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={hasAcceptedTerms}
+                      disabled={!hasReadAll}
+                      onChange={(e) => setHasAcceptedTerms(e.target.checked)}
+                      className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                    />
+                    <span
+                      className="flex h-5 w-5 items-center justify-center rounded border-2 transition-all"
+                      style={{
+                        borderColor: hasAcceptedTerms ? "#08142b" : "#94a3b8",
+                        background: hasAcceptedTerms ? "#08142b" : "#fff",
+                      }}
+                    >
+                      {hasAcceptedTerms && (
+                        <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
+                          <path d="M5 10.5l3.1 3.1L15 6.7" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </span>
+                  </span>
+                  <span>
+                    <span className="block text-[13px] font-semibold text-slate-800">
+                      I have read and accept all the terms and conditions.
+                    </span>
+                    <span className="mt-0.5 block text-[12px] text-slate-500">
+                      {hasReadAll
+                        ? "You may now tick this box to confirm your acceptance."
+                        : "Scroll through all terms above to enable this checkbox."}
+                    </span>
+                  </span>
+                </label>
+
+                <div className="mt-4 flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAgree}
+                    disabled={!hasAcceptedTerms}
+                    className="rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white transition-all"
+                    style={{
+                      background: hasAcceptedTerms ? "#08142b" : "#cbd5e1",
+                      cursor: hasAcceptedTerms ? "pointer" : "not-allowed",
+                      boxShadow: hasAcceptedTerms ? "0 4px 14px rgba(8,20,43,0.25)" : "none",
+                    }}
+                  >
+                    Continue to Login
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
     <>
       <style>{`
@@ -153,7 +336,7 @@ export default function TopNavbar({
       `}</style>
 
       <header
-        className={`px-4 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-2 ${
+        className={`px-4 py-4 sm:px-6 sm:py-5 lg:px-10 lg:py-1 ${
           transparent ? "border-0 bg-transparent" : "border-b border-white/10 bg-[#0b1f44]"
         }`}
       >
@@ -328,172 +511,7 @@ export default function TopNavbar({
         )}
       </header>
 
-      {showTermsModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-[4px]"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) handleCloseModal();
-          }}
-        >
-          <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-6 py-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#08142b]">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 3l7 3.5v5.3c0 4.6-2.9 8.8-7 10.2-4.1-1.4-7-5.6-7-10.2V6.5L12 3z"
-                      stroke="#fff"
-                      strokeWidth="1.7"
-                      strokeLinejoin="round"
-                    />
-                    <path d="M9.5 12.1l1.7 1.7 3.5-3.8" stroke="#fff" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-[17px] font-bold text-slate-900">Terms and Conditions</h2>
-                  <p className="text-[12px] text-slate-500">Paradip Port Authority - Official Notice</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleCloseModal}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100"
-                aria-label="Close"
-              >
-                <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-                  <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-
-            {!hasReadAll && (
-              <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-6 py-2.5">
-                <svg width="15" height="15" viewBox="0 0 20 20" fill="none" className="shrink-0 text-amber-600">
-                  <circle cx="10" cy="10" r="8.5" stroke="currentColor" strokeWidth="1.6" />
-                  <path d="M10 6v4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                  <circle cx="10" cy="13.5" r="0.8" fill="currentColor" />
-                </svg>
-                <p className="text-[12px] font-medium text-amber-800">
-                  Please scroll down and read all terms before accepting.
-                </p>
-              </div>
-            )}
-            {hasReadAll && (
-              <div className="flex items-center gap-2 border-b border-green-200 bg-green-50 px-6 py-2.5">
-                <svg width="15" height="15" viewBox="0 0 20 20" fill="none" className="shrink-0 text-green-600">
-                  <circle cx="10" cy="10" r="8.5" stroke="currentColor" strokeWidth="1.6" />
-                  <path d="M6.5 10.5l2.2 2.2 4.8-5.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <p className="text-[12px] font-medium text-green-800">
-                  You have read all the terms. You may now accept below.
-                </p>
-              </div>
-            )}
-
-            <div className={`scroll-fade-wrap ${hasReadAll ? "read" : ""}`}>
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="terms-scroll max-h-[42vh] overflow-y-auto bg-white px-6 py-4"
-              >
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                  <thead />
-                  <tbody>
-                    {TERMS_AND_CONDITIONS.map((term, i) => (
-                      <tr key={i} style={{ borderBottom: "1px solid #f1f5f9", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
-                        <td
-                          style={{
-                            padding: "10px 12px",
-                            textAlign: "center",
-                            color: "#64748b",
-                            fontWeight: 600,
-                            verticalAlign: "top",
-                            fontSize: 12,
-                          }}
-                        >
-                          {i + 1}
-                        </td>
-                        <td style={{ padding: "10px 12px", color: "#374151", lineHeight: 1.7, verticalAlign: "top" }}>
-                          {term}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
-              <label
-                className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-all ${
-                  !hasReadAll
-                    ? "cursor-not-allowed border-slate-200 bg-slate-100 opacity-60"
-                    : hasAcceptedTerms
-                      ? "border-green-300 bg-green-50"
-                      : "border-slate-300 bg-white hover:border-slate-400"
-                }`}
-                title={!hasReadAll ? "Please read all terms first" : ""}
-              >
-                <span className="relative mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
-                  <input
-                    type="checkbox"
-                    checked={hasAcceptedTerms}
-                    disabled={!hasReadAll}
-                    onChange={(e) => setHasAcceptedTerms(e.target.checked)}
-                    className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-                  />
-                  <span
-                    className="flex h-5 w-5 items-center justify-center rounded border-2 transition-all"
-                    style={{
-                      borderColor: hasAcceptedTerms ? "#08142b" : "#94a3b8",
-                      background: hasAcceptedTerms ? "#08142b" : "#fff",
-                    }}
-                  >
-                    {hasAcceptedTerms && (
-                      <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
-                        <path d="M5 10.5l3.1 3.1L15 6.7" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </span>
-                </span>
-                <span>
-                  <span className="block text-[13px] font-semibold text-slate-800">
-                    I have read and accept all the terms and conditions.
-                  </span>
-                  <span className="mt-0.5 block text-[12px] text-slate-500">
-                    {hasReadAll
-                      ? "You may now tick this box to confirm your acceptance."
-                      : "Scroll through all terms above to enable this checkbox."}
-                  </span>
-                </span>
-              </label>
-
-              <div className="mt-4 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAgree}
-                  disabled={!hasAcceptedTerms}
-                  className="rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white transition-all"
-                  style={{
-                    background: hasAcceptedTerms ? "#08142b" : "#cbd5e1",
-                    cursor: hasAcceptedTerms ? "pointer" : "not-allowed",
-                    boxShadow: hasAcceptedTerms ? "0 4px 14px rgba(8,20,43,0.25)" : "none",
-                  }}
-                >
-                  Continue to Login
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {termsModal}
     </>
   );
 }

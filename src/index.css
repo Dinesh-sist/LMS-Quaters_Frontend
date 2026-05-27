@@ -5,6 +5,35 @@
 
 @import "tailwindcss";
 
+html,
+body {
+  top: 0 !important;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.skiptranslate,
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.goog-te-balloon-frame,
+div.goog-te-gadget-simple,
+.goog-tooltip,
+.goog-tooltip:hover {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body > .skiptranslate {
+  display: none !important;
+}
+
+body.translated-ltr,
+body.translated-rtl {
+  top: 0 !important;
+}
+
 * {
  
   font-family: "Inter", sans-serif;

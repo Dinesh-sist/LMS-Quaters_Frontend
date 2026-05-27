@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
+import Footer from "../Components/Footer";
 import Image2 from "../assets/image8.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
@@ -223,12 +224,10 @@ export default function StaffLogin() {
                 </Link>
               </div>
 
-              <p className="m-0 text-center text-[11px] text-slate-400">
-                &copy; 2026 Paradip Port Authority. All rights reserved.
-              </p>
             </form>
           </div>
         </div>
+        <Footer />
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import TopNavbar from "./UI/TopNavbar";
+import Footer from "../Components/Footer";
 
 const features = [
   {
@@ -43,21 +44,66 @@ const features = [
 export default function About() {
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-slate-50">
+      <style>{`
+        @keyframes aboutPageFadeIn {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes aboutSectionRise {
+          0% {
+            opacity: 0;
+            transform: translateY(28px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes aboutGlowDrift {
+          0% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(0, -14px, 0) scale(1.03); }
+          100% { transform: translate3d(0, 0, 0) scale(1); }
+        }
+        .about-page-enter {
+          animation: aboutPageFadeIn 0.45s ease-out both;
+        }
+        .about-reveal {
+          opacity: 0;
+          animation: aboutSectionRise 0.78s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          will-change: transform, opacity;
+        }
+        .about-glow {
+          animation: aboutGlowDrift 12s ease-in-out infinite;
+          will-change: transform;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .about-page-enter,
+          .about-reveal,
+          .about-glow {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        }
+      `}</style>
       {/* Background */}
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,rgba(232,119,34,0.08),transparent_28%),linear-gradient(180deg,#ffffff_0%,#f8fafc_48%,#eef4ff_100%)]" />
       <div className="fixed inset-0 -z-10 bg-white/20" />
       <div className="fixed inset-0 -z-10 bg-[linear-gradient(rgba(15,23,42,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.03)_1px,transparent_1px)] bg-[length:72px_72px]" />
-      <div className="fixed bottom-[-140px] right-[-100px] -z-10 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(232,119,34,0.10)_0%,transparent_68%)]" />
-      <div className="fixed left-[-80px] top-[-80px] -z-10 h-[340px] w-[340px] rounded-full bg-[radial-gradient(circle,rgba(30,58,138,0.10)_0%,transparent_70%)]" />
+      <div className="about-glow fixed bottom-[-140px] right-[-100px] -z-10 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle,rgba(232,119,34,0.10)_0%,transparent_68%)]" />
+      <div className="about-glow fixed left-[-80px] top-[-80px] -z-10 h-[340px] w-[340px] rounded-full bg-[radial-gradient(circle,rgba(30,58,138,0.10)_0%,transparent_70%)]" />
 
-      <div className="relative z-10">
+      <div className="about-page-enter relative z-10 flex min-h-screen flex-col">
         <TopNavbar navTextColor="light" />
 
-        <main className="relative z-10 flex justify-center px-4 py-10 sm:px-6 md:px-8 lg:px-12">
+        <main className="relative z-10 flex flex-1 justify-center px-4 py-10 sm:px-6 md:px-8 lg:px-12">
           <div className="w-full max-w-[900px] space-y-5">
 
             {/* ── Hero card ── */}
-            <section className="rounded-[20px] border border-slate-900/10 bg-white/90 px-6 py-8 shadow-[0_20px_48px_rgba(15,23,42,0.08)] backdrop-blur-[10px] sm:px-8 sm:py-9 lg:px-10">
+            <section
+              className="about-reveal rounded-[20px] border border-slate-900/10 bg-white/90 px-6 py-8 shadow-[0_20px_48px_rgba(15,23,42,0.08)] backdrop-blur-[10px] sm:px-8 sm:py-9 lg:px-10"
+              style={{ animationDelay: "0.08s" }}
+            >
               <h1 className="mt-1 text-[26px] font-bold leading-tight tracking-[-0.02em] text-blue-950 sm:text-[34px] lg:text-[42px]">
                 Land Management <br className="hidden sm:block" />
                 <span className="text-orange-500">System</span>
@@ -67,11 +113,12 @@ export default function About() {
                 operations — built for accuracy, transparency, and efficiency.
               </p>
             </section>
-                        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {features.map((f) => (
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {features.map((f, index) => (
                 <div
                   key={f.title}
-                  className="group rounded-[16px] border border-slate-900/10 bg-white/90 px-5 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-[10px] transition-shadow hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)]"
+                  className="about-reveal group rounded-[16px] border border-slate-900/10 bg-white/90 px-5 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-[10px] transition-shadow hover:shadow-[0_16px_40px_rgba(15,23,42,0.10)]"
+                  style={{ animationDelay: `${0.16 + index * 0.09}s` }}
                 >
                   <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500 transition-colors group-hover:bg-orange-100">
                     {f.icon}
@@ -83,7 +130,10 @@ export default function About() {
             </section>
 
             {/* ── What is Land Management ── */}
-            <section className="rounded-[20px] border border-slate-900/10 bg-white/90 px-6 py-7 shadow-[0_20px_48px_rgba(15,23,42,0.08)] backdrop-blur-[10px] sm:px-8 lg:px-10">
+            <section
+              className="about-reveal rounded-[20px] border border-slate-900/10 bg-white/90 px-6 py-7 shadow-[0_20px_48px_rgba(15,23,42,0.08)] backdrop-blur-[10px] sm:px-8 lg:px-10"
+              style={{ animationDelay: "0.34s" }}
+            >
               <h2 className="mb-4 text-[16px] font-bold text-blue-950 sm:text-[18px]">
                 What is Land Management?
               </h2>
@@ -107,6 +157,7 @@ export default function About() {
 
           </div>
         </main>
+        <Footer />
       </div>
     </div>
   );

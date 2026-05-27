@@ -1,11 +1,30 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import TopNavbar from "./UI/TopNavbar";
 import bgImage from "../assets/AdminBuilding.jpg";
 
-
-
-
 export default function Home() {
+  const [heroImageReady, setHeroImageReady] = useState(false);
+
+  useEffect(() => {
+    const image = new Image();
+    image.src = bgImage;
+
+    const handleReady = () => setHeroImageReady(true);
+
+    if (image.complete) {
+      handleReady();
+      return undefined;
+    }
+
+    image.onload = handleReady;
+    image.onerror = handleReady;
+
+    return () => {
+      image.onload = null;
+      image.onerror = null;
+    };
+  }, []);
+
   return (
     <div className="relative h-screen w-full overflow-hidden">
 
@@ -17,16 +36,18 @@ export default function Home() {
         }
         @keyframes heroBgFadeIn {
           0% {
-            opacity: 0.18;
+            opacity: 0;
+            transform: scale(1.035);
           }
           100% {
             opacity: 1;
+            transform: scale(1);
           }
         }
         @keyframes heroHeadingSlideIn {
           0% {
             opacity: 0;
-            transform: translateX(-48px);
+            transform: translateX(-32px);
           }
           100% {
             opacity: 1;
@@ -49,19 +70,33 @@ export default function Home() {
           animation: gradientMove 15s ease-in-out infinite;
         }
         .hero-bg-image {
-          opacity: 0.18;
-          animation: heroBgFadeIn 0.85s ease-out forwards;
-          will-change: opacity;
+          opacity: 0;
+          transform: scale(1.035);
+          transition: opacity 0.45s ease-out, transform 0.8s ease-out;
+          will-change: opacity, transform;
+        }
+        .hero-bg-image.is-ready {
+          animation: heroBgFadeIn 0.75s ease-out forwards;
         }
         .hero-heading {
           opacity: 0;
-          animation: heroHeadingSlideIn 0.9s ease-out 0.8s forwards;
+          animation: heroHeadingSlideIn 0.95s ease-out 0.28s forwards;
           will-change: opacity, transform;
         }
         .hero-navbar {
           opacity: 0;
-          animation: navbarDropIn 0.9s ease-out 0.8s forwards;
+          animation: navbarDropIn 0.82s ease-out 0.14s forwards;
           will-change: opacity, transform;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-bg-image,
+          .hero-bg-image.is-ready,
+          .hero-heading,
+          .hero-navbar,
+          .gradient-animated {
+            animation: none !important;
+            transition: none !important;
+          }
         }
       `}</style>
 
@@ -78,8 +113,11 @@ export default function Home() {
           aria-hidden="true"
           loading="eager"
           fetchPriority="high"
-          decoding="async"
-          className="hero-bg-image absolute inset-0 w-full h-full object-cover object-center brightness-100 saturate-[1.2]"
+          decoding="sync"
+          onLoad={() => setHeroImageReady(true)}
+          className={`hero-bg-image absolute inset-0 h-full w-full object-cover object-center brightness-100 saturate-[1.2] ${
+            heroImageReady ? "is-ready" : ""
+          }`}
         />
 
         {/* Dark gradient overlay */}
