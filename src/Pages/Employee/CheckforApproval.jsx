@@ -132,13 +132,19 @@ const statusStyles = {
 };
 
 const columns = [
-  { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 140 },
+  { key: "priorityNo", header: "PRIORITY NO", minWidth: 140 },
+  { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 120 },
   { key: "empName", header: "EMP NAME", minWidth: 220 },
-  { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
+  { key: "class", header: "CLASS", renderer: "class", minWidth: 150 },
+  {key: "casteId", header: "CASTE", minWidth: 120 },
+
   { key: "allotCatId", header: "ALLOT CAT ID", minWidth: 150 },
-  { key: "qtrReq", header: "REQUESTED QTR", minWidth: 150 },
+  {key: "emailId", header: "EMAIL ID", minWidth: 220 },
+  { key: "Req date", header: "REQUESTED DATE", minWidth: 150 },
+  { key: "qtrReq", header: "QTR REQUESTED", minWidth: 150 },
   { key: "qtrLocation", header: "QTR LOCATION", minWidth: 220 },
-  { key: "reqDate", header: "REQUEST DATE", minWidth: 145 },
+  { key: "qtrType", header: "QTR TYPE", minWidth: 145 },
+  {key: "status", header: "STATUS", minWidth: 150},
   {
     key: "status",
     header: "STATUS",

@@ -1,6 +1,5 @@
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-
 const mockData = [
   {
     id: 1,
@@ -107,10 +106,20 @@ const columns = [
   { key: "empId",      header: "EMP ID",         renderer: "empId", minWidth: 135 },
   { key: "empName",    header: "EMP NAME",       minWidth: 220 },
   { key: "class",      header: "CLASS",          renderer: "class", minWidth: 155 },
+  { key: "grad date",   header: "GRAD DATE",      minWidth: 135 },
+  {key: "dob",        header: "DATE OF BIRTH",             minWidth: 120 },
   { key: "dept",       header: "DEPARTMENT",     minWidth: 180 },
+  { key: "casteId",    header: "CASTE ID",       minWidth: 120 },
   { key: "currentQtr", header: "CURRENT QTR",    minWidth: 145 },
+  { key: "currentQtyType",       header: "CURRENT QTR TYPE",     minWidth: 180 },
   { key: "reqQtr",     header: "REQUESTED QTR",  minWidth: 145 },
+  { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
+  { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
+  { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
+   { key: "proofFile",  header: "PROOF FILE",     minWidth: 150 },
   { key: "reqDate",    header: "REQUEST DATE",   minWidth: 140 },
+  { key: "rosterNo",   header: "ROSTER NO",      minWidth: 120 },
+  
   {
     key: "result",
     header: "STATUS",
@@ -149,8 +158,7 @@ function PageSummaryBar() {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
           {Roster} Roster
-        </span>
-        
+        </span>       
       </div>
     </div>  
   );
