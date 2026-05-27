@@ -462,8 +462,8 @@ export default function QuartersApplyLogin() {
               </form>
             </div>
           </div>
-          <Footer />
         </div>
+        <Footer sticky={false} />
 
         {successOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -698,8 +698,8 @@ export default function QuartersApplyLogin() {
               </form>
             </div>
           </div>
-          <Footer />
         </div>
+        <Footer sticky={false} />
       </div>
     </div>
   );

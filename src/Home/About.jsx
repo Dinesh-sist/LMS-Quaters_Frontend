@@ -157,7 +157,7 @@ export default function About() {
 
           </div>
         </main>
-        <Footer />
+        <Footer sticky={false} className="mt-auto" />
       </div>
     </div>
   );

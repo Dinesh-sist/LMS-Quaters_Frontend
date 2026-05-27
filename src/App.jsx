@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import './App.css'
 import './index.css'
 import Home from './Home/Home'
@@ -14,11 +15,35 @@ import StatusOfApplications from './Pages/Admin/StatusOfApplications'
 import HouseAllotmentCommitteeHistory from './Pages/Admin/HouseAllotmentCommitteeHistory'
 import AdminDashboard from './Pages/Admin/AdminUI/dashboard'
 import ProtectedRoute from './Pages/ProtectedRoute'
+import { consumeAuthRecovery, getToken, getUser, setAuth } from './auth'
 
+function TranslateRecovery() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const recovery = consumeAuthRecovery();
+    if (!recovery) return;
+
+    if ((!getToken() || !getUser()) && recovery.token && recovery.user) {
+      setAuth({ token: recovery.token, user: recovery.user });
+    }
+
+    const target = recovery.redirectTo;
+    const current = `${location.pathname}${location.search}${location.hash}`;
+
+    if (target && target !== current) {
+      navigate(target, { replace: true });
+    }
+  }, [location.hash, location.pathname, location.search, navigate]);
+
+  return null;
+}
 
 function App() {
   return (
     <BrowserRouter>
+      <TranslateRecovery />
       <Routes>
         <Route path="/"                    element={<Home />} />
         <Route path="/about"               element={<About />} />
