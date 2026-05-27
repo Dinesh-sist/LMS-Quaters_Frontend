@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
+import Footer from "../Components/Footer";
 import Image from "../assets/Image13.png";
 import Logo from "../assets/Logo.png";
 import { getEmployeeClasses, login, lookupEmployee, registerEmployee } from "../api";
@@ -458,12 +459,10 @@ export default function QuartersApplyLogin() {
                   Back to Login
                 </button>
 
-                <p className="m-0 text-center text-[11px] text-slate-400">
-                  &copy; 2026 Paradip Port Authority. All rights reserved.
-                </p>
               </form>
             </div>
           </div>
+          <Footer />
         </div>
 
         {successOpen ? (
@@ -508,10 +507,61 @@ export default function QuartersApplyLogin() {
           animation: loginCardEnter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
           will-change: transform, opacity;
         }
+        .employee-login-shell {
+          width: 100%;
+        }
+        .employee-login-copy {
+          line-height: 1.5;
+        }
         .employee-input:focus {
           border-color: #1e3a8a !important;
           outline: none;
           box-shadow: 0 0 0 3px rgba(30,58,138,.12);
+        }
+        @media (max-width: 1024px) {
+          .employee-login-title {
+            font-size: 24px;
+          }
+          .employee-login-copy {
+            font-size: 12px;
+          }
+          .employee-login-label {
+            font-size: 10px;
+            letter-spacing: 1.7px;
+          }
+          .employee-login-field,
+          .employee-login-action {
+            font-size: 12px;
+          }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .employee-login-shell {
+            justify-content: center;
+          }
+          .employee-login-card {
+            margin-inline: auto;
+          }
+        }
+        @media (min-width: 1024px) and (max-width: 1180px) {
+          .employee-login-card {
+            max-width: 440px;
+            gap: 14px;
+            padding: 22px 22px;
+          }
+          .employee-login-title {
+            font-size: 27px;
+          }
+          .employee-login-copy {
+            font-size: 12px;
+          }
+          .employee-login-label {
+            font-size: 9px;
+            letter-spacing: 1.6px;
+          }
+          .employee-login-field,
+          .employee-login-action {
+            font-size: 11px;
+          }
         }
         @media (prefers-reduced-motion: reduce) {
           .employee-gradient-bg,
@@ -534,15 +584,15 @@ export default function QuartersApplyLogin() {
             />
           </div>
 
-          <div className="flex items-center justify-center lg:justify-start">
+          <div className="employee-login-shell flex items-center justify-center lg:justify-start">
             <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
               <div>
                 <div className="mb-4 flex items-center gap-4">
                   
                   <div>
                     
-                    <h1
-                      className="m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[32px]"
+                      <h1
+                      className="employee-login-title m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px] xl:text-[32px]"
                       style={{ fontFamily: "Georgia, serif" }}
                     >
                       Employee Login
@@ -550,19 +600,19 @@ export default function QuartersApplyLogin() {
                   </div>
                 </div>
 
-                <p className="m-0 text-[12px] leading-5 text-slate-400 sm:text-[13px]">
+                <p className="employee-login-copy m-0 text-[12px] text-slate-400 sm:text-[13px]">
                   Sign in to access the quarters application portal with your employee credentials.
                 </p>
               </div>
 
               <form className="flex flex-1 flex-col gap-4" onSubmit={handleLogin}>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Username</label>
+                  <label className="employee-login-label text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Username</label>
                   <div className="relative">
                     <input
                       type="text"
                       autoComplete="username"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -587,12 +637,12 @@ export default function QuartersApplyLogin() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Password</label>
+                  <label className="employee-login-label text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Password</label>
                   <div className="relative">
                     <input
                       type={showPass ? "text" : "password"}
                       autoComplete="current-password"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -625,7 +675,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="submit"
-                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="employee-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : "Login as Employee"}
@@ -633,7 +683,7 @@ export default function QuartersApplyLogin() {
 
                 <button
                   type="button"
-                  className="w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
                   onClick={async () => {
                     setError("");
                     await fetchClasses();
@@ -643,18 +693,12 @@ export default function QuartersApplyLogin() {
                   New Register
                 </button>
 
-                <div className="mt-auto pt-5 text-center text-[12px] text-slate-400">
-                  <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
-                    &larr; Back to Home
-                  </Link>
-                </div>
 
-                <p className="m-0 text-center text-[11px] text-slate-400">
-                  &copy; 2026 Paradip Port Authority. All rights reserved.
-                </p>
+
               </form>
             </div>
           </div>
+          <Footer />
         </div>
       </div>
     </div>

@@ -215,11 +215,6 @@ export default function CheckApproval() {
           searchPlaceholder="Search employee, quarter, status..."
         />
       </div>
-
-      <div className="flex flex-col gap-2 px-1 text-[13px] text-slate-500 md:flex-row md:items-center md:justify-between">
-        <span>Copyright 2026 Paradip Port Authority</span>
-        <span>Real Estate Management System</span>
-      </div>
     </EmployeeLayout>
   );
 }

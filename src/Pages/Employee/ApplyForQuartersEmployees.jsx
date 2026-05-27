@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import TopHeader from "../../Components/TopHeader";
+import Footer from "../../Components/Footer";
 import Sidebar from "./EmployeeUI/EmployeeSideNav";
 import { request } from "../../api";
 import { getUser } from "../../auth";
 
 const inputCls = (focused, id) =>
   `w-full box-border rounded-[7px] px-3 py-[9px] text-[13.5px] text-slate-800 bg-white outline-none transition-all duration-200 font-[inherit]
-  ${
-    focused === id
-      ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
-      : "border-[1.5px] border-[#e2e8f0]"
+  ${focused === id
+    ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
+    : "border-[1.5px] border-[#e2e8f0]"
   }`;
 
 const selectCls = (focused, id) =>
@@ -25,6 +25,7 @@ export default function ApplyForQuartersEmployees() {
   const [hodDeptsError, setHodDeptsError] = useState("");
   const [quarters, setQuarters] = useState([]);
   const [quartersError, setQuartersError] = useState("");
+  const [classId, setClassId] = useState(null);
 
   const [emp, setEmp] = useState({
     employeeName: user?.name || "",
@@ -38,6 +39,7 @@ export default function ApplyForQuartersEmployees() {
     selectedQuarterId: "",
     search: "",
   });
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -58,6 +60,7 @@ export default function ApplyForQuartersEmployees() {
   const pageStart = (safePage - 1) * pageSize;
   const pageItems = filteredQuarters.slice(pageStart, pageStart + pageSize);
 
+  // Load employee profile once on mount
   useEffect(() => {
     let cancelled = false;
 
@@ -65,6 +68,7 @@ export default function ApplyForQuartersEmployees() {
       try {
         const data = await request("/api/employee/me", { auth: true });
         if (cancelled) return;
+        setClassId(data?.classId ?? null);
         setEmp((s) => ({
           ...s,
           employeeName: data?.employeeName || s.employeeName,
@@ -72,17 +76,16 @@ export default function ApplyForQuartersEmployees() {
           classOfEmployee: data?.classOfEmployee || s.classOfEmployee,
           casteOfEmployee: data?.casteOfEmployee || s.casteOfEmployee,
         }));
-      } catch {
-        // keep existing placeholders
+      } catch (err) {
+        console.error("Employee profile error:", err);
       }
     }
 
     loadEmployeeProfile();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
+  // Load HOD departments
   useEffect(() => {
     let cancelled = false;
 
@@ -92,8 +95,8 @@ export default function ApplyForQuartersEmployees() {
         const data = await request("/api/allotment-hods");
         const depts = Array.isArray(data?.items)
           ? data.items
-              .map((r) => r?.ALLOT_HOD_DEPT)
-              .filter((v) => typeof v === "string" && v.trim() !== "")
+            .map((r) => r?.ALLOT_HOD_DEPT)
+            .filter((v) => typeof v === "string" && v.trim() !== "")
           : [];
         if (!cancelled) setHodDepts(depts);
       } catch (err) {
@@ -102,18 +105,19 @@ export default function ApplyForQuartersEmployees() {
     }
 
     loadHodDepts();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
+    if (!classId) return;
     let cancelled = false;
 
     async function loadQuarters() {
       try {
         setQuartersError("");
-        const data = await request("/api/estate-quarters/vacant");
+        const data = await request("/api/estate-quarters/vacant?classId=" + classId, {
+          auth: true,
+        });
         const items = Array.isArray(data?.items) ? data.items : [];
         if (!cancelled) setQuarters(items);
       } catch (err) {
@@ -122,10 +126,8 @@ export default function ApplyForQuartersEmployees() {
     }
 
     loadQuarters();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    return () => { cancelled = true; };
+  }, [classId]); // ✅ primitive dependency — React detects null → 1 change reliably
 
   return (
     <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[linear-gradient(180deg,#e6eeff_0%,#f5f8ff_36%,#edf3ff_100%)]">
@@ -141,17 +143,18 @@ export default function ApplyForQuartersEmployees() {
         <div className="flex-1 flex overflow-hidden min-h-0">
           <Sidebar />
 
-          <main className="flex-1 overflow-y-auto px-9 py-7 bg-[#f4f6fa]">
-            <div className="mb-[22px]">
-              <h1 className="text-2xl font-bold text-slate-900">
-                Application Form for Quarter Allotment for Employees
-              </h1>
-              <p className="mt-1 text-sm text-slate-500">
-                Land Data Management System - Employee Application
-              </p>
-            </div>
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f4f6fa]">
+            <main className="flex-1 overflow-y-auto px-9 py-7">
+              <div className="mb-[22px]">
+                <h1 className="text-2xl font-bold text-slate-900">
+                  Application Form for Quarter Allotment for Employees
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Land Data Management System - Employee Application
+                </p>
+              </div>
 
-            <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] px-8 py-7">
+              <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] px-8 py-7">
               <div className="grid items-center gap-5 mb-4" style={{ gridTemplateColumns: "260px 1fr" }}>
                 <label className="text-[13.5px] font-semibold text-slate-800">Name of the Employee:</label>
                 <div className="text-[13.5px] text-slate-800">{emp.employeeName || "-"}</div>
@@ -244,23 +247,23 @@ export default function ApplyForQuartersEmployees() {
                 <div className="text-[12px] font-semibold text-rose-600 mb-3">{quartersError}</div>
               ) : null}
 
-                <div className="flex items-center justify-end mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-slate-700">Search:</span>
-                    <input
-                      type="text"
-                      value={emp.search}
-                      onChange={(e) => {
-                        const next = e.target.value;
-                        setEmp((s) => ({ ...s, search: next }));
-                        setPage(1);
-                      }}
-                      className={`${inputCls(focused, "emp_search")} w-[260px]`}
-                      onFocus={() => setFocused("emp_search")}
-                      onBlur={() => setFocused(null)}
-                    />
-                  </div>
+              <div className="flex items-center justify-end mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-semibold text-slate-700">Search:</span>
+                  <input
+                    type="text"
+                    value={emp.search}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setEmp((s) => ({ ...s, search: next }));
+                      setPage(1);
+                    }}
+                    className={`${inputCls(focused, "emp_search")} w-[260px]`}
+                    onFocus={() => setFocused("emp_search")}
+                    onBlur={() => setFocused(null)}
+                  />
                 </div>
+              </div>
 
               <div className="overflow-x-auto border border-[#e2e8f0] rounded-lg">
                 <table className="w-full text-[13px]">
@@ -274,7 +277,14 @@ export default function ApplyForQuartersEmployees() {
                     </tr>
                   </thead>
                   <tbody>
-                    {pageItems.map((q, idx) => (
+                    {pageItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-6 px-4 text-center text-[13px] text-slate-400">
+                          {classId ? "No vacant quarters available" : "Loading..."}
+                        </td>
+                      </tr>
+                    ) : (
+                      pageItems.map((q, idx) => (
                         <tr key={q?.Id ?? idx} className="border-t border-[#e2e8f0]">
                           <td className="py-3 px-4 bg-slate-50/60">
                             <input
@@ -292,7 +302,8 @@ export default function ApplyForQuartersEmployees() {
                           <td className="py-3 px-4">{q?.Location || "-"}</td>
                           <td className="py-3 px-4">{q?.QuarterNo || "-"}</td>
                         </tr>
-                      ))}
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -357,8 +368,10 @@ export default function ApplyForQuartersEmployees() {
                   </button>
                 </div>
               </div>
-            </div>
-          </main>
+              </div>
+            </main>
+            <Footer />
+          </div>
         </div>
       </div>
     </div>
