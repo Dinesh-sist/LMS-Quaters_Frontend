@@ -9,7 +9,7 @@ import StaffLogin from './Home/StaffLogin'
 import ApplyForQuarters from './Pages/Employee/ApplyForQuarters'
 import ApplyForQuartersEmployees from './Pages/Employee/ApplyForQuartersEmployees'
 import CheckApproval from './Pages/Employee/CheckforApproval'
-import DemandNote from './Pages/Employee/DemandNote'
+
 import VerifyQuarterApplication from './Pages/Admin/VerifyQuaterApplication'
 import StatusOfApplications from './Pages/Admin/StatusOfApplications'
 import HouseAllotmentCommitteeHistory from './Pages/Admin/HouseAllotmentCommitteeHistory'
@@ -80,15 +80,7 @@ function App() {
               <CheckApproval />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/Quarters/DemandNote"
-          element={
-            <ProtectedRoute role="employee">
-              <DemandNote />
-            </ProtectedRoute>
-          }
-        />
+        />       
         <Route
           path="/admin"
           element={
