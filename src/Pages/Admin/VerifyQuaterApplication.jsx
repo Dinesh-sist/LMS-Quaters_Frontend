@@ -70,8 +70,21 @@ const columns = [
   { key: "gradDate",   header: "GRAD DATE",    minWidth: 135 },
   { key: "dateOfJoin", header: "DATE OF JOIN", minWidth: 150 },
   { key: "basic",      header: "BASIC",        renderer: "basic",  minWidth: 120 },
+  { key: "dob",        header: "DATE OF BIRTH", minWidth: 130 },
   { key: "dept",       header: "DEPARTMENT",   minWidth: 180 },
-  {
+  { Key: "casteID",     header: "CASTE ID",     minWidth: 120 },
+  { key: "current qtr", header: "CURRENT QTR",  minWidth: 130 },
+  { key: "current qtr", header: "CURRENT QTR",  minWidth: 130 },
+  { key: "current qtr _type", header: "CURRENT QTR TYPE",  minWidth: 130 },
+  { key: "requested qtr", header: "REQ QTR",  minWidth: 130 },
+  { key: "requested qtr location", header: "REQ QTR LOCATION",  minWidth: 130 },
+  { key: "requested qtr type", header: "REQ QTR TYPE",  minWidth: 130 },
+  { key: "exchange qtr", header: "EXCHANGE QTR",  minWidth: 130 },
+  { key: "proof file", header: "PROOF FILE",  minWidth: 130 },
+  { key: "requested date", header: "REQUESTED DATE",  minWidth: 130 },
+
+    {
+      
     key: "stage",
     header: "REVIEW STAGE",
     minWidth: 170,
