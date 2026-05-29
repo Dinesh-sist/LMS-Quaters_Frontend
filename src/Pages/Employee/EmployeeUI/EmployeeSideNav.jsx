@@ -36,6 +36,7 @@ const sidebarNav = [
    
 ];
 
+
 export default function Sidebar({ onNavigate }) {
   const location = useLocation();
   const navigate = useNavigate();

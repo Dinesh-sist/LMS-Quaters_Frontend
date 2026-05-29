@@ -19,7 +19,7 @@ const mockData = [
   { id: 15, committeeHeld: "2024-10-29", downloadLink: "https://ppa.gov.in/files/committee_2024_10_29.pdf" },
   { id: 16, committeeHeld: "2025-02-17", downloadLink: "https://ppa.gov.in/files/committee_2025_02_17.pdf" },
   { id: 17, committeeHeld: "2025-07-24", downloadLink: "https://ppa.gov.in/files/committee_2025_07_24.pdf" },
-  { id: 18, committeeHeld: "2025-08-19", downloadLink: "https://ppa.gov.in/files/committee_2025_08_19.pdf" },
+  { id: 18, committeeHeld: "2025-08-19", downloadL2ink: "https://ppa.gov.in/files/committee_2025_08_19.pdf" },
 ];
 
 function formatDate(dateStr) {
