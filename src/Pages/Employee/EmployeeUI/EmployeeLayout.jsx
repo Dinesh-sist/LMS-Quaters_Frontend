@@ -15,7 +15,7 @@ export default function EmployeeLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen bg-[#f5f7fb] font-['Segoe_UI',system-ui,sans-serif] text-slate-900">
+    <div className="h-screen bg-[#EEF2FF] font-['Segoe_UI',system-ui,sans-serif] text-slate-900">
       <div className="flex h-full flex-col overflow-hidden">
         <TopHeader
           role={role}

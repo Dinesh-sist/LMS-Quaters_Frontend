@@ -5,6 +5,7 @@ import './index.css'
 import Home from './Home/Home'
 import About from './Home/About'
 import QuartersApplyLogin from './Home/QuatersApplyLogin'
+import EmployeeRegister from './Home/EmployeeRegister'
 import StaffLogin from './Home/StaffLogin'
 import ApplyForQuarters from './Pages/Employee/ApplyForQuarters'
 import ApplyForQuartersEmployees from './Pages/Employee/ApplyForQuartersEmployees'
@@ -56,6 +57,7 @@ function App() {
           }
         />
         <Route path="/QuartersApplyLogin"  element={<QuartersApplyLogin />} />
+        <Route path="/EmployeeRegister"    element={<EmployeeRegister />} />
         <Route
           path="/Quarters/Apply"
           element={

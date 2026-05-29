@@ -130,8 +130,8 @@ export default function ApplyForQuartersEmployees() {
   }, [classId]); // ✅ primitive dependency — React detects null → 1 change reliably
 
   return (
-    <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[linear-gradient(180deg,#e6eeff_0%,#f5f8ff_36%,#edf3ff_100%)]">
-      <div className="h-full bg-[#f7faff] overflow-hidden flex flex-col">
+    <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[#EEF2FF]">
+      <div className="h-full bg-[#EEF2FF] overflow-hidden flex flex-col">
         <TopHeader
           role="newuser"
           description="Employee Services"
@@ -143,7 +143,7 @@ export default function ApplyForQuartersEmployees() {
         <div className="flex-1 flex overflow-hidden min-h-0">
           <Sidebar />
 
-          <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#f4f6fa]">
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
             <main className="flex-1 overflow-y-auto px-9 py-7">
               <div className="mb-[22px]">
                 <h1 className="text-2xl font-bold text-slate-900">
