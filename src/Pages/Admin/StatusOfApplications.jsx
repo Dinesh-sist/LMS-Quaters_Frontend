@@ -1,99 +1,7 @@
+import { useEffect, useState } from "react";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-const mockData = [
-  {
-    id: 1,
-    appNo: 2591,
-    empId: "E2310",
-    empName: "SANGRAM K. SAMAL",
-    class: "SR-CLASS-I",
-    gradDate: "2018-01-20",
-    dateOfJoin: "1991-08-08",
-    basic: 102060,
-    dob: "1971-06-15",
-    dept: "Chief Engineering",
-    casteId: "GEN",
-    currentQtr: "B-12",
-    currentQtyType: "TYPE-A",
-    reqQtr: "A-04",
-    reqQtrLocation: "Colony-1",
-    reqQtrType: "TYPE-B",
-    exchange: "Yes",
-    proofFile: "proof_001.pdf",
-    reqDate: "2024-03-10",
-    rosterNo: "RST-101",
-    result: "Pending",
-  },
-  {
-    id: 2,
-    appNo: 2592,
-    empId: "E2311",
-    empName: "MAMATA KUMARI PANDA",
-    class: "SR-CLASS-II",
-    gradDate: "2022-02-14",
-    dateOfJoin: "2000-08-12",
-    basic: 72000,
-    dob: "1975-02-18",
-    dept: "Finance",
-    casteId: "OBC",
-    currentQtr: "F-02",
-    currentQtyType: "TYPE-C",
-    reqQtr: "E-05",
-    reqQtrLocation: "Colony-5",
-    reqQtrType: "TYPE-B",
-    exchange: "No",
-    proofFile: "proof_008.pdf",
-    reqDate: "2024-03-17",
-    rosterNo: "RST-108",
-    result: "Approved",
-  },
-  {
-    id: 3,
-    appNo: 2578,
-    empId: "E2279",
-    empName: "PRODOSH K. MOHANTY",
-    class: "SR-CLASS-I",
-    gradDate: "2019-10-19",
-    dateOfJoin: "1991-08-09",
-    basic: 102060,
-    dob: "1968-06-01",
-    dept: "Chief Engineering",
-    casteId: "OBC",
-    currentQtr: "C-05",
-    currentQtyType: "TYPE-B",
-    reqQtr: "B-08",
-    reqQtrLocation: "Colony-2",
-    reqQtrType: "TYPE-A",
-    exchange: "Yes",
-    proofFile: "proof_003.pdf",
-    reqDate: "2024-03-12",
-    rosterNo: "RST-103",
-    result: "Rejected",
-  },
-  {
-    id: 4,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    casteId: "SC",
-    currentQtr: "D-11",
-    currentQtyType: "TYPE-C",
-    reqQtr: "C-02",
-    reqQtrLocation: "Colony-3",
-    reqQtrType: "TYPE-A",
-    exchange: "No",
-    proofFile: "proof_004.pdf",
-    reqDate: "2024-03-13",
-    rosterNo: "RST-104",
-    result: "Pending",
-  },
-];
+import { request } from "../../api";
 
 const statusStyles = {
   Approved: "bg-emerald-100 text-emerald-700",
@@ -106,7 +14,7 @@ const columns = [
   { key: "empId",      header: "EMP ID",         renderer: "empId", minWidth: 135 },
   { key: "empName",    header: "EMP NAME",       minWidth: 220 },
   { key: "class",      header: "CLASS",          renderer: "class", minWidth: 155 },
-  { key: "grad date",   header: "GRAD DATE",      minWidth: 135 },
+  { key: "gradDate",   header: "GRAD DATE",      minWidth: 135 },
   {key: "dob",        header: "DATE OF BIRTH",             minWidth: 120 },
   { key: "dept",       header: "DEPARTMENT",     minWidth: 180 },
   { key: "casteId",    header: "CASTE ID",       minWidth: 120 },
@@ -137,11 +45,11 @@ const columns = [
 ];
 
 /* ── Option 2: Title row with inline metric badges ── */
-function PageSummaryBar() {
+function PageSummaryBar({ rows }) {
 
-  const Shortlished =  mockData.filter((d) => d.result === "Shortlisted").length;
+  const shortlisted = rows.filter((d) => d.result === "Shortlisted").length;
 
-    const Roster = mockData.filter((d) => d.result === "Approved").length;
+  const roster = rows.filter((d) => d.result === "Approved").length;
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -153,11 +61,11 @@ function PageSummaryBar() {
       
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          {Shortlished} Shortlisted
+          {shortlisted} Shortlisted
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-          {Roster} Roster
+          {roster} Roster
         </span>       
       </div>
     </div>  
@@ -165,21 +73,51 @@ function PageSummaryBar() {
 }
 
 export default function StatusOfApplications() {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isActive = true;
+
+    request("/api/admin/status-of-applications", { auth: true })
+      .then((data) => {
+        if (isActive) setRows(Array.isArray(data?.items) ? data.items : []);
+      })
+      .catch((fetchError) => {
+        if (isActive) setError(fetchError?.message || "Failed to load application statuses.");
+      })
+      .finally(() => {
+        if (isActive) setLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <AdminLayout
       title="Status of Applications"
       subtitle="Land Data Management System - Application Tracker"
     >
-      <PageSummaryBar />
+      <PageSummaryBar rows={rows} />
+
+      {error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {error}
+        </div>
+      ) : null}
 
       <div className="w-full overflow-x-auto rounded-xl">
         <AgGridTable
           columns={columns}
-          rows={mockData}
+          rows={rows}
           searchable
           pageSize={8}
           showExport
           showFilter
+          emptyMessage={loading ? "Loading application statuses..." : "No application statuses found."}
         />
       </div>
     </AdminLayout>

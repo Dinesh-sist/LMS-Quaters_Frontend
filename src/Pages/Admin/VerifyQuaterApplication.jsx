@@ -1,60 +1,7 @@
+import { useEffect, useState } from "react";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-
-const mockData = [
-  {
-    id: 1,
-    appNo: 2591,
-    empId: "E2310",
-    empName: "SANGRAM K. SAMAL",
-    class: "SR-CLASS-I",
-    gradDate: "2018-01-20",
-    dateOfJoin: "1991-08-08",
-    basic: 102060,
-    dob: "1971-06-15",
-    dept: "Chief Engineering",
-    stage: "Ready for review",
-  },
-  {
-    id: 2,
-    appNo: 2601,
-    empId: "E1945",
-    empName: "RAJENDRA PRASAD NAYAK",
-    class: "SR-CLASS-II",
-    gradDate: "2020-03-15",
-    dateOfJoin: "1995-04-10",
-    basic: 89500,
-    dob: "1969-11-22",
-    dept: "Mechanical",
-    stage: "Under scrutiny",
-  },
-  {
-    id: 3,
-    appNo: 2615,
-    empId: "E2105",
-    empName: "SURESH KUMAR MISHRA",
-    class: "SR-CLASS-I",
-    gradDate: "2017-06-30",
-    dateOfJoin: "1990-01-15",
-    basic: 115000,
-    dob: "1965-03-08",
-    dept: "Civil Engineering",
-    stage: "Shortlisted",
-  },
-  {
-    id: 4,
-    appNo: 2630,
-    empId: "E1876",
-    empName: "BIBHUTI BHUSAN DAS",
-    class: "SR-CLASS-II",
-    gradDate: "2021-09-10",
-    dateOfJoin: "1998-07-20",
-    basic: 78000,
-    dob: "1972-09-14",
-    dept: "Electrical",
-    stage: "Ready for review",
-  },
-];
+import { request } from "../../api";
 
 const stageStyles = {
   "Ready for review": "bg-amber-100 text-amber-700",
@@ -72,16 +19,15 @@ const columns = [
   { key: "basic",      header: "BASIC",        renderer: "basic",  minWidth: 120 },
   { key: "dob",        header: "DATE OF BIRTH", minWidth: 130 },
   { key: "dept",       header: "DEPARTMENT",   minWidth: 180 },
-  { Key: "casteID",     header: "CASTE ID",     minWidth: 120 },
-  { key: "current qtr", header: "CURRENT QTR",  minWidth: 130 },
-  { key: "current qtr", header: "CURRENT QTR",  minWidth: 130 },
-  { key: "current qtr _type", header: "CURRENT QTR TYPE",  minWidth: 130 },
-  { key: "requested qtr", header: "REQ QTR",  minWidth: 130 },
-  { key: "requested qtr location", header: "REQ QTR LOCATION",  minWidth: 130 },
-  { key: "requested qtr type", header: "REQ QTR TYPE",  minWidth: 130 },
-  { key: "exchange qtr", header: "EXCHANGE QTR",  minWidth: 130 },
-  { key: "proof file", header: "PROOF FILE",  minWidth: 130 },
-  { key: "requested date", header: "REQUESTED DATE",  minWidth: 130 },
+  { key: "casteID",     header: "CASTE ID",     minWidth: 120 },
+  { key: "currentQtr", header: "CURRENT QTR",  minWidth: 130 },
+  { key: "currentQtrType", header: "CURRENT QTR TYPE",  minWidth: 160 },
+  { key: "requestedQtr", header: "REQ QTR",  minWidth: 130 },
+  { key: "requestedQtrLocation", header: "REQ QTR LOCATION",  minWidth: 180 },
+  { key: "requestedQtrType", header: "REQ QTR TYPE",  minWidth: 150 },
+  { key: "exchangeQtr", header: "EXCHANGE QTR",  minWidth: 130 },
+  { key: "proofFile", header: "PROOF FILE",  minWidth: 130 },
+  { key: "requestedDate", header: "REQUESTED DATE",  minWidth: 150 },
 
     {
       
@@ -114,10 +60,10 @@ const columns = [
 ];
 
 /* ── Option 2: Title row with inline metric badges ── */
-function PageSummaryBar() {
-  const total    = mockData.length;
-  const pending  = mockData.filter((d) => d.stage === "Ready for review").length;
-  const allocated = mockData.filter((d) => d.stage === "Shortlisted").length;
+function PageSummaryBar({ rows }) {
+  const total = rows.length;
+  const pending = rows.filter((d) => d.stage === "Ready for review").length;
+  const allocated = rows.filter((d) => d.stage === "Shortlisted").length;
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -144,21 +90,51 @@ function PageSummaryBar() {
 }
 
 export default function VerifyQuarterApplications() {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let isActive = true;
+
+    request("/api/admin/verify-quarter-applications", { auth: true })
+      .then((data) => {
+        if (isActive) setRows(Array.isArray(data?.items) ? data.items : []);
+      })
+      .catch((fetchError) => {
+        if (isActive) setError(fetchError?.message || "Failed to load verify applications.");
+      })
+      .finally(() => {
+        if (isActive) setLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <AdminLayout
       title="Verify Quarter Applications"
       subtitle="Land Data Management System - Committee Review"
     >
-      <PageSummaryBar />
+      <PageSummaryBar rows={rows} />
+
+      {error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          {error}
+        </div>
+      ) : null}
 
       <div className="w-full overflow-x-auto rounded-xl">
         <AgGridTable
           columns={columns}
-          rows={mockData}
+          rows={rows}
           searchable
           pageSize={8}
           showExport
           showFilter
+          emptyMessage={loading ? "Loading verify applications..." : "No verify applications found."}
         />
       </div>
     </AdminLayout>
