@@ -12,6 +12,7 @@ const inputCls = (focused, id) =>
     : "border-[1.5px] border-[#e2e8f0]"
   }`;
 
+  
 const selectCls = (focused, id) =>
   `${inputCls(focused, id)} appearance-none bg-no-repeat bg-[right_12px_center] pr-9 cursor-pointer`;
 

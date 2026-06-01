@@ -51,7 +51,7 @@ const columns = [
   },
 ];
 
-// ── Summary bar — counts use lowercase comparison ──
+
 function PageSummaryBar({ rows }) {
   const totalRequests  = rows.length;
   const approved       = rows.filter((r) => r.Status?.toLowerCase() === "approved").length;
