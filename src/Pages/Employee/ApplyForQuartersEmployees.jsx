@@ -11,8 +11,6 @@ const inputCls = (focused, id) =>
     ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
     : "border-[1.5px] border-[#e2e8f0]"
   }`;
-
-  
 const selectCls = (focused, id) =>
   `${inputCls(focused, id)} appearance-none bg-no-repeat bg-[right_12px_center] pr-9 cursor-pointer`;
 
@@ -44,7 +42,6 @@ export default function ApplyForQuartersEmployees() {
     selectedQuarterId: "",
     search: "",
   });
-
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 

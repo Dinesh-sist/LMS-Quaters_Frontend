@@ -43,5 +43,4 @@ export function getEmployeeClasses() {
 export function getQuarterApplications() {
   return request("/api/auth/quarter-applications", { auth: true });
 }
-
 export { API_BASE, request };

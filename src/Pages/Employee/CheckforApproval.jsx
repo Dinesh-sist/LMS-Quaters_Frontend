@@ -50,8 +50,6 @@ const columns = [
     ),
   },
 ];
-
-
 function PageSummaryBar({ rows }) {
   const totalRequests  = rows.length;
   const approved       = rows.filter((r) => r.Status?.toLowerCase() === "approved").length;
