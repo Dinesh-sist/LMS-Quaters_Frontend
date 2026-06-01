@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 const sidebarNav = [
   {
@@ -37,9 +39,26 @@ const sidebarNav = [
 ];
 
 
-export default function Sidebar({ onNavigate }) {
+function getStoredCollapsed() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem("employeeSidebarCollapsed") === "true";
+}
+
+export default function Sidebar({ onNavigate, forceExpanded = false }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(getStoredCollapsed);
+  const isCollapsed = forceExpanded ? false : collapsed;
+
+  const toggleCollapsed = () => {
+    setCollapsed((current) => {
+      const next = !current;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("employeeSidebarCollapsed", String(next));
+      }
+      return next;
+    });
+  };
 
   const handleApplyClick = () => {
     if (location.pathname === "/Quarters/Apply") return;
@@ -49,17 +68,33 @@ export default function Sidebar({ onNavigate }) {
 
 
   return (
-    <aside className="w-[252px] shrink-0 bg-white flex flex-col overflow-hidden border-r border-[#dde3ee]">
+    <aside
+      className={`shrink-0 bg-white flex flex-col overflow-visible border-r border-[#dde3ee] transition-[width] duration-200 ${
+        isCollapsed ? "w-[76px]" : "w-[252px]"
+      }`}
+    >
 
         {/* Meta label */}
-        <div className="px-5 pt-[22px] pb-[5px] text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em]">
-          PPT Outsiders Menu
+        <div className={`flex items-center px-3 pt-[18px] pb-2 ${isCollapsed ? "justify-center" : "justify-between"}`}>
+          {!isCollapsed ? (
+            <div className="text-[13px] font-bold text-blue-900 uppercase tracking-[0.5px]">
+              EMPLOYEE MANAGEMENT
+            </div>
+          ) : null}
+          {!forceExpanded ? (
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#e87722]"
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+            </button>
+          ) : null}
         </div>
 
         {/* Section heading */}
-        <div className="px-5 pt-1 pb-4 text-sm font-bold text-slate-800">
-          Outsider Services
-        </div>
 
         {/* Nav items */}
         <nav className="px-2.5 flex-1">
@@ -71,9 +106,9 @@ export default function Sidebar({ onNavigate }) {
                   ? location.pathname === "/Quarters/ApplyEmployees"
                 : location.pathname === item.to;
 
-            const className = `flex w-full items-center gap-[11px] px-[13px] py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] text-left transition-all duration-150 ${
+            const className = `group relative flex w-full items-center ${isCollapsed ? "justify-center px-0" : "gap-[11px] px-[13px]"} py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] text-left transition-all duration-150 ${
               active
-                ? "font-semibold text-[#e87722] bg-[rgba(232,119,34,0.09)]"
+                ? "font-medium text-[#e87722] bg-[rgba(232,119,34,0.09)]"
                 : "font-medium text-gray-700 bg-transparent hover:bg-slate-100 hover:text-slate-800"
             }`;
 
@@ -83,12 +118,18 @@ export default function Sidebar({ onNavigate }) {
                   key={item.key}
                   type="button"
                   onClick={handleApplyClick}
+                  title={isCollapsed ? item.label : undefined}
                   className={className}
                 >
                   <span className={`flex items-center shrink-0 ${active ? "text-[#e87722]" : "text-slate-500"}`}>
                     {item.icon}
                   </span>
-                  {item.label}
+                  {!isCollapsed ? item.label : null}
+                  {isCollapsed ? (
+                    <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                      {item.label}
+                    </span>
+                  ) : null}
                 </button>
               );
             }
@@ -98,12 +139,18 @@ export default function Sidebar({ onNavigate }) {
                 key={item.key}
                 to={item.to}
                 onClick={onNavigate}
+                title={isCollapsed ? item.label : undefined}
                 className={className}
               >
                 <span className={`flex items-center shrink-0 ${active ? "text-[#e87722]" : "text-slate-500"}`}>
                   {item.icon}
                 </span>
-                {item.label}
+                {!isCollapsed ? item.label : null}
+                {isCollapsed ? (
+                  <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                    {item.label}
+                  </span>
+                ) : null}
               </Link>
             );
           })}

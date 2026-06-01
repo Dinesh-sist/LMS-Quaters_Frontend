@@ -1,5 +1,7 @@
 import AgGridTable from "../../Components/Table";
 import EmployeeLayout from "./EmployeeUI/EmployeeLayout";
+import { getUser } from "../../auth";
+
 
 const approvalRows = [
   {
@@ -189,37 +191,37 @@ function PageSummaryBar() {
           <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
           {inProgress} In Progress
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-800">
-          <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-          {clarifications} Clarifications
-        </span>
+
       </div>
     </div>
   );
 }
 
 export default function CheckApproval() {
+    const user = getUser();
   return (
     <EmployeeLayout
       title="Check Approval Status"
       subtitle="Land Data Management System - Approval Tracker"
       role="user"
       description="Approval Tracking"
-      welcomeName="Applicant"
+      welcomeName={user?.name || user?.username || "Employee"}
       logoutTo="/QuartersApplyLogin"
     >
-      <PageSummaryBar />
+      <div className="lms-data-transition space-y-6">
+        <PageSummaryBar />
 
-      <div className="w-full overflow-x-auto rounded-xl">
-        <AgGridTable
-          columns={columns}
-          rows={approvalRows}
-          searchable
-          pageSize={8}
-          showExport
-          showFilter
-          searchPlaceholder="Search employee, quarter, status..."
-        />
+        <div className="w-full overflow-x-auto rounded-xl">
+          <AgGridTable
+            columns={columns}
+            rows={approvalRows}
+            searchable
+            pageSize={8}
+            showExport
+            showFilter
+            searchPlaceholder="Search employee, quarter, status..."
+          />
+        </div>
       </div>
     </EmployeeLayout>
   );

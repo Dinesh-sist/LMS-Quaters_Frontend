@@ -63,7 +63,7 @@ export default function Popup({
   message,
   variant = "info",
   onClose,
-  autoClose = 2200,
+  autoClose = 3000,
 }) {
   const styles = VARIANT_STYLES[variant] || VARIANT_STYLES.info;
   const [isRendered, setIsRendered] = useState(open);
