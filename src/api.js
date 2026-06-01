@@ -40,5 +40,7 @@ export function lookupEmployee(employeeId, dateOfBirth) {
 export function getEmployeeClasses() {
   return request("/api/employee/classes");
 }
-
+export function getQuarterApplications() {
+  return request("/api/auth/quarter-applications", { auth: true });
+}
 export { API_BASE, request };
