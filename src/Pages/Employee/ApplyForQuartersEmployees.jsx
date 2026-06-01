@@ -202,8 +202,8 @@ export default function ApplyForQuartersEmployees() {
   };
 
   return (
-    <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[linear-gradient(180deg,#e6eeff_0%,#f5f8ff_36%,#edf3ff_100%)]">
-      <div className="h-full bg-[#f7faff] overflow-hidden flex flex-col">
+    <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[#EEF2FF]">
+      <div className="h-full bg-[#EEF2FF] overflow-hidden flex flex-col">
         <TopHeader
           role="newuser"
           description="Employee Services"

@@ -1,16 +1,29 @@
 import { Navigate } from "react-router-dom";
-import { getUser, isAuthed } from "../auth";
+import { clearAuth, getUser, isAuthed } from "../auth";
+
+function getLoginRedirect(role) {
+  return role === "admin" ? "/StaffLogin" : role === "employee" ? "/QuartersApplyLogin" : "/";
+}
 
 export default function ProtectedRoute({ children, role }) {
   if (!isAuthed()) {
-    const to = role === "admin" ? "/StaffLogin" : role === "employee" ? "/QuartersApplyLogin" : "/";
-    return <Navigate to={to} replace />;
+    return <Navigate to={getLoginRedirect(role)} replace />;
   }
 
-  if (role) {
-    const user = getUser();
-    if (!user?.role || user.role !== role) return <Navigate to="/" replace />;
+  const user = getUser();
+
+  if (!user?.role) {
+    clearAuth();
+    return <Navigate to={getLoginRedirect(role)} replace />;
+  }
+
+  if (role && user.role !== role) {
+    return <Navigate to={getLoginRedirect(user.role)} replace />;
   }
 
   return children;
 }
+
+
+
+

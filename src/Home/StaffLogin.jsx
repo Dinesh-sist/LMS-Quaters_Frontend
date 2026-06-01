@@ -227,7 +227,7 @@ export default function StaffLogin() {
             </form>
           </div>
         </div>
-        <Footer />
+        <Footer sticky={false} />
       </div>
     </div>
   );

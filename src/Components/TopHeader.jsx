@@ -22,6 +22,7 @@ function getInitials(name = "") {
   return parts.map((part) => part[0]).join("").toUpperCase();
 }
 
+
 function FontSizeControls({ onDecrease, onIncrease }) {
   return (
     <div
@@ -38,12 +39,7 @@ function FontSizeControls({ onDecrease, onIncrease }) {
       >
         A-
       </button>
-      <span
-        className="inline-flex min-w-[34px] items-center justify-center rounded-lg border border-white/85 bg-[#08142b] px-3 py-1.5 text-[13px] font-bold text-[#fb923c] shadow-[0_4px_10px_rgba(8,20,43,0.24)]"
-        aria-hidden="true"
-      >
-        A
-      </span>
+    
       <button
         type="button"
         onClick={onIncrease}
@@ -91,7 +87,7 @@ export default function TopHeader({
               onClick={onOpenMenu}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-white lg:hidden"
               aria-label="Open sidebar"
-            >
+           >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
