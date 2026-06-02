@@ -312,403 +312,289 @@ export default function ApplyForQuartersEmployees() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] px-8 py-7">
-              <div className="grid items-center gap-5 mb-4" style={{ gridTemplateColumns: "260px 1fr" }}>
-                <label className="text-[13.5px] font-semibold text-slate-800">Name of the Employee:</label>
-                <div className="text-[13.5px] text-slate-800">{emp.employeeName || "-"}</div>
-              </div>
 
-              <div className="grid items-center gap-5 mb-4" style={{ gridTemplateColumns: "260px 1fr" }}>
-                <label className="text-[13.5px] font-semibold text-slate-800">Employee ID:</label>
-                <div className="text-[13.5px] text-slate-800">{emp.employeeId || "-"}</div>
-              </div>
-
-              <div className="grid items-center gap-5 mb-4" style={{ gridTemplateColumns: "260px 1fr" }}>
-                <label className="text-[13.5px] font-semibold text-slate-800">Class of Employee:</label>
-                <div className="text-[13.5px] text-slate-800">{emp.classOfEmployee || "-"}</div>
-              </div>
-
-              <div className="grid items-center gap-5 mb-5" style={{ gridTemplateColumns: "260px 1fr" }}>
-                <label className="text-[13.5px] font-semibold text-slate-800">Caste of Employee:</label>
-                <div className="text-[13.5px] text-slate-800">{emp.casteOfEmployee || "-"}</div>
-              </div>
-
-              <div className="grid items-center gap-5 mb-5" style={{ gridTemplateColumns: "260px 1fr" }}>
-                <label className="text-[13.5px] font-semibold text-slate-800">Department :</label>
-                <select
-                  value={emp.department}
-                  onChange={(e) => setEmp((s) => ({ ...s, department: e.target.value }))}
-                  className={`${selectCls(focused, "emp_department")} max-w-[420px]`}
-                  style={{ backgroundImage: SELECT_ARROW }}
-                  onFocus={() => setFocused("emp_department")}
-                  onBlur={() => setFocused(null)}
-                >
-                  <option value="">Choose a Department</option>
-                  {hodDepts.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid items-center gap-5 mb-3" style={{ gridTemplateColumns: "260px 1fr" }}>
-                <label className="text-[13.5px] font-semibold text-slate-800">
-                  Reason for quarter exchange (Only for exchange) :
-                </label>
-                <div className="flex flex-col gap-3 max-w-[520px]">
-                  <select
-                    value={emp.reason}
-                    onChange={(e) => setEmp((s) => ({ ...s, reason: e.target.value }))}
-                    className={selectCls(focused, "emp_reason")}
-                    style={{ backgroundImage: SELECT_ARROW }}
-                    onFocus={() => setFocused("emp_reason")}
-                    onBlur={() => setFocused(null)}
-                  >
-                    <option value="">Choose a Reason</option>
-                    <option value="fresh">Fresh Allotment</option>
-                    <option value="exchange">Exchange</option>
-                    <option value="renewal">Renewal</option>
-                  </select>
-
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="text"
-                      value={emp.exchangeReason}
-                      onChange={(e) => setEmp((s) => ({ ...s, exchangeReason: e.target.value }))}
-                      className={`${inputCls(focused, "emp_exchangeReason")} flex-1`}
-                      onFocus={() => setFocused("emp_exchangeReason")}
-                      onBlur={() => setFocused(null)}
-                      placeholder=""
-                    />
-                    <label className="text-[#1d4ed8] font-bold cursor-pointer whitespace-nowrap">
-                      File Upload
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }))}
-                      />
-                
-                    </label>
-                  </div>
-                  {emp.attachment ? (
-                    <div className="text-[12px] text-slate-500 mt-2">Selected file: {emp.attachment.name}</div>
-                  ) : null}
-                </div>
-              </div>
-
-              {hodDeptsError ? (
-                <div className="text-[12px] font-semibold text-rose-600 mb-3">{hodDeptsError}</div>
-              ) : null}
-
-              <div className="border-t-[1.5px] border-dashed border-[#e2e8f0] my-6" />
-
-              <div className="text-[18px] font-extrabold text-[#0284c7] mb-4">Choose from Vacant Quarters Listing</div>
-
-              {quartersError ? (
-                <div className="text-[12px] font-semibold text-rose-600 mb-3">{quartersError}</div>
-              ) : null}
-
-              <div className="flex items-center justify-end mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] font-semibold text-slate-700">Search:</span>
-                  <input
-                    type="text"
-                    value={emp.search}
-                    onChange={(e) => {
-                      const next = e.target.value;
-                      setEmp((s) => ({ ...s, search: next }));
-                      setPage(1);
-                    }}
-                    className={`${inputCls(focused, "emp_search")} w-[260px]`}
-                    onFocus={() => setFocused("emp_search")}
-                    onBlur={() => setFocused(null)}
-                  />
-                </div>
-
-                <div className="max-w-8xl mx-auto flex flex-col gap-6">
-                  <div className="flex flex-col xl:flex-row xl:items-start gap-6">
-                    <div className="xl:w-64 shrink-0">
-                      <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-6">
-                        <div className="flex flex-col items-center gap-4 text-center">
-                          <div className="flex w-full flex-row items-center gap-3 md:flex-col md:gap-0">
-                            <div className="w-16 h-16 md:w-28 md:h-28 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-xl md:text-3xl lg:text-5xl font-bold text-[#1a2e5a] shrink-0">
-                              {initials}
-                            </div>
-
-                            <div className="flex min-w-0 flex-1 flex-col items-start gap-1 md:flex-none md:items-center">
-                              <h2
-                                className={`font-bold leading-tight md:mt-2 text-slate-800 w-full md:text-center ${nameSizeClass}`}
-                                style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-                              >
-                                {displayName}
-                              </h2>
-                              <span className="text-[9px] md:text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 mt-0.5 md:mt-2 md:px-3 rounded-full whitespace-nowrap">
-                                Active
-                              </span>
-                            </div>
+              <div className="max-w-8xl mx-auto flex flex-col gap-6">
+                <div className="flex flex-col xl:flex-row xl:items-start gap-6">
+                  <div className="xl:w-64 shrink-0">
+                    <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-6">
+                      <div className="flex flex-col items-center gap-4 text-center">
+                        <div className="flex w-full flex-row items-center gap-3 md:flex-col md:gap-0">
+                          <div className="w-16 h-16 md:w-28 md:h-28 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-xl md:text-3xl lg:text-5xl font-bold text-[#1a2e5a] shrink-0">
+                            {initials}
                           </div>
 
-                          <div className="w-full h-px bg-white/65 my-1 md:my-3" />
+                          <div className="flex min-w-0 flex-1 flex-col items-start gap-1 md:flex-none md:items-center">
+                            <h2
+                              className={`font-bold leading-tight md:mt-2 text-slate-800 w-full md:text-center ${nameSizeClass}`}
+                              style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                            >
+                              {displayName}
+                            </h2>
+                            <span className="text-[9px] md:text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 mt-0.5 md:mt-2 md:px-3 rounded-full whitespace-nowrap">
+                              Active
+                            </span>
+                          </div>
+                        </div>
 
-                          <div className="flex flex-col gap-3 text-left w-full min-w-0">
-                            <div className="flex items-center gap-2 text-xs text-slate-700">
-                              <Hash size={13} className="text-slate-600 shrink-0" />
-                              <span className="break-words min-w-0">{emp.employeeId || "-"}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-slate-700">
-                              <BadgeCheck size={13} className="text-slate-600 shrink-0" />
-                              <span className="break-words min-w-0">{emp.classOfEmployee || "Class pending"}</span>
-                            </div>
-                            <div className="flex items-start gap-2 text-xs text-slate-700">
-                              <Building2 size={13} className="text-slate-600 shrink-0 mt-0.5" />
-                              <span className="break-words min-w-0 leading-relaxed">
-                                {emp.department || "Department not selected"}
-                              </span>
-                            </div>
+                        <div className="w-full h-px bg-white/65 my-1 md:my-3" />
+
+                        <div className="flex flex-col gap-3 text-left w-full min-w-0">
+                          <div className="flex items-center gap-2 text-xs text-slate-700">
+                            <Hash size={13} className="text-slate-600 shrink-0" />
+                            <span className="break-words min-w-0">{emp.employeeId || "-"}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-slate-700">
+                            <BadgeCheck size={13} className="text-slate-600 shrink-0" />
+                            <span className="break-words min-w-0">{emp.classOfEmployee || "Class pending"}</span>
+                          </div>
+                          <div className="flex items-start gap-2 text-xs text-slate-700">
+                            <Building2 size={13} className="text-slate-600 shrink-0 mt-0.5" />
+                            <span className="break-words min-w-0 leading-relaxed">
+                              {emp.department || "Department not selected"}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="flex-1 flex flex-col gap-5 min-w-0">
-                      <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)]">
-                        <div className="flex items-center justify-between px-6 py-3 border-b border-[#e2e8f0]">
-                          <div className="flex items-center gap-2">
-                            <User size={16} className="text-[#1a2e5a]" />
-                            <h3 className="font-semibold text-md text-slate-900">Employee Information</h3>
-                          </div>
-                        </div>
-                        <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-5 sm:gap-x-6">
-                          <InfoField label="Name of the Employee" value={emp.employeeName} />
-                          <InfoField label="Employee ID" value={emp.employeeId} />
-                          <InfoField label="Class of Employee" value={emp.classOfEmployee} />
-                          <InfoField label="Caste of Employee" value={emp.casteOfEmployee} />
+                  <div className="flex-1 flex flex-col gap-5 min-w-0">
+                    <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)]">
+                      <div className="flex items-center justify-between px-6 py-3 border-b border-[#e2e8f0]">
+                        <div className="flex items-center gap-2">
+                          <User size={16} className="text-[#1a2e5a]" />
+                          <h3 className="font-semibold text-md text-slate-900">Employee Information</h3>
                         </div>
                       </div>
+                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-5 sm:gap-x-6">
+                        <InfoField label="Name of the Employee" value={emp.employeeName} />
+                        <InfoField label="Employee ID" value={emp.employeeId} />
+                        <InfoField label="Class of Employee" value={emp.classOfEmployee} />
+                        <InfoField label="Caste of Employee" value={emp.casteOfEmployee} />
+                      </div>
+                    </div>
 
-                      <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)]">
-                        <div className="flex items-center justify-between px-6 py-3 border-b border-[#e2e8f0]">
-                          <div className="flex items-center gap-2">
-                            <FileText size={16} className="text-[#1a2e5a]" />
-                            <h3 className="font-semibold text-md text-slate-900">Application Details</h3>
-                          </div>
+                    <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)]">
+                      <div className="flex items-center justify-between px-6 py-3 border-b border-[#e2e8f0]">
+                        <div className="flex items-center gap-2">
+                          <FileText size={16} className="text-[#1a2e5a]" />
+                          <h3 className="font-semibold text-md text-slate-900">Application Details</h3>
                         </div>
-                        <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
-                          <FieldShell label="Department">
-                            <select
-                              value={emp.department}
-                              onChange={(e) => {
-                                setSubmitError("");
-                                setSuccessMessage("");
-                                setEmp((s) => ({ ...s, department: e.target.value }));
-                              }}
-                              className={selectCls(focused, "emp_department")}
-                              style={{ backgroundImage: SELECT_ARROW }}
-                              onFocus={() => setFocused("emp_department")}
-                              onBlur={() => setFocused(null)}
-                            >
-                              <option value="">Choose a Department</option>
-                              {hodDepts.map((dept) => (
-                                <option key={dept} value={dept}>
-                                  {dept}
-                                </option>
-                              ))}
-                            </select>
-                          </FieldShell>
+                      </div>
+                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <FieldShell label="Department">
+                          <select
+                            value={emp.department}
+                            onChange={(e) => {
+                              setSubmitError("");
+                              setSuccessMessage("");
+                              setEmp((s) => ({ ...s, department: e.target.value }));
+                            }}
+                            className={selectCls(focused, "emp_department")}
+                            style={{ backgroundImage: SELECT_ARROW }}
+                            onFocus={() => setFocused("emp_department")}
+                            onBlur={() => setFocused(null)}
+                          >
+                            <option value="">Choose a Department</option>
+                            {hodDepts.map((dept) => (
+                              <option key={dept} value={dept}>
+                                {dept}
+                              </option>
+                            ))}
+                          </select>
+                        </FieldShell>
 
-                          <FieldShell label="Application Reason">
-                            <select
-                              value={emp.reason}
-                              onChange={(e) => {
-                                setSubmitError("");
-                                setSuccessMessage("");
-                                setEmp((s) => ({ ...s, reason: e.target.value }));
-                              }}
-                              className={selectCls(focused, "emp_reason")}
-                              style={{ backgroundImage: SELECT_ARROW }}
-                              onFocus={() => setFocused("emp_reason")}
-                              onBlur={() => setFocused(null)}
-                            >
-                              <option value="">Choose a Reason</option>
-                              <option value="fresh">Fresh Allotment</option>
-                              <option value="exchange">Exchange</option>
-                              <option value="renewal">Renewal</option>
-                            </select>
-                          </FieldShell>
+                        <FieldShell label="Application Reason">
+                          <select
+                            value={emp.reason}
+                            onChange={(e) => {
+                              setSubmitError("");
+                              setSuccessMessage("");
+                              setEmp((s) => ({ ...s, reason: e.target.value }));
+                            }}
+                            className={selectCls(focused, "emp_reason")}
+                            style={{ backgroundImage: SELECT_ARROW }}
+                            onFocus={() => setFocused("emp_reason")}
+                            onBlur={() => setFocused(null)}
+                          >
+                            <option value="">Choose a Reason</option>
+                            <option value="fresh">Fresh Allotment</option>
+                            <option value="exchange">Exchange</option>
+                            <option value="renewal">Renewal</option>
+                          </select>
+                        </FieldShell>
 
-                          <FieldShell label="Exchange Reason">
+                        <FieldShell label="Exchange Reason">
+                          <input
+                            type="text"
+                            value={emp.exchangeReason}
+                            onChange={(e) => {
+                              setSubmitError("");
+                              setSuccessMessage("");
+                              setEmp((s) => ({ ...s, exchangeReason: e.target.value }));
+                            }}
+                            className={inputCls(focused, "emp_exchangeReason")}
+                            onFocus={() => setFocused("emp_exchangeReason")}
+                            onBlur={() => setFocused(null)}
+                            placeholder="Enter reason/notes if applicable"
+                          />
+                        </FieldShell>
+
+                        <FieldShell label="Attachment">
+                          <label className="h-10 rounded-[7px] border-[1.5px] border-[#e2e8f0] bg-white px-3 text-[13px] font-semibold text-[#1d4ed8] flex items-center justify-between gap-3 cursor-pointer">
+                            <span className="truncate">{emp.attachment?.name || "File Upload"}</span>
+                            <Upload size={15} className="shrink-0" />
                             <input
-                              type="text"
-                              value={emp.exchangeReason}
-                              onChange={(e) => {
-                                setSubmitError("");
-                                setSuccessMessage("");
-                                setEmp((s) => ({ ...s, exchangeReason: e.target.value }));
-                              }}
-                              className={inputCls(focused, "emp_exchangeReason")}
-                              onFocus={() => setFocused("emp_exchangeReason")}
-                              onBlur={() => setFocused(null)}
-                              placeholder="Enter reason/notes if applicable"
+                              type="file"
+                              className="hidden"
+                              onChange={(e) => setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }))}
                             />
-                          </FieldShell>
-
-                          <FieldShell label="Attachment">
-                            <label className="h-10 rounded-[7px] border-[1.5px] border-[#e2e8f0] bg-white px-3 text-[13px] font-semibold text-[#1d4ed8] flex items-center justify-between gap-3 cursor-pointer">
-                              <span className="truncate">{emp.attachment?.name || "File Upload"}</span>
-                              <Upload size={15} className="shrink-0" />
-                              <input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }))}
-                              />
-                            </label>
-                          </FieldShell>
-                        </div>
-                        {hodDeptsError ? (
-                          <div className="px-6 pb-4 text-[12px] font-semibold text-rose-600">{hodDeptsError}</div>
-                        ) : null}
+                          </label>
+                        </FieldShell>
                       </div>
+                      {hodDeptsError ? (
+                        <div className="px-6 pb-4 text-[12px] font-semibold text-rose-600">{hodDeptsError}</div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden">
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <Home size={16} className="text-[#1a2e5a]" />
+                      <h3 className="font-bold text-lg text-slate-900">Choose from Vacant Quarters Listing</h3>
+                    </div>
+                    <div className="text-[12px] font-semibold text-slate-500">
+                      {selectedQuarter
+                        ? `Selected: ${selectedQuarter.quarterNumber}`
+                        : "Select one available quarter"}
                     </div>
                   </div>
 
-                  <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden">
-                    <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Home size={16} className="text-[#1a2e5a]" />
-                        <h3 className="font-bold text-lg text-slate-900">Choose from Vacant Quarters Listing</h3>
-                      </div>
-                      <div className="text-[12px] font-semibold text-slate-500">
-                        {selectedQuarter
-                          ? `Selected: ${selectedQuarter.quarterNumber}`
-                          : "Select one available quarter"}
-                      </div>
-                    </div>
-
-                    {quartersError ? (
-                      <div className="px-6 pb-3 text-[12px] font-semibold text-rose-600">{quartersError}</div>
-                    ) : null}
-
-                    <div className="lms-quarter-grid bg-white pb-5 px-5 lg:pb-7 lg:px-7">
-                      <AgGridTable
-                        columns={quarterColumns}
-                        rows={vacantQuarterRows}
-                        rowKey={(row) => row?.rowKey}
-                        searchable
-                        pageSize={10}
-                        showExport={false}
-                        showFilter={false}
-                        contentAutoWidth={false}
-                        contentAlign="center"
-                        emptyMessage={classId ? "No vacant quarters available" : "Loading vacant quarters..."}
-                        searchPlaceholder="Search quarter type, area, quarter number..."
-                      />
-                    </div>
-
-                    <div className="hidden mt-3 flex-wrap items-center justify-between gap-3">
-                      <div className="text-[12px] font-semibold text-slate-600">
-                        {filteredQuarters.length === 0
-                          ? "0 results"
-                          : `${pageStart + 1}-${Math.min(pageStart + pageSize, filteredQuarters.length)} of ${filteredQuarters.length}`}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={pageSize}
-                          onChange={(e) => {
-                            setPageSize(Number(e.target.value));
-                            setPage(1);
-                          }}
-                          className="rounded-lg border border-[#e2e8f0] bg-white px-2 py-1.5 text-[12px] font-semibold text-slate-700"
-                        >
-                          {[10, 25, 50, 100].map((n) => (
-                            <option key={n} value={n}>
-                              {n}/page
-                            </option>
-                          ))}
-                        </select>
-
-                        <button
-                          type="button"
-                          onClick={() => setPage(1)}
-                          disabled={safePage === 1}
-                          className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                        >
-                          First
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPage((p) => Math.max(1, p - 1))}
-                          disabled={safePage === 1}
-                          className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                        >
-                          Prev
-                        </button>
-                        <div className="text-[12px] font-bold text-slate-700 px-1">
-                          {safePage} / {totalPages}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                          disabled={safePage === totalPages}
-                          className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                        >
-                          Next
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPage(totalPages)}
-                          disabled={safePage === totalPages}
-                          className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                        >
-                          Last
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {successMessage ? (
-                    <div className="flex items-center gap-3 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
-                      <div className="text-[13px] font-semibold text-emerald-700">{successMessage}</div>
-                    </div>
+                  {quartersError ? (
+                    <div className="px-6 pb-3 text-[12px] font-semibold text-rose-600">{quartersError}</div>
                   ) : null}
 
-                  {submitError ? (
-                    <div className="flex items-center gap-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
-                      <div className="text-[13px] font-semibold text-rose-700">{submitError}</div>
+                  <div className="lms-quarter-grid bg-white pb-5 px-5 lg:pb-7 lg:px-7">
+                    <AgGridTable
+                      columns={quarterColumns}
+                      rows={vacantQuarterRows}
+                      rowKey={(row) => row?.rowKey}
+                      searchable
+                      pageSize={10}
+                      showExport={false}
+                      showFilter={false}
+                      contentAutoWidth={false}
+                      contentAlign="center"
+                      emptyMessage={classId ? "No vacant quarters available" : "Loading vacant quarters..."}
+                      searchPlaceholder="Search quarter type, area, quarter number..."
+                    />
+                  </div>
+
+                  <div className="hidden mt-3 flex-wrap items-center justify-between gap-3">
+                    <div className="text-[12px] font-semibold text-slate-600">
+                      {filteredQuarters.length === 0
+                        ? "0 results"
+                        : `${pageStart + 1}-${Math.min(pageStart + pageSize, filteredQuarters.length)} of ${filteredQuarters.length}`}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setPage(1);
+                        }}
+                        className="rounded-lg border border-[#e2e8f0] bg-white px-2 py-1.5 text-[12px] font-semibold text-slate-700"
+                      >
+                        {[10, 25, 50, 100].map((n) => (
+                          <option key={n} value={n}>
+                            {n}/page
+                          </option>
+                        ))}
+                      </select>
+
                       <button
                         type="button"
-                        onClick={() => setSubmitError("")}
-                        className="ml-auto text-rose-400 hover:text-rose-600 font-bold text-[16px]"
+                        onClick={() => setPage(1)}
+                        disabled={safePage === 1}
+                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
                       >
-                        X
+                        First
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={safePage === 1}
+                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
+                      >
+                        Prev
+                      </button>
+                      <div className="text-[12px] font-bold text-slate-700 px-1">
+                        {safePage} / {totalPages}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safePage === totalPages}
+                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage(totalPages)}
+                        disabled={safePage === totalPages}
+                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
+                      >
+                        Last
                       </button>
                     </div>
-                  ) : null}
+                  </div>
+                </div>
 
-                  <div className="flex items-center justify-end gap-3">
+                {successMessage ? (
+                  <div className="flex items-center gap-3 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
+                    <div className="text-[13px] font-semibold text-emerald-700">{successMessage}</div>
+                  </div>
+                ) : null}
+
+                {submitError ? (
+                  <div className="flex items-center gap-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
+                    <div className="text-[13px] font-semibold text-rose-700">{submitError}</div>
                     <button
                       type="button"
-                      onClick={resetApplication}
-                      className="px-6 py-2.5 rounded-lg border border-[#e2e8f0] bg-white hover:bg-slate-50 text-slate-700 text-[13.5px] font-semibold transition-all duration-200"
+                      onClick={() => setSubmitError("")}
+                      className="ml-auto text-rose-400 hover:text-rose-600 font-bold text-[16px]"
                     >
-                      Reset
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleApply}
-                      disabled={submitting}
-                      className="px-10 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[14px] font-bold shadow-[0_2px_8px_rgba(232,119,34,0.25)] transition-all duration-200 flex items-center gap-2"
-                    >
-                      {submitting ? "Submitting..." : "Apply"}
+                      X
                     </button>
                   </div>
+                ) : null}
+
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={resetApplication}
+                    className="px-6 py-2.5 rounded-lg border border-[#e2e8f0] bg-white hover:bg-slate-50 text-slate-700 text-[13.5px] font-semibold transition-all duration-200"
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleApply}
+                    disabled={submitting}
+                    className="px-10 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[14px] font-bold shadow-[0_2px_8px_rgba(232,119,34,0.25)] transition-all duration-200 flex items-center gap-2"
+                  >
+                    {submitting ? "Submitting..." : "Apply"}
+                  </button>
                 </div>
               </div>
             </main>
-            <Footer />
           </div>
         </div>
+        <Footer />
       </div>
     </div>
   );
