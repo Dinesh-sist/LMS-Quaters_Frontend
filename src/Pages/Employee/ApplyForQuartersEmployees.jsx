@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   BadgeCheck,
   Building2,
@@ -61,7 +61,11 @@ function FieldShell({ label, children }) {
 export default function ApplyForQuartersEmployees() {
   const user = getUser();
   const location = useLocation();
+  const navigate = useNavigate();
   const [focused, setFocused] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [hodDepts, setHodDepts] = useState([]);
   const [hodDeptsError, setHodDeptsError] = useState("");
@@ -112,6 +116,8 @@ export default function ApplyForQuartersEmployees() {
           checked={String(emp.selectedQuarterRowKey) === String(value)}
           onClick={(event) => event.stopPropagation()}
           onChange={() => {
+            setSubmitError("");
+            setSuccessMessage("");
             setEmp((s) => ({
               ...s,
               selectedQuarterId: String(row?.quarterId ?? ""),
@@ -148,6 +154,7 @@ export default function ApplyForQuartersEmployees() {
           employeeId: data?.employeeId || s.employeeId,
           classOfEmployee: data?.classOfEmployee || s.classOfEmployee,
           casteOfEmployee: data?.casteOfEmployee || s.casteOfEmployee,
+          department: data?.department || s.department,
         }));
       } catch (err) {
         console.error("Employee profile error:", err);
@@ -170,7 +177,8 @@ export default function ApplyForQuartersEmployees() {
             .map((r) => r?.ALLOT_HOD_DEPT)
             .filter((v) => typeof v === "string" && v.trim() !== "")
           : [];
-        if (!cancelled) setHodDepts(depts);
+        const uniqueDepts = [...new Set(depts)];
+        if (!cancelled) setHodDepts(uniqueDepts);
       } catch (err) {
         if (!cancelled) setHodDeptsError(err?.message || "Failed to load HOD departments");
       }
@@ -191,7 +199,15 @@ export default function ApplyForQuartersEmployees() {
           auth: true,
         });
         const items = Array.isArray(data?.items) ? data.items : [];
-        if (!cancelled) setQuarters(items);
+        const seen = new Set();
+        const uniqueItems = items.filter((q) => {
+          const id = q?.Id ?? q?.ID ?? q?.QuarterId ?? q?.QuarterID;
+          if (id == null || seen.has(String(id))) return false;
+          seen.add(String(id));
+          return true;
+        });
+
+        if (!cancelled) setQuarters(uniqueItems);
       } catch (err) {
         if (!cancelled) setQuartersError(err?.message || "Failed to load quarters");
       }
@@ -211,6 +227,65 @@ export default function ApplyForQuartersEmployees() {
     .join("")
     .toUpperCase() || "E";
   const selectedQuarter = vacantQuarterRows.find((q) => String(q.rowKey) === String(emp.selectedQuarterRowKey));
+
+  const resetApplication = () => {
+    setEmp((s) => ({
+      ...s,
+      department: "",
+      reason: "",
+      exchangeReason: "",
+      attachment: null,
+      selectedQuarterId: "",
+      selectedQuarterRowKey: "",
+    }));
+    setSubmitError("");
+    setSuccessMessage("");
+    setPage(1);
+  };
+
+  const handleApply = async () => {
+    setSubmitError("");
+    setSuccessMessage("");
+
+    if (!emp.department) {
+      setSubmitError("Please select a department.");
+      return;
+    }
+    if (!emp.reason) {
+      setSubmitError("Please select a reason.");
+      return;
+    }
+    if (!emp.selectedQuarterId) {
+      setSubmitError("Please select a quarter.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const data = await request("/api/applications", {
+        method: "POST",
+        auth: true,
+        body: {
+          quarterId: parseInt(emp.selectedQuarterId, 10),
+          notes: emp.exchangeReason || "",
+        },
+      });
+
+      const quarterNumber = data?.quarterNumber || selectedQuarter?.quarterNumber || emp.selectedQuarterId;
+      const message = `Application submitted successfully for Quarter ${quarterNumber}!`;
+      setSuccessMessage(message);
+
+      setTimeout(() => {
+        navigate("/Quarters/Approval", {
+          state: { successMessage: message },
+        });
+      }, 1500);
+    } catch (err) {
+      console.error("Application submission error:", err);
+      setSubmitError(err.message || "Failed to submit application. Please try again.");
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[#EEF2FF]">
@@ -310,7 +385,11 @@ export default function ApplyForQuartersEmployees() {
                           <FieldShell label="Department">
                             <select
                               value={emp.department}
-                              onChange={(e) => setEmp((s) => ({ ...s, department: e.target.value }))}
+                              onChange={(e) => {
+                                setSubmitError("");
+                                setSuccessMessage("");
+                                setEmp((s) => ({ ...s, department: e.target.value }));
+                              }}
                               className={selectCls(focused, "emp_department")}
                               style={{ backgroundImage: SELECT_ARROW }}
                               onFocus={() => setFocused("emp_department")}
@@ -328,7 +407,11 @@ export default function ApplyForQuartersEmployees() {
                           <FieldShell label="Application Reason">
                             <select
                               value={emp.reason}
-                              onChange={(e) => setEmp((s) => ({ ...s, reason: e.target.value }))}
+                              onChange={(e) => {
+                                setSubmitError("");
+                                setSuccessMessage("");
+                                setEmp((s) => ({ ...s, reason: e.target.value }));
+                              }}
                               className={selectCls(focused, "emp_reason")}
                               style={{ backgroundImage: SELECT_ARROW }}
                               onFocus={() => setFocused("emp_reason")}
@@ -345,10 +428,15 @@ export default function ApplyForQuartersEmployees() {
                             <input
                               type="text"
                               value={emp.exchangeReason}
-                              onChange={(e) => setEmp((s) => ({ ...s, exchangeReason: e.target.value }))}
+                              onChange={(e) => {
+                                setSubmitError("");
+                                setSuccessMessage("");
+                                setEmp((s) => ({ ...s, exchangeReason: e.target.value }));
+                              }}
                               className={inputCls(focused, "emp_exchangeReason")}
                               onFocus={() => setFocused("emp_exchangeReason")}
                               onBlur={() => setFocused(null)}
+                              placeholder="Enter reason/notes if applicable"
                             />
                           </FieldShell>
 
@@ -464,6 +552,43 @@ export default function ApplyForQuartersEmployees() {
                         </button>
                       </div>
                     </div>
+                  </div>
+
+                  {successMessage ? (
+                    <div className="flex items-center gap-3 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
+                      <div className="text-[13px] font-semibold text-emerald-700">{successMessage}</div>
+                    </div>
+                  ) : null}
+
+                  {submitError ? (
+                    <div className="flex items-center gap-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
+                      <div className="text-[13px] font-semibold text-rose-700">{submitError}</div>
+                      <button
+                        type="button"
+                        onClick={() => setSubmitError("")}
+                        className="ml-auto text-rose-400 hover:text-rose-600 font-bold text-[16px]"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <div className="flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={resetApplication}
+                      className="px-6 py-2.5 rounded-lg border border-[#e2e8f0] bg-white hover:bg-slate-50 text-slate-700 text-[13.5px] font-semibold transition-all duration-200"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleApply}
+                      disabled={submitting}
+                      className="px-10 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[14px] font-bold shadow-[0_2px_8px_rgba(232,119,34,0.25)] transition-all duration-200 flex items-center gap-2"
+                    >
+                      {submitting ? "Submitting..." : "Apply"}
+                    </button>
                   </div>
                 </div>
               </div>
