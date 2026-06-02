@@ -15,6 +15,7 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
     body: body == null ? undefined : JSON.stringify(body)
   });
 
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const message = data?.error || `Request failed (${res.status})`;
@@ -24,6 +25,8 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   }
   return data;
 }
+
+
 
 export function login(username, password) {
   return request("/api/auth/login", { method: "POST", body: { username, password } });
@@ -44,3 +47,23 @@ export function getQuarterApplications() {
   return request("/api/admin/check-approval", { auth: true });
 }
 export { API_BASE, request };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

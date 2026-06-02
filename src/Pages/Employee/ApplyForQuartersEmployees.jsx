@@ -705,6 +705,7 @@ export default function ApplyForQuartersEmployees() {
                   </div>
                 </div>
               </div>
+              </div>
             </main>
             <Footer />
           </div>
@@ -713,3 +714,5 @@ export default function ApplyForQuartersEmployees() {
     </div>
   );
 }
+    
+
