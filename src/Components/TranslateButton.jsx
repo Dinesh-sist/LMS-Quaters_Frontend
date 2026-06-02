@@ -138,7 +138,7 @@ function isHindiApplied() {
   );
 }
 
-export default function TranslateButton() {
+export default function TranslateButton({ showPopup = true }) {
   const [isHindi, setIsHindi] = useState(() => getTranslateCookie().includes("/en/hi"));
   const [isReady, setIsReady] = useState(false);
   const [popupState, setPopupState] = useState({
@@ -208,7 +208,7 @@ export default function TranslateButton() {
 
   useEffect(() => {
     const pendingPopup = consumePopupEvent();
-    if (!pendingPopup) return;
+    if (!pendingPopup || !showPopup) return;
 
     window.setTimeout(() => {
       setPopupState({
@@ -238,11 +238,13 @@ export default function TranslateButton() {
     window.setTimeout(enforceHiddenTranslateUi, 500);
 
     if (langCode === "en") {
-      queuePopupEvent({
-        title: "Language Updated",
-        message: "Changed back to English.",
-        variant: "info",
-      });
+      if (showPopup) {
+        queuePopupEvent({
+          title: "Language Updated",
+          message: "Changed back to English.",
+          variant: "info",
+        });
+      }
 
       const appUrl = getCurrentAppUrl();
       stashAuthRecovery({ redirectTo: `${window.location.pathname}${window.location.search}${window.location.hash}` });
@@ -265,19 +267,23 @@ export default function TranslateButton() {
         const waitForHindi = window.setInterval(() => {
           if (isHindiApplied() || Date.now() - startedAt > 4000) {
             window.clearInterval(waitForHindi);
-            setPopupState({
-              open: true,
-              title: "Language Updated",
-              message: "Translated to Hindi.",
-              variant: "info",
-            });
+            if (showPopup) {
+              setPopupState({
+                open: true,
+                title: "Language Updated",
+                message: "Translated to Hindi.",
+                variant: "info",
+              });
+            }
           }
         }, 150);
       }
 
+
       setIsHindi((prev) => !prev);
     }
   };
+
 
   const buttonLabel = isHindi ? "English" : "Hindi";
 
@@ -289,8 +295,7 @@ export default function TranslateButton() {
         disabled={!isReady}
         className="group inline-flex items-center gap-1.5 rounded-lg border border-white/85 bg-transparent px-3 py-1.5 text-[14px] font-semibold text-white transition-all hover:border-orange-300 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-60"
         title={isHindi ? "Switch to English" : "Switch to Hindi"}
-        aria-label={isHindi ? "Switch language to English" : "Switch language to Hindi"}
-      >
+        aria-label={isHindi ? "Switch language to English" : "Switch language to Hindi"}      >
         <svg
           className="h-[18px] w-[18px] shrink-0 text-white/95"
           viewBox="0 0 24 24"
@@ -324,3 +329,7 @@ export default function TranslateButton() {
     </>
   );
 }
+
+
+
+

@@ -302,15 +302,128 @@ export default function ApplyForQuartersEmployees() {
           <Sidebar />
 
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
-            <main className="flex-1 overflow-y-auto px-5 py-6 lg:px-9 lg:py-7">
-              <div key={location.pathname} className="lms-page-transition">
-                <div className="mb-[22px]">
-                  <h1 className="text-2xl font-bold text-slate-900">
-                    Application Form for Quarter Allotment for Employees
-                  </h1>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Land Data Management System - Employee Application
-                  </p>
+            <main className="flex-1 overflow-y-auto px-9 py-7">
+              <div className="mb-[22px]">
+                <h1 className="text-2xl font-bold text-slate-900">
+                  Application Form for Quarter Allotment for Employees
+                </h1>
+                <p className="mt-1 text-sm text-slate-500">
+                  Land Data Management System - Employee Application
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] px-8 py-7">
+              <div className="grid items-center gap-5 mb-4" style={{ gridTemplateColumns: "260px 1fr" }}>
+                <label className="text-[13.5px] font-semibold text-slate-800">Name of the Employee:</label>
+                <div className="text-[13.5px] text-slate-800">{emp.employeeName || "-"}</div>
+              </div>
+
+              <div className="grid items-center gap-5 mb-4" style={{ gridTemplateColumns: "260px 1fr" }}>
+                <label className="text-[13.5px] font-semibold text-slate-800">Employee ID:</label>
+                <div className="text-[13.5px] text-slate-800">{emp.employeeId || "-"}</div>
+              </div>
+
+              <div className="grid items-center gap-5 mb-4" style={{ gridTemplateColumns: "260px 1fr" }}>
+                <label className="text-[13.5px] font-semibold text-slate-800">Class of Employee:</label>
+                <div className="text-[13.5px] text-slate-800">{emp.classOfEmployee || "-"}</div>
+              </div>
+
+              <div className="grid items-center gap-5 mb-5" style={{ gridTemplateColumns: "260px 1fr" }}>
+                <label className="text-[13.5px] font-semibold text-slate-800">Caste of Employee:</label>
+                <div className="text-[13.5px] text-slate-800">{emp.casteOfEmployee || "-"}</div>
+              </div>
+
+              <div className="grid items-center gap-5 mb-5" style={{ gridTemplateColumns: "260px 1fr" }}>
+                <label className="text-[13.5px] font-semibold text-slate-800">Department :</label>
+                <select
+                  value={emp.department}
+                  onChange={(e) => setEmp((s) => ({ ...s, department: e.target.value }))}
+                  className={`${selectCls(focused, "emp_department")} max-w-[420px]`}
+                  style={{ backgroundImage: SELECT_ARROW }}
+                  onFocus={() => setFocused("emp_department")}
+                  onBlur={() => setFocused(null)}
+                >
+                  <option value="">Choose a Department</option>
+                  {hodDepts.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid items-center gap-5 mb-3" style={{ gridTemplateColumns: "260px 1fr" }}>
+                <label className="text-[13.5px] font-semibold text-slate-800">
+                  Reason for quarter exchange (Only for exchange) :
+                </label>
+                <div className="flex flex-col gap-3 max-w-[520px]">
+                  <select
+                    value={emp.reason}
+                    onChange={(e) => setEmp((s) => ({ ...s, reason: e.target.value }))}
+                    className={selectCls(focused, "emp_reason")}
+                    style={{ backgroundImage: SELECT_ARROW }}
+                    onFocus={() => setFocused("emp_reason")}
+                    onBlur={() => setFocused(null)}
+                  >
+                    <option value="">Choose a Reason</option>
+                    <option value="fresh">Fresh Allotment</option>
+                    <option value="exchange">Exchange</option>
+                    <option value="renewal">Renewal</option>
+                  </select>
+
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="text"
+                      value={emp.exchangeReason}
+                      onChange={(e) => setEmp((s) => ({ ...s, exchangeReason: e.target.value }))}
+                      className={`${inputCls(focused, "emp_exchangeReason")} flex-1`}
+                      onFocus={() => setFocused("emp_exchangeReason")}
+                      onBlur={() => setFocused(null)}
+                      placeholder=""
+                    />
+                    <label className="text-[#1d4ed8] font-bold cursor-pointer whitespace-nowrap">
+                      File Upload
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }))}
+                      />
+                
+                    </label>
+                  </div>
+                  {emp.attachment ? (
+                    <div className="text-[12px] text-slate-500 mt-2">Selected file: {emp.attachment.name}</div>
+                  ) : null}
+                </div>
+              </div>
+
+              {hodDeptsError ? (
+                <div className="text-[12px] font-semibold text-rose-600 mb-3">{hodDeptsError}</div>
+              ) : null}
+
+              <div className="border-t-[1.5px] border-dashed border-[#e2e8f0] my-6" />
+
+              <div className="text-[18px] font-extrabold text-[#0284c7] mb-4">Choose from Vacant Quarters Listing</div>
+
+              {quartersError ? (
+                <div className="text-[12px] font-semibold text-rose-600 mb-3">{quartersError}</div>
+              ) : null}
+
+              <div className="flex items-center justify-end mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-semibold text-slate-700">Search:</span>
+                  <input
+                    type="text"
+                    value={emp.search}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      setEmp((s) => ({ ...s, search: next }));
+                      setPage(1);
+                    }}
+                    className={`${inputCls(focused, "emp_search")} w-[260px]`}
+                    onFocus={() => setFocused("emp_search")}
+                    onBlur={() => setFocused(null)}
+                  />
                 </div>
 
                 <div className="max-w-8xl mx-auto flex flex-col gap-6">
