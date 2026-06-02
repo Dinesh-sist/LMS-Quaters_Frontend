@@ -161,6 +161,8 @@ export default function ApplyForQuartersEmployees() {
       }
     }
 
+
+
     loadEmployeeProfile();
     return () => { cancelled = true; };
   }, []);
@@ -312,11 +314,10 @@ export default function ApplyForQuartersEmployees() {
                 </p>
               </div>
 
-
               <div className="max-w-8xl mx-auto flex flex-col gap-6">
                 <div className="flex flex-col xl:flex-row xl:items-start gap-6">
                   <div className="xl:w-64 shrink-0">
-                    <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-6">
+                    <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-11">
                       <div className="flex flex-col items-center gap-4 text-center">
                         <div className="flex w-full flex-row items-center gap-3 md:flex-col md:gap-0">
                           <div className="w-16 h-16 md:w-28 md:h-28 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-xl md:text-3xl lg:text-5xl font-bold text-[#1a2e5a] shrink-0">
@@ -324,15 +325,13 @@ export default function ApplyForQuartersEmployees() {
                           </div>
 
                           <div className="flex min-w-0 flex-1 flex-col items-start gap-1 md:flex-none md:items-center">
-                            <h2
+                            <h2 
                               className={`font-bold leading-tight md:mt-2 text-slate-800 w-full md:text-center ${nameSizeClass}`}
                               style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
                             >
                               {displayName}
                             </h2>
-                            <span className="text-[9px] md:text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 mt-0.5 md:mt-2 md:px-3 rounded-full whitespace-nowrap">
-                              Active
-                            </span>
+                           
                           </div>
                         </div>
 
@@ -599,3 +598,7 @@ export default function ApplyForQuartersEmployees() {
     </div>
   );
 }
+
+
+
+

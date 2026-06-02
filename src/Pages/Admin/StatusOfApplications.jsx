@@ -49,7 +49,7 @@ function PageSummaryBar({ rows }) {
 
   const shortlisted = rows.filter((d) => d.result === "Shortlisted").length;
 
-  const roster = rows.filter((d) => d.result === "Approved").length;
+
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -63,14 +63,12 @@ function PageSummaryBar({ rows }) {
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           {shortlisted} Shortlisted
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-          {roster} Roster
-        </span>       
+              
       </div>
     </div>  
   );
 }
+
 
 export default function StatusOfApplications() {
   const [rows, setRows] = useState([]);
