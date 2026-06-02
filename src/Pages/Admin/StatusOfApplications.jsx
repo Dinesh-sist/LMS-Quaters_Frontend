@@ -101,24 +101,26 @@ export default function StatusOfApplications() {
       title="Status of Applications"
       subtitle="Land Data Management System - Application Tracker"
     >
-      <PageSummaryBar rows={rows} />
+      <div className="lms-data-transition space-y-6">
+        <PageSummaryBar rows={rows} />
 
-      {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {error}
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="w-full overflow-x-auto rounded-xl">
+          <AgGridTable
+            columns={columns}
+            rows={rows}
+            searchable
+            pageSize={8}
+            showExport
+            showFilter
+            emptyMessage={loading ? "Loading application statuses..." : "No application statuses found."}
+          />
         </div>
-      ) : null}
-
-      <div className="w-full overflow-x-auto rounded-xl">
-        <AgGridTable
-          columns={columns}
-          rows={rows}
-          searchable
-          pageSize={8}
-          showExport
-          showFilter
-          emptyMessage={loading ? "Loading application statuses..." : "No application statuses found."}
-        />
       </div>
     </AdminLayout>
   );

@@ -103,46 +103,48 @@ export default function HistoryOfHouseAllotmentCommittee() {
       title="History Of House Allotment Committee"
       subtitle="Land Data Management System - Committee Records"
     >
-      <PageSummaryBar rows={rows} />
+      <div className="lms-data-transition space-y-6">
+        <PageSummaryBar rows={rows} />
 
-      {error ? (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {error}
+        {error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="w-full overflow-x-auto rounded-xl">
+          <AgGridTable
+            columns={columns}
+            rows={rows}
+            searchable
+            pageSize={8}
+            showExport
+            showFilter={false}
+            contentAutoWidth={false}
+            contentAlign="center"
+            emptyMessage={loading ? "Loading committee records..." : "No committee records found."}
+            searchPlaceholder="Search committee date..."
+          />
         </div>
-      ) : null}
 
-      <div className="w-full overflow-x-auto rounded-xl">
-        <AgGridTable
-          columns={columns}
-          rows={rows}
-          searchable
-          pageSize={8}
-          showExport
-          showFilter={false}
-          contentAutoWidth={false}
-          contentAlign="center"
-          emptyMessage={loading ? "Loading committee records..." : "No committee records found."}
-          searchPlaceholder="Search committee date..."
-        />
-      </div>
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          <button
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 active:scale-95"
+            onClick={() => alert("Downloading Final List...")}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Download Final List
+          </button>
 
-      <div className="flex flex-wrap items-center gap-3 pt-2">
-        <button
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 active:scale-95"
-          onClick={() => alert("Downloading Final List...")}
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          Download Final List
-        </button>
-
-        
+          
+        </div>
       </div>
     </AdminLayout>
   );

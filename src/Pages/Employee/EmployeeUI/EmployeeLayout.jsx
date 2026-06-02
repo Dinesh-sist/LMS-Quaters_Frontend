@@ -40,7 +40,7 @@ export default function EmployeeLayout({
                 aria-label="Close sidebar overlay"
               />
               <div className="relative h-full bg-white shadow-xl">
-                <EmployeeSideNav onNavigate={() => setSidebarOpen(false)} />
+                <EmployeeSideNav forceExpanded onNavigate={() => setSidebarOpen(false)} />
               </div>
             </div>
           ) : null}
