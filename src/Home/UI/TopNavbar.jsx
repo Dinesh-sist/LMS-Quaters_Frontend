@@ -48,7 +48,7 @@ function FontSizeControls({ onDecrease, onIncrease }) {
       >
         A-
       </button>
-      
+
       <button
         type="button"
         onClick={onIncrease}
@@ -61,15 +61,16 @@ function FontSizeControls({ onDecrease, onIncrease }) {
     </div>
   );
 }
-
 export default function TopNavbar({
   titleColor = "text-white",
   navTextColor = "light",
   transparent = false,
+  hideTranslatePopup = false,
 }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -416,7 +417,7 @@ export default function TopNavbar({
           <div className="hidden items-center gap-3 lg:flex">
             <div className="flex items-center gap-2 rounded-2xl bg-white/10 px-2 py-1.5 backdrop-blur-sm">
               <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} />
-              <TranslateButton />
+              <TranslateButton showPopup={!hideTranslatePopup} />
             </div>
 
             <nav className="flex items-center gap-1">
@@ -493,7 +494,7 @@ export default function TopNavbar({
           <div className="mt-4 ml-auto w-full max-w-[240px] rounded-[24px] border border-slate-200 bg-white p-2.5 shadow-lg sm:max-w-[260px] sm:p-3 lg:hidden">
             <div className="mb-2 flex flex-col gap-2 rounded-[18px] bg-[#0b1f44] p-2.5">
               <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} />
-              <TranslateButton />
+              <TranslateButton showPopup={!hideTranslatePopup} />
             </div>
 
             <nav className="flex flex-col gap-1.5 sm:gap-2">

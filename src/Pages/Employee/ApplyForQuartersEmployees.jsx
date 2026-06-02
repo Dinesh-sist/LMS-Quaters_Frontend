@@ -230,8 +230,12 @@ export default function ApplyForQuartersEmployees() {
                         className="hidden"
                         onChange={(e) => setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }))}
                       />
+                
                     </label>
                   </div>
+                  {emp.attachment ? (
+                    <div className="text-[12px] text-slate-500 mt-2">Selected file: {emp.attachment.name}</div>
+                  ) : null}
                 </div>
               </div>
 
