@@ -103,7 +103,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       }
       setAuth({ token: data.token, user: data.user });
       localStorage.setItem("lmsq_terms_accepted", "1");
-      navigate("/Quarters/Apply", { replace: true });
+      navigate("/Quarters/ApplyEmployees", { replace: true });
     } catch (e2) {
       setError(e2?.message || "Login failed.");
     } finally {

@@ -7,7 +7,6 @@ import About from './Home/About'
 import QuartersApplyLogin from './Home/QuatersApplyLogin'
 import EmployeeRegister from './Home/EmployeeRegister'
 import StaffLogin from './Home/StaffLogin'
-import ApplyForQuarters from './Pages/Employee/ApplyForQuarters'
 import ApplyForQuartersEmployees from './Pages/Employee/ApplyForQuartersEmployees'
 import CheckApproval from './Pages/Employee/CheckforApproval'
 
@@ -58,14 +57,6 @@ function App() {
         />
         <Route path="/QuartersApplyLogin"  element={<QuartersApplyLogin />} />
         <Route path="/EmployeeRegister"    element={<EmployeeRegister />} />
-        <Route
-          path="/Quarters/Apply"
-          element={
-            <ProtectedRoute role="employee">
-              <ApplyForQuarters />
-            </ProtectedRoute>
-          }
-        />
         <Route
           path="/Quarters/ApplyEmployees"
           element={
