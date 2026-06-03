@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import TopHeader from "../../Components/TopHeader";
 import Sidebar from "./EmployeeUI/EmployeeSideNav";
 import { request } from "../../api";
-import { getUser } from "../../auth";
+import { getUser, getToken } from "../../auth";
 
 const inputCls = (focused, id) =>
   `w-full box-border rounded-[7px] px-3 py-[9px] text-[13.5px] text-slate-800 bg-white outline-none transition-all duration-200 font-[inherit]
@@ -22,7 +22,6 @@ export default function ApplyForQuartersEmployees() {
   const [focused, setFocused] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const [hodDepts, setHodDepts] = useState([]);
   const [hodDeptsError, setHodDeptsError] = useState("");
@@ -62,10 +61,9 @@ export default function ApplyForQuartersEmployees() {
   const pageStart = (safePage - 1) * pageSize;
   const pageItems = filteredQuarters.slice(pageStart, pageStart + pageSize);
 
-  // Load employee profile once on mount
+  // Load employee profile
   useEffect(() => {
     let cancelled = false;
-
     async function loadEmployeeProfile() {
       try {
         const data = await request("/api/employee/me", { auth: true });
@@ -83,7 +81,6 @@ export default function ApplyForQuartersEmployees() {
         console.error("Employee profile error:", err);
       }
     }
-
     loadEmployeeProfile();
     return () => { cancelled = true; };
   }, []);
@@ -91,7 +88,6 @@ export default function ApplyForQuartersEmployees() {
   // Load HOD departments
   useEffect(() => {
     let cancelled = false;
-
     async function loadHodDepts() {
       try {
         setHodDeptsError("");
@@ -107,23 +103,19 @@ export default function ApplyForQuartersEmployees() {
         if (!cancelled) setHodDeptsError(err?.message || "Failed to load HOD departments");
       }
     }
-
     loadHodDepts();
     return () => { cancelled = true; };
   }, []);
 
+  // Load vacant quarters by classId
   useEffect(() => {
     if (!classId) return;
     let cancelled = false;
-
     async function loadQuarters() {
       try {
         setQuartersError("");
-        const data = await request("/api/estate-quarters/vacant?classId=" + classId, {
-          auth: true,
-        });
+        const data = await request("/api/estate-quarters/vacant?classId=" + classId, { auth: true });
         const items = Array.isArray(data?.items) ? data.items : [];
-
         const seen = new Set();
         const uniqueItems = items.filter((q) => {
           const id = q?.Id;
@@ -131,72 +123,45 @@ export default function ApplyForQuartersEmployees() {
           seen.add(id);
           return true;
         });
-
         if (!cancelled) setQuarters(uniqueItems);
       } catch (err) {
         if (!cancelled) setQuartersError(err?.message || "Failed to load quarters");
       }
     }
-
     loadQuarters();
     return () => { cancelled = true; };
   }, [classId]);
 
   const handleApply = async () => {
     setSubmitError("");
-    setSuccessMessage("");
 
-    // Validation
-    if (!emp.department) {
-      setSubmitError("Please select a department.");
-      return;
-    }
-    if (!emp.reason) {
-      setSubmitError("Please select a reason.");
-      return;
-    }
-    if (!emp.selectedQuarterId) {
-      setSubmitError("Please select a quarter.");
-      return;
-    }
+    if (!emp.department)        { setSubmitError("Please select a department."); return; }
+    if (!emp.reason)            { setSubmitError("Please select a reason."); return; }
+    if (!emp.selectedQuarterId) { setSubmitError("Please select a quarter."); return; }
 
     try {
       setSubmitting(true);
 
-      // Send as JSON (not FormData)
-      const res = await fetch("/api/applications", {
+      //  FIX: Use the request helper function which automatically adds auth token
+      const data = await request("/api/admin/checkapprovalsave", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        body: {
+          quarterId:      parseInt(emp.selectedQuarterId),
+          reason:         emp.reason,
+          exchangeReason: emp.exchangeReason || "",
+          department:     emp.department,
         },
-        body: JSON.stringify({
-          quarterId: parseInt(emp.selectedQuarterId),
-          notes: emp.exchangeReason || ""
-        }),
+        auth: true,  
+      });
+      navigate("/Quarters/Approval", {
+        state: {
+          successMessage: `Your quarter application has been submitted successfully! Application No: ${data.appNo}`,
+        },
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `Server error: ${res.status}`);
-      }
-
-      const data = await res.json();
-
-      // Show success and navigate
-      setSuccessMessage(`✓ Application submitted successfully for Quarter ${data.quarterNumber}!`);
-      
-      setTimeout(() => {
-        navigate("/CheckApproval", {
-          state: { 
-            successMessage: `Application submitted successfully for Quarter ${data.quarterNumber}!` 
-          },
-        });
-      }, 1500);
-
     } catch (err) {
-      console.error("Application submission error:", err);
-      setSubmitError(err.message || "Failed to submit application. Please try again.");
+      setSubmitError(err.message || "Failed to submit. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -341,8 +306,7 @@ export default function ApplyForQuartersEmployees() {
                     type="text"
                     value={emp.search}
                     onChange={(e) => {
-                      const next = e.target.value;
-                      setEmp((s) => ({ ...s, search: next }));
+                      setEmp((s) => ({ ...s, search: e.target.value }));
                       setPage(1);
                     }}
                     className={`${inputCls(focused, "emp_search")} w-[260px]`}
@@ -413,10 +377,7 @@ export default function ApplyForQuartersEmployees() {
                 <div className="flex items-center gap-2">
                   <select
                     value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value));
-                      setPage(1);
-                    }}
+                    onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
                     className="rounded-lg border border-[#e2e8f0] bg-white px-2 py-1.5 text-[12px] font-semibold text-slate-700"
                   >
                     {[10, 25, 50, 100].map((n) => (
@@ -444,29 +405,15 @@ export default function ApplyForQuartersEmployees() {
                 </div>
               </div>
 
-              {/* Divider */}
               <div className="border-t-[1.5px] border-dashed border-[#e2e8f0] my-6" />
-
-              {/* Success Banner */}
-              {successMessage && (
-                <div className="mb-4 flex items-center gap-3 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
-                  <span className="text-emerald-500 text-[18px]">✓</span>
-                  <div className="text-[13px] font-semibold text-emerald-700">{successMessage}</div>
-                </div>
-              )}
 
               {/* Error Banner */}
               {submitError && (
                 <div className="mb-4 flex items-center gap-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
                   <span className="text-rose-500 text-[18px]">⚠</span>
-                  <div className="text-[13px] font-semibold text-rose-700">{submitError}</div>
-                  <button
-                    type="button"
-                    onClick={() => setSubmitError("")}
-                    className="ml-auto text-rose-400 hover:text-rose-600 font-bold text-[16px]"
-                  >
-                    ✕
-                  </button>
+                  <div className="text-[13px] font-semibold text-rose-700 flex-1">{submitError}</div>
+                  <button type="button" onClick={() => setSubmitError("")}
+                    className="text-rose-400 hover:text-rose-600 font-bold text-[16px]">✕</button>
                 </div>
               )}
 
@@ -485,7 +432,6 @@ export default function ApplyForQuartersEmployees() {
                       search: "",
                     }));
                     setSubmitError("");
-                    setSuccessMessage("");
                     setPage(1);
                   }}
                   className="px-6 py-2.5 rounded-lg border border-[#e2e8f0] bg-white hover:bg-slate-50 text-slate-700 text-[13.5px] font-semibold transition-all duration-200"
@@ -496,7 +442,7 @@ export default function ApplyForQuartersEmployees() {
                   type="button"
                   onClick={handleApply}
                   disabled={submitting}
-                  className="px-10 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[14px] font-bold shadow-[0_2px_8px_rgba(232,119,34,0.25)] transition-all duration-200 flex items-center gap-2"
+                  className="px-10 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[14px] font-bold shadow-[0_2px_8px_rgba(232,119,34,0.25)] transition-all duration-200"
                 >
                   {submitting ? "Submitting..." : "Apply"}
                 </button>
