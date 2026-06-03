@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Logo from "../../assets/Logo.png";
+import TranslateButton from "../../Components/TranslateButton";
+
 
 const NAV_ITEMS = [
   { label: "Home", to: "/", dropdown: false },
@@ -32,25 +34,58 @@ const TERMS_AND_CONDITIONS = [
   "Prior permission is required before hyperlinks are directed from any website to this website. Permission for the same, stating the nature of the content on the pages from where the link has to be given and the exact language of the hyperlink should be obtained by sending a request at dmmsppt@paradipport.gov.in.",
 ];
 
+
+
+function FontSizeControls({ onDecrease, onIncrease }) {
+  return (
+    <div className="inline-flex items-center gap-1" role="group" aria-label="Font size controls">
+      <button
+        type="button"
+        onClick={onDecrease}
+        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c]"
+        aria-label="Decrease font size"
+        title="Decrease font size"
+      >
+        A-
+      </button>
+
+      <button
+        type="button"
+        onClick={onIncrease}
+        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c]"
+        aria-label="Increase font size"
+        title="Increase font size"
+      >
+        A+
+      </button>
+    </div>
+  );
+}
 export default function TopNavbar({
   titleColor = "text-white",
   navTextColor = "light",
   transparent = false,
+  hideTranslatePopup = false,
 }) {
   const location = useLocation();
   const navigate = useNavigate();
 
+  
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [hasReadAll, setHasReadAll] = useState(false);
+  const [fontSize, setFontSize] = useState(16);
 
   const scrollRef = useRef(null);
   const isDarkText = navTextColor === "dark";
 
   const dropdownPaths = DROPDOWN_ITEMS.filter((i) => i.to).map((i) => i.to);
   const isDropdownActive = [...dropdownPaths, "/Quarters/Apply"].includes(location.pathname);
+
+  const increaseFontSize = () => setFontSize((prev) => Math.min(prev + 2, 28));
+  const decreaseFontSize = () => setFontSize((prev) => Math.max(prev - 2, 12));
 
   const closeAllMenus = () => {
     setDropdownOpen(false);
@@ -83,6 +118,10 @@ export default function TopNavbar({
     const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 10;
     if (atBottom) setHasReadAll(true);
   };
+
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSize}px`;
+  }, [fontSize]);
 
   useEffect(() => {
     if (showTermsModal) {
@@ -375,77 +414,89 @@ export default function TopNavbar({
             </svg>
           </button>
 
-          <nav className="hidden items-center gap-1 lg:flex">
-            {NAV_ITEMS.map(({ label, to, dropdown }) => {
-              if (dropdown) {
-                return (
-                  <div key={label} className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setDropdownOpen((p) => !p)}
-                      className={`flex min-h-[40px] items-center gap-1.5 rounded-full border-0 px-5 py-2 text-sm font-semibold transition-all ${
-                        isDropdownActive || dropdownOpen
-                          ? "bg-orange-400 text-white"
-                          : isDarkText
-                            ? "bg-transparent text-slate-700 hover:text-slate-950"
-                            : "bg-transparent text-white/85 hover:text-white"
-                      }`}
-                    >
-                      {label}
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+          <div className="hidden items-center gap-3 lg:flex">
+            <div className="flex items-center gap-2 rounded-2xl bg-white/10 px-2 py-1.5 backdrop-blur-sm">
+              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} />
+              <TranslateButton showPopup={!hideTranslatePopup} />
+            </div>
+
+            <nav className="flex items-center gap-1">
+              {NAV_ITEMS.map(({ label, to, dropdown }) => {
+                if (dropdown) {
+                  return (
+                    <div key={label} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setDropdownOpen((p) => !p)}
+                        className={`flex min-h-[40px] items-center gap-1.5 rounded-full border-0 px-5 py-2 text-sm font-semibold transition-all ${
+                          isDropdownActive || dropdownOpen
+                            ? "bg-orange-400 text-white"
+                            : isDarkText
+                              ? "bg-transparent text-slate-700 hover:text-slate-950"
+                              : "bg-transparent text-white/85 hover:text-white"
+                        }`}
                       >
-                        <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
+                        {label}
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
+                        >
+                          <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
 
-                    {dropdownOpen && (
-                      <div className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[180px] rounded-2xl border border-slate-200 bg-white px-2 py-3 shadow-xl">
-                        {DROPDOWN_ITEMS.map(({ label: dl, to: dt, active }) =>
-                          active && dt ? (
-                            <Link
-                              key={dl}
-                              to={dt}
-                              onClick={dl === "Quarters" ? handleQuartersClick : () => setDropdownOpen(false)}
-                              className="block rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 no-underline transition-colors hover:bg-orange-50 hover:text-orange-600"
-                            >
-                              {dl}
-                            </Link>
-                          ) : (
-                            <span key={dl} className="block cursor-not-allowed rounded-xl px-4 py-2 text-sm italic text-slate-400">
-                              {dl}
-                            </span>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </div>
+                      {dropdownOpen && (
+                        <div className="absolute left-0 top-[calc(100%+8px)] z-50 min-w-[180px] rounded-2xl border border-slate-200 bg-white px-2 py-3 shadow-xl">
+                          {DROPDOWN_ITEMS.map(({ label: dl, to: dt, active }) =>
+                            active && dt ? (
+                              <Link
+                                key={dl}
+                                to={dt}
+                                onClick={dl === "Quarters" ? handleQuartersClick : () => setDropdownOpen(false)}
+                                className="block rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 no-underline transition-colors hover:bg-orange-50 hover:text-orange-600"
+                              >
+                                {dl}
+                              </Link>
+                            ) : (
+                              <span key={dl} className="block cursor-not-allowed rounded-xl px-4 py-2 text-sm italic text-slate-400">
+                                {dl}
+                              </span>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                const isActive = location.pathname === to && !isDropdownActive;
+                return (
+                  <Link
+                    key={label}
+                    to={to}
+                    onClick={() => setDropdownOpen(false)}
+                    className={`rounded-full px-5 py-2 text-sm font-semibold no-underline transition-all ${
+                      isActive ? "bg-orange-400 text-white" : isDarkText ? "text-slate-700 hover:text-slate-950" : "text-white/85 hover:text-white"
+                    }`}
+                  >
+                    {label}
+                  </Link>
                 );
-              }
-
-              const isActive = location.pathname === to && !isDropdownActive;
-              return (
-                <Link
-                  key={label}
-                  to={to}
-                  onClick={() => setDropdownOpen(false)}
-                  className={`rounded-full px-5 py-2 text-sm font-semibold no-underline transition-all ${
-                    isActive ? "bg-orange-400 text-white" : isDarkText ? "text-slate-700 hover:text-slate-950" : "text-white/85 hover:text-white"
-                  }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+              })}
+            </nav>
+          </div>
         </div>
 
         {mobileMenuOpen && (
           <div className="mt-4 ml-auto w-full max-w-[240px] rounded-[24px] border border-slate-200 bg-white p-2.5 shadow-lg sm:max-w-[260px] sm:p-3 lg:hidden">
+            <div className="mb-2 flex flex-col gap-2 rounded-[18px] bg-[#0b1f44] p-2.5">
+              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} />
+              <TranslateButton showPopup={!hideTranslatePopup} />
+            </div>
+
             <nav className="flex flex-col gap-1.5 sm:gap-2">
               {NAV_ITEMS.map(({ label, to, dropdown }) => {
                 if (dropdown) {

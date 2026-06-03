@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 const sidebarNav = [
   {
@@ -45,16 +47,49 @@ const sidebarNav = [
   },
 ];
 
-export default function AdminSideNav({ onNavigate }) {
+function getStoredCollapsed() {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem("adminSidebarCollapsed") === "true";
+}
+
+export default function AdminSideNav({ onNavigate, forceExpanded = false }) {
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(getStoredCollapsed);
+  const isCollapsed = forceExpanded ? false : collapsed;
 
-
-
+  const toggleCollapsed = () => {
+    setCollapsed((current) => {
+      const next = !current;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("adminSidebarCollapsed", String(next));
+      }
+      return next;
+    });
+  };
 
   return (
-    <aside className="h-full w-[252px] shrink-0 bg-white flex flex-col overflow-hidden border-r border-[#dde3ee]">
-      <div className="px-5 pt-[22px] pb-[15px] text-[13px] font-bold text-slate-500 uppercase tracking-[0.5px]">
-        Admin Management
+    <aside
+      className={`h-full shrink-0 bg-white flex flex-col overflow-visible border-r border-[#dde3ee] transition-[width] duration-200 ${
+        isCollapsed ? "w-[76px]" : "w-[252px]"
+      }`}
+    >
+      <div className={`flex items-center px-3 pt-[18px] pb-[15px] ${isCollapsed ? "justify-center" : "justify-between"}`}>
+        {!isCollapsed ? (
+          <div className="text-[13px] font-bold text-slate-500 uppercase tracking-[0.5px]">
+            Admin Management
+          </div>
+        ) : null}
+        {!forceExpanded ? (
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#e87722]"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+          </button>
+        ) : null}
       </div>
 
 
@@ -67,16 +102,22 @@ export default function AdminSideNav({ onNavigate }) {
               key={item.key}
               to={item.to}
               onClick={onNavigate}
-              className={`flex items-center gap-[11px] px-[13px] py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] transition-all duration-150 ${
+              title={isCollapsed ? item.label : undefined}
+              className={`group relative flex items-center ${isCollapsed ? "justify-center px-0" : "gap-[11px] px-[13px]"} py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] transition-all duration-150 ${
                 active
-                  ? "font-semibold text-[#e87722] bg-[rgba(232,119,34,0.09)]"
+                  ? "font-medium text-[#e87722] bg-[rgba(232,119,34,0.09)]"
                   : "font-medium text-gray-700 bg-transparent hover:bg-slate-100 hover:text-slate-800"
               }`}
             >
               <span className={`flex items-center shrink-0 ${active ? "text-[#e87722]" : "text-slate-500"}`}>
                 {item.icon}
               </span>
-              {item.label}
+              {!isCollapsed ? item.label : null}
+              {isCollapsed ? (
+                <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                  {item.label}
+                </span>
+              ) : null}
             </Link>
           );
         })}

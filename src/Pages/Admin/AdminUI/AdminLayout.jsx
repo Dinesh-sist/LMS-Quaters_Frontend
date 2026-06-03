@@ -31,7 +31,7 @@ export default function AdminLayout({ title, subtitle, children }) {
                 aria-label="Close sidebar overlay"
               />
               <div className="relative h-full bg-white shadow-xl">
-                <AdminSideNav onNavigate={() => setSidebarOpen(false)} />
+                <AdminSideNav forceExpanded onNavigate={() => setSidebarOpen(false)} />
               </div>
             </div>
           ) : null}

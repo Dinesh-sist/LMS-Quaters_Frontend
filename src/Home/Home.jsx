@@ -143,7 +143,7 @@ export default function Home() {
 
           {/* Navbar */}
           <div className="hero-navbar">
-            <TopNavbar titleColor="text-white" transparent />
+            <TopNavbar titleColor="text-white" transparent hideTranslatePopup />
           </div>
 
           {/* Hero body */}

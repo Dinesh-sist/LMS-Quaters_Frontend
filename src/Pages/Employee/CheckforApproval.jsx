@@ -3,13 +3,138 @@ import { useLocation } from "react-router-dom";
 import AgGridTable from "../../Components/Table";
 import EmployeeLayout from "./EmployeeUI/EmployeeLayout";
 import { request } from "../../api";
+import { getUser } from "../../auth";
+
+
+const approvalRows = [
+  {
+    id: 1,
+    priorityNo: 1,
+    empId: "EMP24031",
+    empName: "Sanjay Kumar Das",
+    class: "SR-CLASS-I",
+    casteId: "GEN",
+    allotCatId: "CAT-A",
+    emailId: "sanjay.das@ppa.gov.in",
+    reqDate: "2026-04-28",
+    qtrReq: "A-12",
+    qtrLocation: "Jhanjhirimangala Colony",
+    qtrType: "TYPE-A",
+    status: "Approved",
+  },
+  {
+    id: 2,
+    priorityNo: 2,
+    empId: "EMP24054",
+    empName: "Priyanka Sahoo",
+    class: "SR-CLASS-II",
+    casteId: "OBC",
+    allotCatId: "CAT-B",
+    emailId: "priyanka.sahoo@ppa.gov.in",
+    reqDate: "2026-04-30",
+    qtrReq: "B-07",
+    qtrLocation: "Nuabazar Colony",
+    qtrType: "TYPE-B",
+    status: "Under Review",
+  },
+  {
+    id: 3,
+    priorityNo: 3,
+    empId: "EMP24088",
+    empName: "Rakesh Patnaik",
+    class: "SR-CLASS-I",
+    casteId: "SC",
+    allotCatId: "CAT-A",
+    emailId: "rakesh.patnaik@ppa.gov.in",
+    reqDate: "2026-05-02",
+    qtrReq: "C-04",
+    qtrLocation: "Officer's Colony",
+    qtrType: "TYPE-C",
+    status: "Pending",
+  },
+  {
+    id: 4,
+    priorityNo: 4,
+    empId: "EMP24102",
+    empName: "Mamata Mohanty",
+    class: "SR-CLASS-II",
+    casteId: "ST",
+    allotCatId: "CAT-C",
+    emailId: "mamata.mohanty@ppa.gov.in",
+    reqDate: "2026-05-03",
+    qtrReq: "D-15",
+    qtrLocation: "Transit Campus",
+    qtrType: "TYPE-D",
+    status: "Clarification Needed",
+  },
+  {
+    id: 5,
+    priorityNo: 5,
+    empId: "EMP24114",
+    empName: "Anil Behera",
+    class: "SR-CLASS-I",
+    casteId: "GEN",
+    allotCatId: "CAT-B",
+    emailId: "anil.behera@ppa.gov.in",
+    reqDate: "2026-05-05",
+    qtrReq: "A-03",
+    qtrLocation: "Marine Drive Colony",
+    qtrType: "TYPE-A",
+    status: "Approved",
+  },
+  {
+    id: 6,
+    priorityNo: 6,
+    empId: "EMP24119",
+    empName: "Deepa Rout",
+    class: "SR-CLASS-II",
+    casteId: "OBC",
+    allotCatId: "CAT-C",
+    emailId: "deepa.rout@ppa.gov.in",
+    reqDate: "2026-05-06",
+    qtrReq: "B-10",
+    qtrLocation: "Jhanjhirimangala Colony",
+    qtrType: "TYPE-B",
+    status: "Pending",
+  },
+  {
+    id: 7,
+    priorityNo: 7,
+    empId: "EMP24127",
+    empName: "Subrat Panda",
+    class: "SR-CLASS-I",
+    casteId: "GEN",
+    allotCatId: "CAT-A",
+    emailId: "subrat.panda@ppa.gov.in",
+    reqDate: "2026-05-07",
+    qtrReq: "C-09",
+    qtrLocation: "Officer's Colony",
+    qtrType: "TYPE-C",
+    status: "Under Review",
+  },
+  {
+    id: 8,
+    priorityNo: 8,
+    empId: "EMP24133",
+    empName: "Niharika Mishra",
+    class: "SR-CLASS-II",
+    casteId: "SC",
+    allotCatId: "CAT-B",
+    emailId: "niharika.mishra@ppa.gov.in",
+    reqDate: "2026-05-08",
+    qtrReq: "E-02",
+    qtrLocation: "Nuabazar Colony",
+    qtrType: "TYPE-E",
+    status: "Approved",
+  },
+];
 
 
 const statusStyles = {
-  approved:             "bg-emerald-100 text-emerald-700",
-  pending:              "bg-amber-100 text-amber-700",
-  rejected:             "bg-rose-100 text-rose-700",
-  cancelled:            "bg-slate-100 text-slate-600",
+  approved: "bg-emerald-100 text-emerald-700",
+  pending: "bg-amber-100 text-amber-700",
+  rejected: "bg-rose-100 text-rose-700",
+  cancelled: "bg-slate-100 text-slate-600",
 };
 
 function statusLabel(value) {
@@ -38,9 +163,8 @@ const columns = [
     minWidth: 180,
     render: (value) => (
       <span
-        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
-          statusStyles[value?.toLowerCase()] || "bg-slate-100 text-slate-600"
-        }`}
+        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[value?.toLowerCase()] || "bg-slate-100 text-slate-600"
+          }`}
       >
         {statusLabel(value)}
       </span>
@@ -49,10 +173,10 @@ const columns = [
 ];
 
 function PageSummaryBar({ rows }) {
-  const totalRequests  = rows.length;
-  const approved       = rows.filter((r) => r.Status?.toLowerCase() === "approved").length;
-  const inProgress     = rows.filter((r) => r.Status?.toLowerCase() === "pending").length;
-  const rejected       = rows.filter((r) => r.Status?.toLowerCase() === "rejected").length;
+  const totalRequests = rows.length;
+  const approved = rows.filter((r) => r.Status?.toLowerCase() === "approved").length;
+  const inProgress = rows.filter((r) => r.Status?.toLowerCase() === "pending").length;
+  const rejected = rows.filter((r) => r.Status?.toLowerCase() === "rejected").length;
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -113,8 +237,7 @@ export default function CheckApproval() {
       subtitle="Land Data Management System - Approval Tracker"
       role="user"
       description="Approval Tracking"
-      welcomeName="Applicant"
-      logoutTo="/QuartersApplyLogin"
+      welcomeName={user?.name || user?.username || "Employee"} logoutTo="/QuartersApplyLogin"
     >
 
       {/* Success Banner */}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
@@ -7,8 +7,8 @@ import Logo from "../assets/Logo.png";
 import { getEmployeeClasses, login, lookupEmployee, registerEmployee } from "../api";
 import { setAuth } from "../auth";
 
-export default function QuartersApplyLogin() {
-  const [mode, setMode] = useState("login"); // "login" | "register"
+export default function QuartersApplyLogin({ initialMode = "login" }) {
+  const [mode, setMode] = useState(initialMode); // "login" | "register"
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -74,14 +74,21 @@ export default function QuartersApplyLogin() {
         ];
   }, [classOptions]);
 
-  const fetchClasses = async () => {
+  const fetchClasses = useCallback(async () => {
     try {
       const data = await getEmployeeClasses();
       setClassOptions(Array.isArray(data?.items) ? data.items : []);
     } catch {
       setClassOptions([]);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (initialMode === "register") {
+      setMode("register");
+      fetchClasses();
+    }
+  }, [fetchClasses, initialMode]);
 
   const handleLogin = async (e) => {
     e?.preventDefault();
@@ -96,7 +103,7 @@ export default function QuartersApplyLogin() {
       }
       setAuth({ token: data.token, user: data.user });
       localStorage.setItem("lmsq_terms_accepted", "1");
-      navigate("/Quarters/Apply", { replace: true });
+      navigate("/Quarters/ApplyEmployees", { replace: true });
     } catch (e2) {
       setError(e2?.message || "Login failed.");
     } finally {
@@ -129,7 +136,6 @@ export default function QuartersApplyLogin() {
       setSuccessOpen(true);
       setTimeout(() => {
         setSuccessOpen(false);
-        setMode("login");
         setReg({
           employeeId: "",
           dateOfBirth: "",
@@ -144,6 +150,7 @@ export default function QuartersApplyLogin() {
         });
         setUsername("");
         setPassword("");
+        navigate("/QuartersApplyLogin", { replace: true });
       }, 1200);
     } catch (e2) {
       setError(e2?.message || "Registration failed.");
@@ -453,7 +460,7 @@ export default function QuartersApplyLogin() {
                   className="w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
                   onClick={() => {
                     setError("");
-                    setMode("login");
+                    navigate("/QuartersApplyLogin");
                   }}
                 >
                   Back to Login
@@ -462,8 +469,8 @@ export default function QuartersApplyLogin() {
               </form>
             </div>
           </div>
-          <Footer />
         </div>
+        <Footer sticky={false} />
 
         {successOpen ? (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
@@ -686,22 +693,25 @@ export default function QuartersApplyLogin() {
                   className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
                   onClick={async () => {
                     setError("");
-                    await fetchClasses();
-                    setMode("register");
+                    navigate("/EmployeeRegister");
                   }}
                 >
                   New Register
                 </button>
 
-
+                <div className="mt-auto pt-3 text-center text-[12px] text-slate-400">
+                  <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
+                    &larr; Back to Home
+                  </Link>
+                </div>
 
               </form>
             </div>
           </div>
-          <Footer />
         </div>
+        <Footer sticky={false} />
       </div>
     </div>
-  );
+  );  
 }
 

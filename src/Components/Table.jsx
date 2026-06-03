@@ -21,29 +21,29 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 // ── Purple themeQuartz (from file 2) ────────────────────────
 const purpleTheme = themeQuartz.withParams({
-  fontFamily:                 "'Segoe UI', system-ui, sans-serif",
-  fontSize:                   13,
-  rowHeight:                  48,
-  rowVerticalPaddingScale:    0,
-  headerHeight:               44,
-  headerBackgroundColor:      "#f9fafb",
-  headerTextColor:            "#6b7280",
-  headerFontSize:             11,
-  headerFontWeight:           700,
-  backgroundColor:            "#ffffff",
-  oddRowBackgroundColor:      "#fafaff",
-  rowHoverColor:              "rgba(139,92,246,0.05)",
+  fontFamily: "'Segoe UI', system-ui, sans-serif",
+  fontSize: 13,
+  rowHeight: 48,
+  rowVerticalPaddingScale: 0,
+  headerHeight: 44,
+  headerBackgroundColor: "#f9fafb",
+  headerTextColor: "#6b7280",
+  headerFontSize: 11,
+  headerFontWeight: 700,
+  backgroundColor: "#ffffff",
+  oddRowBackgroundColor: "#fafaff",
+  rowHoverColor: "rgba(139,92,246,0.05)",
   selectedRowBackgroundColor: "#ede9fe",
-  borderColor:                "#f3f4f6",
+  borderColor: "#f3f4f6",
   cellHorizontalPaddingScale: 1.3,
-  accentColor:                "#6d28d9",
-  foregroundColor:            "#374151",
-  chromeBackgroundColor:      "rgba(249,250,251,0.5)",
-  borderRadius:               0,
-  wrapperBorderRadius:        0,
-  columnBorder:               false,
-  headerColumnBorder:         false,
-  sidePanelBorder:            false,
+  accentColor: "#6d28d9",
+  foregroundColor: "#374151",
+  chromeBackgroundColor: "rgba(249,250,251,0.5)",
+  borderRadius: 0,
+  wrapperBorderRadius: 0,
+  columnBorder: false,
+  headerColumnBorder: false,
+  sidePanelBorder: false,
 });
 
 /* ── Cell Renderers (from file 2) ───────────────────────────── */
@@ -80,7 +80,7 @@ function ClassCellRenderer({ value }) {
     <span style={{
       padding: "2px 8px",
       background: isSr1 ? "#dbeafe" : "#ffedd5",
-      color:      isSr1 ? "#1d4ed8" : "#c2410c",
+      color: isSr1 ? "#1d4ed8" : "#c2410c",
       borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
     }}>
       {value}
@@ -115,12 +115,136 @@ function ActionCellRenderer() {
 }
 
 const RENDERER_MAP = {
-  badge:  BadgeCellRenderer,
-  empId:  EmpIdCellRenderer,
-  class:  ClassCellRenderer,
-  basic:  BasicCellRenderer,
+  badge: BadgeCellRenderer,
+  empId: EmpIdCellRenderer,
+  class: ClassCellRenderer,
+  basic: BasicCellRenderer,
   action: ActionCellRenderer,
 };
+
+
+
+const COLUMN_KEY_FALLBACK_PREFIX = "column";
+const MAX_CONTENT_WIDTH = 720;
+const CELL_PADDING = 56;
+const CONTENT_FONT = "500 13px 'Segoe UI', system-ui, sans-serif";
+const normalizedRowKeyCache = new WeakMap();
+
+function normalizeColumnToken(value) {
+  return String(value ?? "")
+    .replace(/[\s_-]+/g, "")
+    .toLowerCase();
+}
+
+function getColumnKey(column, index) {
+  const fallback = `${COLUMN_KEY_FALLBACK_PREFIX}_${index}`;
+  return String(
+    column?.key ??
+    column?.Key ??
+    column?.field ??
+    column?.Field ??
+    column?.dataKey ??
+    column?.dataField ??
+    fallback
+  );
+}
+
+function getColumnHeader(column, fallbackKey) {
+  return column?.header || column?.label || fallbackKey;
+}
+
+function getPreferredFieldNames(column, fallbackKey) {
+  return [
+    column?.field,
+    column?.Field,
+    column?.dataKey,
+    column?.dataField,
+    column?.key,
+    column?.Key,
+    fallbackKey,
+  ]
+    .filter((value) => value != null && value !== "")
+    .map(String)
+    .filter((value, index, allValues) => allValues.indexOf(value) === index);
+}
+
+function getNormalizedRowKeyMap(row) {
+  if (!row || typeof row !== "object") return new Map();
+
+  let cached = normalizedRowKeyCache.get(row);
+  if (!cached) {
+    cached = new Map(
+      Object.keys(row).map((key) => [normalizeColumnToken(key), key])
+    );
+    normalizedRowKeyCache.set(row, cached);
+  }
+
+  return cached;
+}
+
+function getRowValue(row, column, fallbackKey) {
+  if (typeof column?.value === "function") {
+    return column.value(row);
+  }
+
+  if (!row || typeof row !== "object") return undefined;
+
+  const fieldNames = getPreferredFieldNames(column, fallbackKey);
+
+  for (const fieldName of fieldNames) {
+    if (Object.prototype.hasOwnProperty.call(row, fieldName)) {
+      return row[fieldName];
+    }
+  }
+
+  const normalizedRowKeys = getNormalizedRowKeyMap(row);
+  for (const fieldName of fieldNames) {
+    const matchedKey = normalizedRowKeys.get(normalizeColumnToken(fieldName));
+    if (matchedKey) {
+      return row[matchedKey];
+    }
+  }
+
+  return undefined;
+}
+
+function getDisplayText(value, column) {
+  if (value == null) return "";
+
+  if (column?.renderer === "basic") {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue)
+      ? `₹${numericValue.toLocaleString("en-IN")}`
+      : String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+
+  return String(value);
+}
+
+function measureTextWidth(text) {
+  if (typeof document === "undefined") {
+    return String(text ?? "").length * 8;
+  }
+
+  const canvas =
+    measureTextWidth.canvas || (measureTextWidth.canvas = document.createElement("canvas"));
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return String(text ?? "").length * 8;
+  }
+
+  context.font = CONTENT_FONT;
+  return Math.ceil(context.measureText(String(text ?? "")).width);
+}
 
 /* ── Toolbar button (from file 2) ───────────────────────────── */
 
@@ -131,56 +255,66 @@ export default function AgGridTable({
   columns,
   rows,
   rowKey,
-  emptyMessage     = "No records found.",
+  emptyMessage = "No records found.",
   contentAutoWidth = true,
-  contentAlign     = "center",
+  contentAlign = "center",
   // ── File 2 props (header / toolbar) ──
-  badgeText  = "",
+  badgeText = "",
   badgeLabel = "",
   searchable = true,
-  pageSize   = 10,
+  pageSize = 10,
   showExport = true,
   showFilter = true,
-  loading    = false,
+  loading = false,
   searchPlaceholder = "Search name, ID, app no...",
 }) {
   const gridRef = useRef(null);
-  const [quickFilter,   setQuickFilter]   = useState("");
+  const [quickFilter, setQuickFilter] = useState("");
   const [pageSizeState] = useState(pageSize);
-  const [pageLabel,     setPageLabel]     = useState("1 / 1");
+  const [pageLabel, setPageLabel] = useState("1 / 1");
   const [rowRangeLabel, setRowRangeLabel] = useState("0–0 of 0");
-  const [showColMenu,   setShowColMenu]   = useState(false);
-  const [visibleCols,   setVisibleCols]   = useState(
-    () => new Set(columns.map((col) => col.key))
+  const [showColMenu, setShowColMenu] = useState(false);
+  const normalizedColumns = useMemo(
+    () =>
+      columns.map((col, index) => {
+        const fieldKey = getColumnKey(col, index);
+        return {
+          ...col,
+          __colId: `${fieldKey}__${index}`,
+          __fieldKey: fieldKey,
+          __headerName: getColumnHeader(col, fieldKey),
+        };
+      }),
+    [columns]
+  );
+  const [visibleCols, setVisibleCols] = useState(
+    () => new Set(normalizedColumns.map((col) => col.__colId))
   );
 
-  // ── Hard-coded width computation (file 1) ────────────────────
+  // ── Content-aware width computation (file 1 replacement) ────
   const computedColumnWidths = useMemo(() => {
-    const CHAR_PX      = 8;
-    const CELL_PADDING = 56;
-    const MAX_WIDTH    = 720;
-
-    return columns.reduce((acc, col) => {
-      if (col.key === "action" || col.renderer === "action") {
-        acc[col.key] = col.width || 220;
+    return normalizedColumns.reduce((acc, col) => {
+      if (col.__fieldKey === "action" || col.renderer === "action") {
+        acc[col.__colId] = col.width || 220;
         return acc;
       }
 
-      const headerText = col.header || col.label || col.key || "";
       const baseWidth = col.width || col.minWidth || 140;
-      let maxChars    = String(headerText).length;
+      let widestCell = 0;
 
       for (const row of rows) {
-        const raw  = typeof col.value === "function" ? col.value(row) : row?.[col.key];
-        const text = raw == null ? "" : String(raw);
-        if (text.length > maxChars) maxChars = text.length;
+        const rawValue = getRowValue(row, col, col.__fieldKey);
+        const text = getDisplayText(rawValue, col);
+        widestCell = Math.max(widestCell, measureTextWidth(text));
       }
 
-      const estimated = maxChars * CHAR_PX + CELL_PADDING;
-      acc[col.key]    = Math.max(baseWidth, Math.min(MAX_WIDTH, estimated));
+      acc[col.__colId] = Math.max(
+        baseWidth,
+        Math.min(MAX_CONTENT_WIDTH, widestCell + CELL_PADDING)
+      );
       return acc;
     }, {});
-  }, [columns, rows]);
+  }, [normalizedColumns, rows]);
 
   const serialValueGetter = useCallback(
     (params) => {
@@ -195,54 +329,52 @@ export default function AgGridTable({
   );
 
 
-
   // ── Column definitions (file 1 logic + file 2 renderers) ────
   const columnDefs = useMemo(
     () => [
       {
-        headerName:        "S.No",
-        field:             "__sno",
-        minWidth:          90,
-        width:             90,
+        headerName: "S.No",
+        field: "__sno",
+        minWidth: 90,
+        width: 90,
         suppressSizeToFit: true,
-        flex:              0,
-        sortable:          false,
-        filter:            false,
-        floatingFilter:    false,
-        suppressMenu:      true,
-        resizable:         false,
-        valueGetter:       serialValueGetter,
-        pinned:            "left",
+        flex: 0,
+        sortable: false,
+        filter: false,
+        floatingFilter: false,
+        suppressMenu: true,
+        resizable: false,
+        valueGetter: serialValueGetter,
+        pinned: "left",
       },
-      ...columns.map((col) => {
-        const isAction = col.key === "action" || col.renderer === "action";
+      ...normalizedColumns.map((col) => {
+        const isAction = col.__fieldKey === "action" || col.renderer === "action";
         const actionWidth = col.width || 220;
         const computedWidth = isAction
           ? actionWidth
-          : Math.max(col.minWidth || 140, computedColumnWidths[col.key] || col.width || 140);
+          : Math.max(col.minWidth || 140, computedColumnWidths[col.__colId] || col.width || 140);
 
         const def = {
-          headerName:        col.header || col.label || col.key,
-          field:             col.key,
-          minWidth:          computedWidth,
-          width:             computedWidth,
-          flex:              0,
+          colId: col.__colId,
+          headerName: col.__headerName,
+          field: col.__fieldKey,
+          minWidth: computedWidth,
+          width: computedWidth,
+          flex: 0,
           suppressSizeToFit: true,
-          sortable:          col.sortable !== false,
-          filter:            showFilter && col.filterable !== false ? "agTextColumnFilter" : false,
-          floatingFilter:    showFilter && col.filterable !== false,
-          suppressMenu:      !showFilter,
-          resizable:         false,
-          suppressMovable:   true,
-          valueGetter:
-            typeof col.value === "function"
-              ? (params) => col.value(params.data)
-              : undefined,
+          sortable: col.sortable !== false,
+          filter: showFilter && col.filterable !== false ? "agTextColumnFilter" : false,
+          floatingFilter: showFilter && col.filterable !== false,
+          suppressMenu: !showFilter,
+          resizable: false,
+          suppressMovable: true,
+          valueGetter: (params) => getRowValue(params.data, col, col.__fieldKey),
         };
 
         if (!contentAutoWidth) {
           def.flex = typeof col.flex === "number" ? col.flex : 1;
           delete def.width;
+          def.minWidth = col.minWidth || 140;
         }
 
         // ── Prefer RENDERER_MAP (file 2 chips/badges) then col.render ──
@@ -257,13 +389,13 @@ export default function AgGridTable({
         return def;
       }),
     ],
-    [columns, computedColumnWidths, contentAutoWidth, serialValueGetter, showFilter]
+    [computedColumnWidths, contentAutoWidth, normalizedColumns, serialValueGetter, showFilter]
   );
 
   const defaultColDef = useMemo(
     () => ({
-      resizable:    false,
-      minWidth:     140,
+      resizable: false,
+      minWidth: 140,
       filterParams: { buttons: ["reset"] },
     }),
     []
@@ -279,38 +411,78 @@ export default function AgGridTable({
     return undefined;
   }, [rowKey]);
 
+  const autoSizeVisibleColumns = useCallback(() => {
+    if (!contentAutoWidth) return;
+
+    const scheduleResize =
+      typeof window !== "undefined" && typeof window.requestAnimationFrame === "function"
+        ? window.requestAnimationFrame
+        : (callback) => setTimeout(callback, 0);
+
+    scheduleResize(() => {
+      const api = gridRef.current?.api;
+      if (!api || typeof api.getAllDisplayedColumns !== "function") return;
+
+      const displayedColumnIds = api
+        .getAllDisplayedColumns()
+        .map((column) => column.getColId())
+        .filter((columnId) => columnId !== "__sno");
+
+      if (!displayedColumnIds.length) return;
+
+      if (typeof api.autoSizeColumns === "function") {
+        api.autoSizeColumns(displayedColumnIds, true);
+      } else if (typeof api.autoSizeAllColumns === "function") {
+        api.autoSizeAllColumns(true);
+      }
+    });
+  }, [contentAutoWidth]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setVisibleCols(new Set(normalizedColumns.map((col) => col.__colId)));
+  }, [normalizedColumns]);
+
 
   // ── Pagination labels (file 1) ───────────────────────────────
   const updatePaginationLabels = useCallback(() => {
     const api = gridRef.current?.api;
     if (!api) return;
-    const totalRows  = api.getDisplayedRowCount();
+    const totalRows = api.getDisplayedRowCount();
     const totalPages = Math.max(api.paginationGetTotalPages(), 1);
-    const currentPg  = api.paginationGetCurrentPage() + 1;
+    const currentPg = api.paginationGetCurrentPage() + 1;
     setPageLabel(`${currentPg}/${totalPages}`);
     if (totalRows === 0) { setRowRangeLabel("0 of 0"); return; }
     const start = api.paginationGetCurrentPage() * pageSizeState + 1;
-    const end   = Math.min(start + pageSizeState - 1, totalRows);
+    const end = Math.min(start + pageSizeState - 1, totalRows);
     setRowRangeLabel(`${start}–${end} of ${totalRows}`);
   }, [pageSizeState]);
 
-  const onGridReady         = useCallback(() => { updatePaginationLabels(); }, [updatePaginationLabels]);
-  const onFilterChanged     = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
+  const onGridReady = useCallback(() => {
+    updatePaginationLabels();
+    autoSizeVisibleColumns();
+  }, [autoSizeVisibleColumns, updatePaginationLabels]);
+  const onFirstDataRendered = useCallback(() => {
+    updatePaginationLabels();
+    autoSizeVisibleColumns();
+  }, [autoSizeVisibleColumns, updatePaginationLabels]);
+  const onFilterChanged = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
   const onPaginationChanged = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
-  const onModelUpdated      = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
-  const onGridSizeChanged   = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
+  const onModelUpdated = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
+  const onGridSizeChanged = useCallback(() => updatePaginationLabels(), [updatePaginationLabels]);
 
-  const toggleColumn = useCallback((key) => {
+  const toggleColumn = useCallback((columnId) => {
     const api = gridRef.current?.api;
     if (!api) return;
     setVisibleCols((prev) => {
-      const next       = new Set(prev);
-      const shouldShow = !next.has(key);
-      if (shouldShow) next.add(key); else next.delete(key);
-      api.setColumnsVisible([key], shouldShow);
+      const next = new Set(prev);
+      const shouldShow = !next.has(columnId);
+      if (shouldShow) next.add(columnId); else next.delete(columnId);
+      api.setColumnsVisible([columnId], shouldShow);
+      autoSizeVisibleColumns();
       return next;
     });
-  }, []);
+  }, [autoSizeVisibleColumns]);
 
   useEffect(() => {
     const api = gridRef.current?.api;
@@ -331,7 +503,8 @@ export default function AgGridTable({
     if (rows.length === 0) api.showNoRowsOverlay();
     else api.hideOverlay();
     api.refreshCells({ force: true });
-  }, [rows]);
+    autoSizeVisibleColumns();
+  }, [autoSizeVisibleColumns, rows]);
 
   const onExportCSV = useCallback(() => {
     gridRef.current?.api?.exportDataAsCsv({
@@ -479,46 +652,52 @@ export default function AgGridTable({
         {/* ── Panel header (file 2) ── */}
 
 
-    
+
 
         {/* ── Toolbar (file 2 search + export/filter buttons) ── */}
 
-          {searchable && (
-            <div
+        {searchable && (
+          <div
+            style={{
+              position: "relative",
+              maxWidth: 350,
+              flex: 1,
+              paddingTop: 10,
+              paddingBottom: 10,
+              paddingLeft: 16,
+            }}
+          >
+            <svg style={{
+              position: "absolute", left: 20, top: "50%",
+              transform: "translateY(-50%)", width: 15, height: 15,
+              color: "#9ca3af", pointerEvents: "none",
+            }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={quickFilter}
+              onChange={(e) => setQuickFilter(e.target.value)}
               style={{
-                position: "relative",
-                maxWidth: 280,
-                flex: 1,
-                paddingTop: 10,
-                paddingBottom: 10,
-                paddingLeft: 16,
+                width: "100%", paddingLeft: 32, paddingRight: 12,
+                paddingTop: 7, paddingBottom: 7, fontSize: 13,
+                border: "1px solid #e5e7eb", borderRadius: 10,
+                background: "#ffffff", outline: "none",
+                color: "#374151", boxSizing: "border-box",
               }}
-            >
-              <svg style={{
-                position: "absolute",  left: 20, top: "50%",
-                transform: "translateY(-50%)", width: 15, height: 15,
-                color: "#9ca3af", pointerEvents: "none",
-              }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder={searchPlaceholder}
-                value={quickFilter}
-                onChange={(e) => setQuickFilter(e.target.value)}
-                style={{
-                  width: "100%", paddingLeft: 32, paddingRight: 12,
-                  paddingTop: 7, paddingBottom: 7, fontSize: 13,
-                  border: "1px solid #e5e7eb", borderRadius: 10,
-                  background: "#ffffff", outline: "none",
-                  color: "#374151", boxSizing: "border-box",
-                }}
-                onFocus={(e) => (e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.15)")}
-                onBlur={(e)  => (e.target.style.boxShadow = "none")}
-              />
-            </div>
-          )}
+              onFocus={(e) => {
+                e.target.style.boxShadow = "0 0 0 3px #fce7d7";
+                e.target.style.borderColor = "#fbbf24";
+              }}
+              onBlur={(e) => {
+                e.target.style.boxShadow = "none";
+                e.target.style.borderColor = "#e5e7eb";
+              }}
+            />
+          </div>
+        )}
 
 
 
@@ -535,19 +714,19 @@ export default function AgGridTable({
             }}>
               Toggle Columns
             </p>
-            {columns.map((col) => (
-              <label key={col.key} style={{
+            {normalizedColumns.map((col) => (
+              <label key={col.__colId} style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "6px 4px", fontSize: 13, color: "#374151",
                 borderRadius: 8, cursor: "pointer",
               }}>
                 <input
                   type="checkbox"
-                  checked={visibleCols.has(col.key)}
-                  onChange={() => toggleColumn(col.key)}
+                  checked={visibleCols.has(col.__colId)}
+                  onChange={() => toggleColumn(col.__colId)}
                   style={{ accentColor: "#6a696b" }}
                 />
-                {col.header}
+                {col.__headerName}
               </label>
             ))}
           </div>
@@ -574,6 +753,7 @@ export default function AgGridTable({
               paginationPageSize={pageSizeState}
               suppressPaginationPanel
               onGridReady={onGridReady}
+              onFirstDataRendered={onFirstDataRendered}
               onFilterChanged={onFilterChanged}
               onPaginationChanged={onPaginationChanged}
               onModelUpdated={onModelUpdated}
@@ -595,23 +775,23 @@ export default function AgGridTable({
               <div className="lms-pagination-controls">
                 <button onClick={() => gridRef.current?.api?.paginationGoToFirstPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/>
+                    <polyline points="11 17 6 12 11 7" /><polyline points="18 17 13 12 18 7" />
                   </svg>
                 </button>
                 <button onClick={() => gridRef.current?.api?.paginationGoToPreviousPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="15 18 9 12 15 6"/>
+                    <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
                 <span className="lms-pagination-page-label">{pageLabel}</span>
                 <button onClick={() => gridRef.current?.api?.paginationGoToNextPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6"/>
+                    <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </button>
                 <button onClick={() => gridRef.current?.api?.paginationGoToLastPage()} >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/>
+                    <polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" />
                   </svg>
                 </button>
               </div>

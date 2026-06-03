@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import Popup from "./Popup";
+import { stashAuthRecovery } from "../auth";
 
 const SCRIPT_ID = "google-translate-script";
 const ELEMENT_ID = "google_translate_element";
 const COOKIE_NAME = "googtrans";
-const HINDI_INITIAL = "\u0905";
 const POPUP_STORAGE_KEY = "translate-popup-event";
+
+function getCurrentAppUrl() {
+  return `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
 
 function queuePopupEvent(payload) {
   window.sessionStorage.setItem(POPUP_STORAGE_KEY, JSON.stringify(payload));
@@ -134,7 +138,7 @@ function isHindiApplied() {
   );
 }
 
-export default function TranslateButton() {
+export default function TranslateButton({ showPopup = true }) {
   const [isHindi, setIsHindi] = useState(() => getTranslateCookie().includes("/en/hi"));
   const [isReady, setIsReady] = useState(false);
   const [popupState, setPopupState] = useState({
@@ -204,7 +208,7 @@ export default function TranslateButton() {
 
   useEffect(() => {
     const pendingPopup = consumePopupEvent();
-    if (!pendingPopup) return;
+    if (!pendingPopup || !showPopup) return;
 
     window.setTimeout(() => {
       setPopupState({
@@ -234,15 +238,20 @@ export default function TranslateButton() {
     window.setTimeout(enforceHiddenTranslateUi, 500);
 
     if (langCode === "en") {
-      queuePopupEvent({
-        title: "Language Updated",
-        message: "Changed back to English.",
-        variant: "info",
-      });
+      if (showPopup) {
+        queuePopupEvent({
+          title: "Language Updated",
+          message: "Changed back to English.",
+          variant: "info",
+        });
+      }
+
+      const appUrl = getCurrentAppUrl();
+      stashAuthRecovery({ redirectTo: `${window.location.pathname}${window.location.search}${window.location.hash}` });
 
       window.setTimeout(() => {
         clearTranslateCookie();
-        window.location.reload();
+        window.location.replace(appUrl);
       }, 2200);
     }
 
@@ -258,19 +267,25 @@ export default function TranslateButton() {
         const waitForHindi = window.setInterval(() => {
           if (isHindiApplied() || Date.now() - startedAt > 4000) {
             window.clearInterval(waitForHindi);
-            setPopupState({
-              open: true,
-              title: "Language Updated",
-              message: "Translated to Hindi.",
-              variant: "info",
-            });
+            if (showPopup) {
+              setPopupState({
+                open: true,
+                title: "Language Updated",
+                message: "Translated to Hindi.",
+                variant: "info",
+              });
+            }
           }
         }, 150);
       }
 
+
       setIsHindi((prev) => !prev);
     }
   };
+
+
+  const buttonLabel = isHindi ? "English" : "Hindi";
 
   return (
     <>
@@ -278,45 +293,29 @@ export default function TranslateButton() {
         type="button"
         onClick={handleToggle}
         disabled={!isReady}
-        className="group relative inline-flex h-12 w-12 items-center justify-center rounded-[16px] border border-white/85 bg-transparent transition-all hover:border-orange-300 disabled:cursor-not-allowed disabled:opacity-60"
+        className="group inline-flex items-center gap-1.5 rounded-lg border border-white/85 bg-transparent px-3 py-1.5 text-[14px] font-semibold text-white transition-all hover:border-orange-300 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-60"
         title={isHindi ? "Switch to English" : "Switch to Hindi"}
-        aria-label={isHindi ? "Switch language to English" : "Switch language to Hindi"}
-      >
-        <span
-          className={`absolute left-[6px] top-[6px] flex h-[18px] w-[18px] items-center justify-center rounded-[5px] border text-[11px] font-bold leading-none transition-all duration-300 ease-out ${
-            isHindi
-              ? "translate-x-[12px] translate-y-[12px] scale-[0.92] border-slate-300 bg-white text-slate-500 shadow-none"
-              : "translate-x-0 translate-y-0 scale-100 border-[#08142b] bg-[#08142b] text-[#fb923c] shadow-[0_4px_8px_rgba(8,20,43,0.22)]"
-          }`}
-          aria-hidden="true"
-        >
-          <span className="notranslate" translate="no" lang="en">
-            A
-          </span>
-        </span>
-
-        <span
-          className={`absolute left-[6px] top-[6px] flex h-[18px] w-[18px] items-center justify-center rounded-[5px] border text-[11px] font-bold leading-none transition-all duration-300 ease-out ${
-            isHindi
-              ? "translate-x-0 translate-y-0 scale-100 border-[#08142b] bg-[#08142b] text-[#fb923c] shadow-[0_4px_8px_rgba(8,20,43,0.22)]"
-              : "translate-x-[12px] translate-y-[12px] scale-[0.92] border-slate-300 bg-white text-slate-500 shadow-none"
-          }`}
-          aria-hidden="true"
-        >
-          {HINDI_INITIAL}
-        </span>
-
+        aria-label={isHindi ? "Switch language to English" : "Switch language to Hindi"}      >
         <svg
-          className={`absolute right-[5px] top-[5px] h-[15px] w-[15px] text-white transition-transform duration-300 ease-out ${isHindi ? "rotate-180" : "rotate-0"}`}
-          viewBox="0 0 12 12"
+          className="h-[18px] w-[18px] shrink-0 text-white/95"
+          viewBox="0 0 24 24"
           fill="none"
           aria-hidden="true"
         >
-          <path d="M3 1.8A3.5 3.5 0 0 1 9 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          <path d="M8.7 1.9L9.1 4.5 11.3 3.1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M9 10.2A3.5 3.5 0 0 1 3 8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-          <path d="M3.3 10.1L2.9 7.5.7 8.9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M12 3C16.97 3 21 7.03 21 12C21 16.97 16.97 21 12 21C7.03 21 3 16.97 3 12C3 7.03 7.03 3 12 3Z"
+            stroke="currentColor"
+            strokeWidth="1.7"
+          />
+          <path d="M3.8 9H20.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M3.8 15H20.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M12 3.5C14.1 5.7 15.3 8.76 15.3 12C15.3 15.24 14.1 18.3 12 20.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          <path d="M12 3.5C9.9 5.7 8.7 8.76 8.7 12C8.7 15.24 9.9 18.3 12 20.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
         </svg>
+
+        <span className="notranslate leading-none" translate="no" lang="en">
+          {buttonLabel}
+        </span>
       </button>
 
       <Popup
@@ -330,3 +329,7 @@ export default function TranslateButton() {
     </>
   );
 }
+
+
+
+
