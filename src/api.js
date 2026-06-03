@@ -44,6 +44,7 @@ export function getEmployeeClasses() {
 export function getQuarterApplications() {
   return request("/api/admin/check-approval", { method: "GET", auth: true });
 }
+
 export function saveQuarterApplication(payload) {
   return request("/api/admin/checkapprovalsave", {
     method: "POST",

@@ -16,8 +16,6 @@ function statusLabel(value) {
   if (!value) return "—";
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
-
-
 const columns = [
   {key :"Id",           header: "ID",                minWidth: 80 },
   {key :"Priority",     header: "PRIORITY",          minWidth: 80 },

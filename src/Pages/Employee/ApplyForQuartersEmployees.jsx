@@ -107,7 +107,6 @@ export default function ApplyForQuartersEmployees() {
     return () => { cancelled = true; };
   }, []);
 
-  // Load vacant quarters by classId
   useEffect(() => {
     if (!classId) return;
     let cancelled = false;
