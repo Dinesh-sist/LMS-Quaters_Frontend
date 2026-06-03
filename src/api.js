@@ -43,27 +43,17 @@ export function lookupEmployee(employeeId, dateOfBirth) {
 export function getEmployeeClasses() {
   return request("/api/employee/classes");
 }
+
 export function getQuarterApplications() {
-  return request("/api/admin/check-approval", { auth: true });
+  return request("/api/admin/check-approval", { method: "GET", auth: true });
 }
+
+export function saveQuarterApplication(payload) {
+  return request("/api/admin/checkapprovalsave", {
+    method: "POST",
+    body: payload,
+    auth: true 
+  });
+}
+
 export { API_BASE, request };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

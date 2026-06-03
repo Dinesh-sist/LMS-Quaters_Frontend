@@ -14,7 +14,7 @@ import Footer from "../../Components/Footer";
 import Sidebar from "./EmployeeUI/EmployeeSideNav";
 import AgGridTable from "../../Components/Table";
 import { request } from "../../api";
-import { getUser } from "../../auth";
+import { getUser, getToken } from "../../auth";
 
 const inputCls = (focused, id) =>
   `w-full box-border rounded-[7px] px-3 py-[9px] text-[13.5px] text-slate-800 bg-white outline-none transition-all duration-200 font-[inherit]
@@ -65,7 +65,6 @@ export default function ApplyForQuartersEmployees() {
   const [focused, setFocused] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const [hodDepts, setHodDepts] = useState([]);
   const [hodDeptsError, setHodDeptsError] = useState("");
@@ -140,9 +139,9 @@ export default function ApplyForQuartersEmployees() {
   const safePage = Math.min(Math.max(page, 1), totalPages);
   const pageStart = (safePage - 1) * pageSize;
 
+  // Load employee profile
   useEffect(() => {
     let cancelled = false;
-
     async function loadEmployeeProfile() {
       try {
         const data = await request("/api/employee/me", { auth: true });
@@ -160,16 +159,12 @@ export default function ApplyForQuartersEmployees() {
         console.error("Employee profile error:", err);
       }
     }
-
-
-
     loadEmployeeProfile();
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-
     async function loadHodDepts() {
       try {
         setHodDeptsError("");
@@ -185,7 +180,6 @@ export default function ApplyForQuartersEmployees() {
         if (!cancelled) setHodDeptsError(err?.message || "Failed to load HOD departments");
       }
     }
-
     loadHodDepts();
     return () => { cancelled = true; };
   }, []);
@@ -193,13 +187,10 @@ export default function ApplyForQuartersEmployees() {
   useEffect(() => {
     if (!classId) return;
     let cancelled = false;
-
     async function loadQuarters() {
       try {
         setQuartersError("");
-        const data = await request("/api/estate-quarters/vacant?classId=" + classId, {
-          auth: true,
-        });
+        const data = await request("/api/estate-quarters/vacant?classId=" + classId, { auth: true });
         const items = Array.isArray(data?.items) ? data.items : [];
         const seen = new Set();
         const uniqueItems = items.filter((q) => {
@@ -208,13 +199,11 @@ export default function ApplyForQuartersEmployees() {
           seen.add(String(id));
           return true;
         });
-
         if (!cancelled) setQuarters(uniqueItems);
       } catch (err) {
         if (!cancelled) setQuartersError(err?.message || "Failed to load quarters");
       }
     }
-
     loadQuarters();
     return () => { cancelled = true; };
   }, [classId]);
@@ -247,44 +236,34 @@ export default function ApplyForQuartersEmployees() {
 
   const handleApply = async () => {
     setSubmitError("");
-    setSuccessMessage("");
 
-    if (!emp.department) {
-      setSubmitError("Please select a department.");
-      return;
-    }
-    if (!emp.reason) {
-      setSubmitError("Please select a reason.");
-      return;
-    }
-    if (!emp.selectedQuarterId) {
-      setSubmitError("Please select a quarter.");
-      return;
-    }
+    if (!emp.department)        { setSubmitError("Please select a department."); return; }
+    if (!emp.reason)            { setSubmitError("Please select a reason."); return; }
+    if (!emp.selectedQuarterId) { setSubmitError("Please select a quarter."); return; }
 
     try {
       setSubmitting(true);
-      const data = await request("/api/applications", {
+
+      //  FIX: Use the request helper function which automatically adds auth token
+      const data = await request("/api/admin/checkapprovalsave", {
         method: "POST",
-        auth: true,
         body: {
-          quarterId: parseInt(emp.selectedQuarterId, 10),
-          notes: emp.exchangeReason || "",
+          quarterId:      parseInt(emp.selectedQuarterId),
+          reason:         emp.reason,
+          exchangeReason: emp.exchangeReason || "",
+          department:     emp.department,
+        },
+        auth: true,  
+      });
+      navigate("/Quarters/Approval", {
+        state: {
+          successMessage: `Your quarter application has been submitted successfully! Application No: ${data.appNo}`,
         },
       });
 
-      const quarterNumber = data?.quarterNumber || selectedQuarter?.quarterNumber || emp.selectedQuarterId;
-      const message = `Application submitted successfully for Quarter ${quarterNumber}!`;
-      setSuccessMessage(message);
-
-      setTimeout(() => {
-        navigate("/Quarters/Approval", {
-          state: { successMessage: message },
-        });
-      }, 1500);
     } catch (err) {
-      console.error("Application submission error:", err);
-      setSubmitError(err.message || "Failed to submit application. Please try again.");
+      setSubmitError(err.message || "Failed to submit. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -550,7 +529,38 @@ export default function ApplyForQuartersEmployees() {
                         Last
                       </button>
                     </div>
-                  </div>
+                  )}
+                </div>
+              </div>
+
+              {hodDeptsError && (
+                <div className="text-[12px] font-semibold text-rose-600 mb-3">{hodDeptsError}</div>
+              )}
+
+              <div className="border-t-[1.5px] border-dashed border-[#e2e8f0] my-6" />
+
+              <div className="text-[18px] font-extrabold text-[#0284c7] mb-4">
+                Choose from Vacant Quarters Listing
+              </div>
+
+              {quartersError && (
+                <div className="text-[12px] font-semibold text-rose-600 mb-3">{quartersError}</div>
+              )}
+
+              <div className="flex items-center justify-end mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-semibold text-slate-700">Search:</span>
+                  <input
+                    type="text"
+                    value={emp.search}
+                    onChange={(e) => {
+                      setEmp((s) => ({ ...s, search: e.target.value }));
+                      setPage(1);
+                    }}
+                    className={`${inputCls(focused, "emp_search")} w-[260px]`}
+                    onFocus={() => setFocused("emp_search")}
+                    onBlur={() => setFocused(null)}
+                  />
                 </div>
 
                 {successMessage ? (
@@ -572,23 +582,58 @@ export default function ApplyForQuartersEmployees() {
                   </div>
                 ) : null}
 
-                <div className="flex items-center justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={resetApplication}
-                    className="px-6 py-2.5 rounded-lg border border-[#e2e8f0] bg-white hover:bg-slate-50 text-slate-700 text-[13.5px] font-semibold transition-all duration-200"
+                <div className="flex items-center gap-2">
+                  <select
+                    value={pageSize}
+                    onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                    className="rounded-lg border border-[#e2e8f0] bg-white px-2 py-1.5 text-[12px] font-semibold text-slate-700"
                   >
                     Reset
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleApply}
-                    disabled={submitting}
-                    className="px-10 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[14px] font-bold shadow-[0_2px_8px_rgba(232,119,34,0.25)] transition-all duration-200 flex items-center gap-2"
-                  >
-                    {submitting ? "Submitting..." : "Apply"}
-                  </button>
                 </div>
+              </div>
+
+              <div className="border-t-[1.5px] border-dashed border-[#e2e8f0] my-6" />
+
+              {/* Error Banner */}
+              {submitError && (
+                <div className="mb-4 flex items-center gap-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
+                  <span className="text-rose-500 text-[18px]">⚠</span>
+                  <div className="text-[13px] font-semibold text-rose-700 flex-1">{submitError}</div>
+                  <button type="button" onClick={() => setSubmitError("")}
+                    className="text-rose-400 hover:text-rose-600 font-bold text-[16px]">✕</button>
+                </div>
+              )}
+
+              {/* Reset + Apply Buttons */}
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmp((s) => ({
+                      ...s,
+                      department: "",
+                      reason: "",
+                      exchangeReason: "",
+                      attachment: null,
+                      selectedQuarterId: "",
+                      search: "",
+                    }));
+                    setSubmitError("");
+                    setPage(1);
+                  }}
+                  className="px-6 py-2.5 rounded-lg border border-[#e2e8f0] bg-white hover:bg-slate-50 text-slate-700 text-[13.5px] font-semibold transition-all duration-200"
+                >
+                  Reset
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApply}
+                  disabled={submitting}
+                  className="px-10 py-2.5 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-[14px] font-bold shadow-[0_2px_8px_rgba(232,119,34,0.25)] transition-all duration-200"
+                >
+                  {submitting ? "Submitting..." : "Apply"}
+                </button>
               </div>
             </main>
           </div>
