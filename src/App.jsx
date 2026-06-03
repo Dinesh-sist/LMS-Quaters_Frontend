@@ -14,8 +14,9 @@ import CheckApproval from './Pages/Employee/CheckforApproval'
 import VerifyQuarterApplication from './Pages/Admin/VerifyQuaterApplication'
 import StatusOfApplications from './Pages/Admin/StatusOfApplications'
 import HouseAllotmentCommitteeHistory from './Pages/Admin/HouseAllotmentCommitteeHistory'
-import AdminDashboard from './Pages/Admin/AdminUI/dashboard'
+import AdminDashboard from './Pages/Admin/dashboard'
 import ProtectedRoute from './Pages/ProtectedRoute'
+import SetDateForApplication from './Pages/Admin/SetDateForApplication'
 import { consumeAuthRecovery, getToken, getUser, setAuth } from './auth'
 
 function TranslateRecovery() {
@@ -120,6 +121,14 @@ function App() {
           element={
             <ProtectedRoute role="admin">
               <HouseAllotmentCommitteeHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/date"
+          element={
+            <ProtectedRoute role="admin">
+              <SetDateForApplication />
             </ProtectedRoute>
           }
         />
