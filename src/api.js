@@ -3,7 +3,8 @@ import { getToken } from "./auth";
 const API_BASE = (import.meta.env?.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
 async function request(path, { method = "GET", body, auth = false } = {}) {
-  const headers = { "Content-Type": "application/json" };
+  const isFormData = body instanceof FormData;
+  const headers = isFormData ? {} : { "Content-Type": "application/json" };
   if (auth) {
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -12,8 +13,9 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   const res = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
-    body: body == null ? undefined : JSON.stringify(body)
+    body: body == null ? undefined : isFormData ? body : JSON.stringify(body),
   });
+
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -24,6 +26,8 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   }
   return data;
 }
+
+
 
 export function login(username, password) {
   return request("/api/auth/login", { method: "POST", body: { username, password } });
@@ -40,7 +44,17 @@ export function lookupEmployee(employeeId, dateOfBirth) {
 export function getEmployeeClasses() {
   return request("/api/employee/classes");
 }
+
 export function getQuarterApplications() {
-  return request("/api/admin/check-approval", { auth: true });
+  return request("/api/admin/check-approval", { method: "GET", auth: true });
 }
+
+export function saveQuarterApplication(payload) {
+  return request("/api/admin/checkapprovalsave", {
+    method: "POST",
+    body: payload,
+    auth: true 
+  });
+}
+
 export { API_BASE, request };
