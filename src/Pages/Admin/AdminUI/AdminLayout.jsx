@@ -37,7 +37,7 @@ export default function AdminLayout({ title, subtitle, children }) {
           ) : null}
 
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-indigo-50">
-            <main className="flex-1 overflow-y-auto px-5 py-7 md:px-8 xl:px-10">
+            <main className="flex-1 overflow-y-auto px-5 py-7 md:px-8 xl:px-10"style={{ scrollbarGutter: "stable" }}>
               <div className="mx-auto w-full max-w-[1540px] space-y-6">
                 {(title || subtitle) && (
                   <div>

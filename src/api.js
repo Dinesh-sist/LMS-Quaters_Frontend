@@ -56,5 +56,31 @@ export function saveQuarterApplication(payload) {
     auth: true 
   });
 }
+export function publishApplication(payload) {
+  return request("/api/admin/publish", {
+    method: "POST",
+    body: payload,
+    auth: true
+  });
+}
+export function getLatestPublication() {
+  return request("/api/admin/publication/latest", {
+    method: "GET",
+    auth: true,
+  });
+}
+export function stopPublication() {
+  return request("/api/admin/stop-publication", {
+    method: "POST",
+    auth: true,
+  });
+}
+export function updatePublication(payload) {
+  return request("/api/admin/publication/update", {
+    method: "PUT",
+    body: payload,
+    auth: true,
+  });
+}
 
 export { API_BASE, request };

@@ -70,7 +70,7 @@ export default function Popup({
   const [isVisible, setIsVisible] = useState(false);
   const closeTimerRef = useRef(null);
   const exitTimerRef = useRef(null);
-
+  const [isPaused, setIsPaused] = useState(false);
   const clearTimers = () => {
     if (closeTimerRef.current) {
       window.clearTimeout(closeTimerRef.current);
@@ -103,12 +103,11 @@ export default function Popup({
         setIsVisible(true);
       });
 
-      if (autoClose) {
+      if (autoClose && !isPaused) {
         closeTimerRef.current = window.setTimeout(() => {
           requestClose();
         }, autoClose);
       }
-
       return () => {
         window.cancelAnimationFrame(raf);
         clearTimers();
@@ -125,15 +124,16 @@ export default function Popup({
     return () => {
       clearTimers();
     };
-  }, [autoClose, isRendered, open, onClose]);
+  }, [autoClose, isRendered, open, onClose, isPaused]);
 
   if (!isRendered || typeof document === "undefined") return null;
 
   return createPortal(
     <div
-      className={`pointer-events-none fixed right-5 top-22 z-[1200] w-[min(360px,calc(100vw-2rem))] transition-all duration-300 ease-out ${
-        isVisible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
-      }`}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      className={`pointer-events-none fixed right-5 top-22 z-[1200] w-[min(360px,calc(100vw-2rem))] transition-all duration-300 ease-out ${isVisible ? "translate-x-0 opacity-100" : "translate-x-8 opacity-0"
+        }`}
     >
       <div
         className={`pointer-events-auto relative overflow-hidden rounded-[18px] border ${styles.border} ${styles.panel} shadow-[0_18px_40px_rgba(15,23,42,0.16)] backdrop-blur-sm`}
@@ -147,6 +147,7 @@ export default function Popup({
               className={`h-full w-full origin-right ${styles.accent}`}
               style={{
                 animation: `popupTimerShrink ${autoClose}ms linear forwards`,
+                animationPlayState: isPaused ? "paused" : "running",
               }}
             />
           </div>
