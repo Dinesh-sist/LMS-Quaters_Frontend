@@ -22,6 +22,7 @@ function TranslateRecovery() {
   const navigate = useNavigate();
   const location = useLocation();
 
+
   useEffect(() => {
     const recovery = consumeAuthRecovery();
     if (!recovery) return;
@@ -130,3 +131,17 @@ function App() {
 }
 
 export default App
+
+
+
+
+
+
+
+
+
+
+
+
+
+
