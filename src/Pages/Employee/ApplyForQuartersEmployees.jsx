@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   BadgeCheck,
   Building2,
@@ -13,18 +13,27 @@ import TopHeader from "../../Components/TopHeader";
 import Footer from "../../Components/Footer";
 import Sidebar from "./EmployeeUI/EmployeeSideNav";
 import AgGridTable from "../../Components/Table";
-import { request } from "../../api";
+import Popup from "../../Components/Popup";
+import { request, saveQuarterApplication } from "../../api";
 import { getUser } from "../../auth";
 
-const inputCls = (focused, id) =>
-  `w-full box-border rounded-[7px] px-3 py-[9px] text-[13.5px] text-slate-800 bg-white outline-none transition-all duration-200 font-[inherit]
-  ${focused === id
-    ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
-    : "border-[1.5px] border-[#e2e8f0]"
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const inputCls = (focused, id, hasError = false, disabled = false) =>
+  `w-full box-border rounded-[7px] px-3 py-[9px] text-[13.5px] outline-none transition-all duration-200 font-[inherit]
+  ${disabled ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white text-slate-800"}
+  ${
+    hasError
+      ? "border-[1.5px] border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+      : focused === id
+      ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
+      : "border-[1.5px] border-[#e2e8f0]"
   }`;
 
-const selectCls = (focused, id) =>
-  `${inputCls(focused, id)} appearance-none bg-no-repeat bg-[right_12px_center] pr-9 cursor-pointer`;
+const selectCls = (focused, id, hasError = false, disabled = false) =>
+  `${inputCls(focused, id, hasError, disabled)} appearance-none bg-no-repeat bg-[right_12px_center] pr-9 ${
+    disabled ? "" : "cursor-pointer"
+  }`;
 
 const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")`;
 
@@ -42,30 +51,49 @@ function InfoField({ label, value, placeholder = "-" }) {
       <p className="text-[10px] xl:text-[12px] font-semibold text-slate-400 uppercase tracking-wider">
         {label}
       </p>
-      <p className={`text-[11px] xl:text-[13px] font-semibold ${value ? "text-slate-900" : "text-slate-300"}`}>
+      <p
+        className={`text-[11px] xl:text-[13px] font-semibold ${
+          value ? "text-slate-900" : "text-slate-300"
+        }`}
+      >
         {value || placeholder}
       </p>
     </div>
   );
 }
 
-function FieldShell({ label, children }) {
+function RequiredMark() {
+  return <span className="ml-1 align-top text-rose-500">*</span>;
+}
+
+function FieldShell({ label, required = false, children }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
-      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</p>
+      <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        {label}
+        {required ? <RequiredMark /> : null}
+      </p>
       {children}
     </div>
   );
 }
 
+// ─── Main Component ──────────────────────────────────────────────────────────
+
 export default function ApplyForQuartersEmployees() {
   const user = getUser();
-  const location = useLocation();
   const navigate = useNavigate();
+  const [submitError, setSubmitError] = useState("");
+
   const [focused, setFocused] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [validationErrors, setValidationErrors] = useState({});
+  const [popupState, setPopupState] = useState({
+    open: false,
+    title: "",
+    message: "",
+    variant: "info",
+  });
 
   const [hodDepts, setHodDepts] = useState([]);
   const [hodDeptsError, setHodDeptsError] = useState("");
@@ -86,19 +114,75 @@ export default function ApplyForQuartersEmployees() {
     selectedQuarterRowKey: "",
   });
 
+  const isExchange = emp.reason === "exchange";
+
+  // ─── Derived data ───────────────────────────────────────────────────────────
+
   const vacantQuarterRows = quarters
-    .filter((q) => Boolean(q?.IsAvailable))
+    // Accept any truthy value for the availability flag regardless of casing
+    .filter((q) => {
+      const available =
+        q?.IsAvailable ??
+        q?.isAvailable ??
+        q?.is_available ??
+        q?.available ??
+        q?.Available;
+      return Boolean(available);
+    })
     .map((q, index) => {
-      const quarterId = q?.Id ?? q?.ID ?? q?.QuarterId ?? q?.QuarterID ?? index;
+      // Try every common casing the backend might use; never fall back to index
+      // so we never accidentally send 0 as a valid quarterId.
+      const quarterId =
+        q?.Id ??
+        q?.id ??
+        q?.ID ??
+        q?.QuarterId ??
+        q?.quarterId ??
+        q?.QuarterID ??
+        q?.quarter_id ??
+        null;
+
+      if (quarterId == null) {
+        // Log once in dev so the real key is visible in the console
+        console.warn("[ApplyForQuarters] Could not resolve quarterId from quarter object:", q);
+      }
 
       return {
-        rowKey: `${quarterId}-${index}`,
+        rowKey: `${quarterId ?? "unknown"}-${index}`,
+        // Keep as original type (number or string); do NOT coerce here
         quarterId,
-        quarterType: q?.QuarterType || q?.quarterType || "-",
-        areaType: q?.Location || q?.AreaType || q?.Area || "-",
-        quarterNumber: q?.QuarterNo || q?.QuarterNumber || q?.quarterNumber || "-",
+        quarterType: q?.QuarterType || q?.quarterType || q?.quarter_type || "-",
+        areaType: q?.Location || q?.location || q?.AreaType || q?.Area || q?.area || "-",
+        quarterNumber:
+          q?.QuarterNo ||
+          q?.quarterNo ||
+          q?.quarter_no ||
+          q?.QuarterNumber ||
+          q?.quarterNumber ||
+          q?.quarter_number ||
+          "-",
       };
-    });
+    })
+    // Drop any row where we couldn't resolve a real ID — selecting it would fail at submit
+    .filter((row) => row.quarterId != null);
+
+  const selectedQuarter = vacantQuarterRows.find(
+    (q) => String(q.rowKey) === String(emp.selectedQuarterRowKey)
+  );
+
+  const displayName =
+    emp.employeeName || user?.name || user?.username || "Employee";
+  const nameSizeClass = getNameSizeClass(displayName);
+  const initials =
+    String(displayName || "E")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0] || "")
+      .join("")
+      .toUpperCase() || "E";
+
+  // ─── Table columns ──────────────────────────────────────────────────────────
 
   const quarterColumns = [
     {
@@ -113,14 +197,16 @@ export default function ApplyForQuartersEmployees() {
           type="radio"
           name="chooseQuarter"
           value={String(value ?? "")}
-          checked={String(emp.selectedQuarterRowKey) === String(value)}
-          onClick={(event) => event.stopPropagation()}
+          checked={
+            String(emp.selectedQuarterRowKey) === String(value)
+          }
+          onClick={(e) => e.stopPropagation()}
           onChange={() => {
-            setSubmitError("");
-            setSuccessMessage("");
+            clearValidationError("selectedQuarter");
             setEmp((s) => ({
               ...s,
-              selectedQuarterId: String(row?.quarterId ?? ""),
+              // Store the raw quarterId exactly as it came from the API
+              selectedQuarterId: row?.quarterId,
               selectedQuarterRowKey: String(value ?? ""),
             }));
           }}
@@ -133,12 +219,7 @@ export default function ApplyForQuartersEmployees() {
     { key: "quarterNumber", header: "Quarter Number", minWidth: 180 },
   ];
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const filteredQuarters = vacantQuarterRows;
-  const totalPages = Math.max(1, Math.ceil(filteredQuarters.length / pageSize));
-  const safePage = Math.min(Math.max(page, 1), totalPages);
-  const pageStart = (safePage - 1) * pageSize;
+  // ─── Data fetching ──────────────────────────────────────────────────────────
 
   useEffect(() => {
     let cancelled = false;
@@ -161,10 +242,10 @@ export default function ApplyForQuartersEmployees() {
       }
     }
 
-
-
     loadEmployeeProfile();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -176,18 +257,23 @@ export default function ApplyForQuartersEmployees() {
         const data = await request("/api/allotment-hods");
         const depts = Array.isArray(data?.items)
           ? data.items
-            .map((r) => r?.ALLOT_HOD_DEPT)
-            .filter((v) => typeof v === "string" && v.trim() !== "")
+              .map((r) => r?.ALLOT_HOD_DEPT)
+              .filter((v) => typeof v === "string" && v.trim() !== "")
           : [];
         const uniqueDepts = [...new Set(depts)];
         if (!cancelled) setHodDepts(uniqueDepts);
       } catch (err) {
-        if (!cancelled) setHodDeptsError(err?.message || "Failed to load HOD departments");
+        if (!cancelled)
+          setHodDeptsError(
+            err?.message || "Failed to load HOD departments"
+          );
       }
     }
 
     loadHodDepts();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -197,38 +283,48 @@ export default function ApplyForQuartersEmployees() {
     async function loadQuarters() {
       try {
         setQuartersError("");
-        const data = await request("/api/estate-quarters/vacant?classId=" + classId, {
-          auth: true,
-        });
+        const data = await request(
+          "/api/estate-quarters/vacant?classId=" + classId,
+          { auth: true }
+        );
         const items = Array.isArray(data?.items) ? data.items : [];
         const seen = new Set();
         const uniqueItems = items.filter((q) => {
-          const id = q?.Id ?? q?.ID ?? q?.QuarterId ?? q?.QuarterID;
+          const id =
+            q?.Id ?? q?.ID ?? q?.QuarterId ?? q?.QuarterID;
           if (id == null || seen.has(String(id))) return false;
           seen.add(String(id));
           return true;
         });
-
         if (!cancelled) setQuarters(uniqueItems);
       } catch (err) {
-        if (!cancelled) setQuartersError(err?.message || "Failed to load quarters");
+        if (!cancelled)
+          setQuartersError(
+            err?.message || "Failed to load quarters"
+          );
       }
     }
 
     loadQuarters();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [classId]);
 
-  const displayName = emp.employeeName || user?.name || user?.username || "Employee";
-  const nameSizeClass = getNameSizeClass(displayName);
-  const initials = String(displayName || "E")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0] || "")
-    .join("")
-    .toUpperCase() || "E";
-  const selectedQuarter = vacantQuarterRows.find((q) => String(q.rowKey) === String(emp.selectedQuarterRowKey));
+  // ─── Handlers ───────────────────────────────────────────────────────────────
+
+  const clearValidationError = (field) => {
+    setValidationErrors((prev) => ({ ...prev, [field]: false }));
+  };
+
+  const showPopup = ({ title, message, variant = "error" }) => {
+    // Reset first so re-opening the same popup triggers the animation
+    setPopupState({ open: false, title, message, variant });
+    window.setTimeout(
+      () => setPopupState({ open: true, title, message, variant }),
+      0
+    );
+  };
 
   const resetApplication = () => {
     setEmp((s) => ({
@@ -240,54 +336,135 @@ export default function ApplyForQuartersEmployees() {
       selectedQuarterId: "",
       selectedQuarterRowKey: "",
     }));
-    setSubmitError("");
-    setSuccessMessage("");
-    setPage(1);
+    setValidationErrors({});
   };
 
-  const handleApply = async () => {
-    setSubmitError("");
-    setSuccessMessage("");
+  // const handleApply = async () => {
+  //   const nextErrors = {
+  //     department: !emp.department,
+  //     reason: !emp.reason,
+  //     selectedQuarter: emp.selectedQuarterId == null || emp.selectedQuarterId === "",
+  //     exchangeReason: isExchange && !emp.exchangeReason.trim(),
+  //     attachment: isExchange && !emp.attachment,
+  //   };
+  //   const hasError = Object.values(nextErrors).some(Boolean);
+  //   setValidationErrors(nextErrors);
 
-    if (!emp.department) {
-      setSubmitError("Please select a department.");
-      return;
-    }
-    if (!emp.reason) {
-      setSubmitError("Please select a reason.");
-      return;
-    }
-    if (!emp.selectedQuarterId) {
-      setSubmitError("Please select a quarter.");
-      return;
-    }
+  //   if (hasError) {
+  //     showPopup({
+  //       title: "Required fields missing",
+  //       message: "Fill in all required fields to complete the application.",
+  //       variant: "error",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     setSubmitting(true);
+
+  //     // Resolve the quarterId from the selected row (keeps original type from API)
+  //     const selectedRow = vacantQuarterRows.find(
+  //       (r) => String(r.rowKey) === String(emp.selectedQuarterRowKey)
+  //     );
+  //     const rawId = selectedRow?.quarterId ?? emp.selectedQuarterId;
+
+  //     // Prefer a numeric ID if the value is purely numeric, otherwise send as-is
+  //     const numericId = Number(rawId);
+  //     const resolvedQuarterId = Number.isFinite(numericId) && numericId > 0
+  //       ? numericId
+  //       : rawId; // send the original string ID if it isn't a clean positive integer
+
+  //     if (!resolvedQuarterId) {
+  //       showPopup({
+  //         title: "Invalid quarter selection",
+  //         message: "Could not determine the selected quarter ID. Please re-select a quarter and try again.",
+  //         variant: "error",
+  //       });
+  //       setSubmitting(false);
+  //       return;
+  //     }
+
+  //     let payload;
+
+  //     if (emp.attachment) {
+  //       payload = new FormData();
+  //       payload.append("attachment", emp.attachment);
+  //       payload.append("quarterId", String(resolvedQuarterId));
+  //       payload.append("department", emp.department);
+  //       payload.append("reason", emp.reason);
+  //       if (isExchange)
+  //         payload.append("exchangeReason", emp.exchangeReason || "");
+  //       payload.append("employeeId", emp.employeeId || user?.username || "");
+  //       payload.append("classOfEmployee", emp.classOfEmployee || "");
+  //       payload.append("casteOfEmployee", emp.casteOfEmployee || "");
+  //     } else {
+  //       payload = {
+  //         quarterId: resolvedQuarterId,
+  //         department: emp.department,
+  //         reason: emp.reason,
+  //         ...(isExchange ? { exchangeReason: emp.exchangeReason || "" } : {}),
+  //         employeeId: emp.employeeId || user?.username,
+  //         classOfEmployee: emp.classOfEmployee,
+  //         casteOfEmployee: emp.casteOfEmployee,
+  //       };
+  //     }
+
+  //     const data = await saveQuarterApplication(payload);
+  //     const message = `Your quarter application has been submitted successfully! Application No: ${
+  //       data?.appNo || "N/A"
+  //     }`;
+
+  //     navigate("/Quarters/Approval", {
+  //       state: { successMessage: message },
+  //     });
+  //   } catch (err) {
+  //     console.error("Application submission error:", err);
+  //     showPopup({
+  //       title: "Application failed",
+  //       message:
+  //         err?.message ||
+  //         "Failed to submit application. Please try again.",
+  //       variant: "error",
+  //     });
+  //     setSubmitting(false);
+  //   }
+  // };
+const handleApply = async () => {
+    setSubmitError("");
+
+    if (!emp.department)        { setSubmitError("Please select a department."); return; }
+    if (!emp.reason)            { setSubmitError("Please select a reason."); return; }
+    if (!emp.selectedQuarterId) { setSubmitError("Please select a quarter."); return; }
 
     try {
       setSubmitting(true);
-      const data = await request("/api/applications", {
+
+      //  FIX: Use the request helper function which automatically adds auth token
+      const data = await request("/api/admin/checkapprovalsave", {
         method: "POST",
-        auth: true,
         body: {
-          quarterId: parseInt(emp.selectedQuarterId, 10),
-          notes: emp.exchangeReason || "",
+          quarterId:      parseInt(emp.selectedQuarterId),
+          reason:         emp.reason,
+          exchangeReason: emp.exchangeReason || "",
+          department:     emp.department,
+        },
+        auth: true,  
+      });
+      navigate("/Quarters/Approval", {
+        state: {
+          successMessage: `Your quarter application has been submitted successfully! Application No: ${data.appNo}`,
         },
       });
 
-      const quarterNumber = data?.quarterNumber || selectedQuarter?.quarterNumber || emp.selectedQuarterId;
-      const message = `Application submitted successfully for Quarter ${quarterNumber}!`;
-      setSuccessMessage(message);
-
-      setTimeout(() => {
-        navigate("/Quarters/Approval", {
-          state: { successMessage: message },
-        });
-      }, 1500);
     } catch (err) {
-      console.error("Application submission error:", err);
-      setSubmitError(err.message || "Failed to submit application. Please try again.");
+      setSubmitError(err.message || "Failed to submit. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   };
+
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[#EEF2FF]">
@@ -305,6 +482,7 @@ export default function ApplyForQuartersEmployees() {
 
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
             <main className="flex-1 overflow-y-auto px-9 py-7">
+              {/* Page heading */}
               <div className="mb-[22px]">
                 <h1 className="text-2xl font-bold text-slate-900">
                   Application Form for Quarter Allotment for Employees
@@ -315,23 +493,31 @@ export default function ApplyForQuartersEmployees() {
               </div>
 
               <div className="max-w-8xl mx-auto flex flex-col gap-6">
+                {/* Profile card + form details */}
                 <div className="flex flex-col xl:flex-row xl:items-start gap-6">
+                  {/* ── Profile card ── */}
                   <div className="xl:w-64 shrink-0">
-                    <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-11">
+                    <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-6">
                       <div className="flex flex-col items-center gap-4 text-center">
                         <div className="flex w-full flex-row items-center gap-3 md:flex-col md:gap-0">
+                          {/* Avatar */}
                           <div className="w-16 h-16 md:w-28 md:h-28 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-xl md:text-3xl lg:text-5xl font-bold text-[#1a2e5a] shrink-0">
                             {initials}
                           </div>
 
                           <div className="flex min-w-0 flex-1 flex-col items-start gap-1 md:flex-none md:items-center">
-                            <h2 
+                            <h2
                               className={`font-bold leading-tight md:mt-2 text-slate-800 w-full md:text-center ${nameSizeClass}`}
-                              style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                              style={{
+                                wordBreak: "break-word",
+                                overflowWrap: "anywhere",
+                              }}
                             >
                               {displayName}
                             </h2>
-                           
+                            <span className="text-[9px] md:text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 mt-0.5 md:mt-2 md:px-3 rounded-full whitespace-nowrap">
+                              Active
+                            </span>
                           </div>
                         </div>
 
@@ -340,14 +526,24 @@ export default function ApplyForQuartersEmployees() {
                         <div className="flex flex-col gap-3 text-left w-full min-w-0">
                           <div className="flex items-center gap-2 text-xs text-slate-700">
                             <Hash size={13} className="text-slate-600 shrink-0" />
-                            <span className="break-words min-w-0">{emp.employeeId || "-"}</span>
+                            <span className="break-words min-w-0">
+                              {emp.employeeId || "-"}
+                            </span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-slate-700">
-                            <BadgeCheck size={13} className="text-slate-600 shrink-0" />
-                            <span className="break-words min-w-0">{emp.classOfEmployee || "Class pending"}</span>
+                            <BadgeCheck
+                              size={13}
+                              className="text-slate-600 shrink-0"
+                            />
+                            <span className="break-words min-w-0">
+                              {emp.classOfEmployee || "Class pending"}
+                            </span>
                           </div>
                           <div className="flex items-start gap-2 text-xs text-slate-700">
-                            <Building2 size={13} className="text-slate-600 shrink-0 mt-0.5" />
+                            <Building2
+                              size={13}
+                              className="text-slate-600 shrink-0 mt-0.5"
+                            />
                             <span className="break-words min-w-0 leading-relaxed">
                               {emp.department || "Department not selected"}
                             </span>
@@ -357,39 +553,62 @@ export default function ApplyForQuartersEmployees() {
                     </div>
                   </div>
 
+                  {/* ── Right column: Employee info + Application details ── */}
                   <div className="flex-1 flex flex-col gap-5 min-w-0">
+                    {/* Employee information card */}
                     <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)]">
                       <div className="flex items-center justify-between px-6 py-3 border-b border-[#e2e8f0]">
                         <div className="flex items-center gap-2">
                           <User size={16} className="text-[#1a2e5a]" />
-                          <h3 className="font-semibold text-md text-slate-900">Employee Information</h3>
+                          <h3 className="font-semibold text-md text-slate-900">
+                            Employee Information
+                          </h3>
                         </div>
                       </div>
                       <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-5 sm:gap-x-6">
-                        <InfoField label="Name of the Employee" value={emp.employeeName} />
+                        <InfoField
+                          label="Name of the Employee"
+                          value={emp.employeeName}
+                        />
                         <InfoField label="Employee ID" value={emp.employeeId} />
-                        <InfoField label="Class of Employee" value={emp.classOfEmployee} />
-                        <InfoField label="Caste of Employee" value={emp.casteOfEmployee} />
+                        <InfoField
+                          label="Class of Employee"
+                          value={emp.classOfEmployee}
+                        />
+                        <InfoField
+                          label="Caste of Employee"
+                          value={emp.casteOfEmployee}
+                        />
                       </div>
                     </div>
 
+                    {/* Application details card */}
                     <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)]">
                       <div className="flex items-center justify-between px-6 py-3 border-b border-[#e2e8f0]">
                         <div className="flex items-center gap-2">
                           <FileText size={16} className="text-[#1a2e5a]" />
-                          <h3 className="font-semibold text-md text-slate-900">Application Details</h3>
+                          <h3 className="font-semibold text-md text-slate-900">
+                            Application Details
+                          </h3>
                         </div>
                       </div>
                       <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <FieldShell label="Department">
+                        {/* Department */}
+                        <FieldShell label="Department" required>
                           <select
                             value={emp.department}
                             onChange={(e) => {
-                              setSubmitError("");
-                              setSuccessMessage("");
-                              setEmp((s) => ({ ...s, department: e.target.value }));
+                              clearValidationError("department");
+                              setEmp((s) => ({
+                                ...s,
+                                department: e.target.value,
+                              }));
                             }}
-                            className={selectCls(focused, "emp_department")}
+                            className={selectCls(
+                              focused,
+                              "emp_department",
+                              validationErrors.department
+                            )}
                             style={{ backgroundImage: SELECT_ARROW }}
                             onFocus={() => setFocused("emp_department")}
                             onBlur={() => setFocused(null)}
@@ -403,15 +622,33 @@ export default function ApplyForQuartersEmployees() {
                           </select>
                         </FieldShell>
 
-                        <FieldShell label="Application Reason">
+                        {/* Reason */}
+                        <FieldShell label="Application Reason" required>
                           <select
                             value={emp.reason}
                             onChange={(e) => {
-                              setSubmitError("");
-                              setSuccessMessage("");
-                              setEmp((s) => ({ ...s, reason: e.target.value }));
+                              const reason = e.target.value;
+                              clearValidationError("reason");
+                              if (reason !== "exchange") {
+                                clearValidationError("exchangeReason");
+                                clearValidationError("attachment");
+                              }
+                              setEmp((s) => ({
+                                ...s,
+                                reason,
+                                exchangeReason:
+                                  reason === "exchange"
+                                    ? s.exchangeReason
+                                    : "",
+                                attachment:
+                                  reason === "exchange" ? s.attachment : null,
+                              }));
                             }}
-                            className={selectCls(focused, "emp_reason")}
+                            className={selectCls(
+                              focused,
+                              "emp_reason",
+                              validationErrors.reason
+                            )}
                             style={{ backgroundImage: SELECT_ARROW }}
                             onFocus={() => setFocused("emp_reason")}
                             onBlur={() => setFocused(null)}
@@ -423,46 +660,96 @@ export default function ApplyForQuartersEmployees() {
                           </select>
                         </FieldShell>
 
-                        <FieldShell label="Exchange Reason">
+                        {/* Exchange reason */}
+                        <FieldShell
+                          label="Exchange Reason"
+                          required={isExchange}
+                        >
                           <input
                             type="text"
                             value={emp.exchangeReason}
                             onChange={(e) => {
-                              setSubmitError("");
-                              setSuccessMessage("");
-                              setEmp((s) => ({ ...s, exchangeReason: e.target.value }));
+                              clearValidationError("exchangeReason");
+                              setEmp((s) => ({
+                                ...s,
+                                exchangeReason: e.target.value,
+                              }));
                             }}
-                            className={inputCls(focused, "emp_exchangeReason")}
+                            disabled={!isExchange}
+                            className={inputCls(
+                              focused,
+                              "emp_exchangeReason",
+                              validationErrors.exchangeReason,
+                              !isExchange
+                            )}
                             onFocus={() => setFocused("emp_exchangeReason")}
                             onBlur={() => setFocused(null)}
-                            placeholder="Enter reason/notes if applicable"
+                            placeholder={
+                              isExchange
+                                ? "Enter exchange reason"
+                                : "Available when Exchange is selected"
+                            }
                           />
                         </FieldShell>
 
-                        <FieldShell label="Attachment">
-                          <label className="h-10 rounded-[7px] border-[1.5px] border-[#e2e8f0] bg-white px-3 text-[13px] font-semibold text-[#1d4ed8] flex items-center justify-between gap-3 cursor-pointer">
-                            <span className="truncate">{emp.attachment?.name || "File Upload"}</span>
+                        {/* Attachment */}
+                        <FieldShell label="Attachment" required={isExchange}>
+                          <label
+                            className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${
+                              validationErrors.attachment
+                                ? "border-rose-500 bg-white text-rose-600 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+                                : isExchange
+                                ? "border-[#e2e8f0] bg-white text-[#1d4ed8] cursor-pointer"
+                                : "border-[#e2e8f0] bg-slate-100 text-slate-400 cursor-not-allowed"
+                            }`}
+                          >
+                            <span className="truncate">
+                              {emp.attachment?.name ||
+                                (isExchange
+                                  ? "File Upload"
+                                  : "Available when Exchange is selected")}
+                            </span>
                             <Upload size={15} className="shrink-0" />
                             <input
                               type="file"
+                              disabled={!isExchange}
                               className="hidden"
-                              onChange={(e) => setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }))}
+                              onChange={(e) => {
+                                clearValidationError("attachment");
+                                setEmp((s) => ({
+                                  ...s,
+                                  attachment: e.target.files?.[0] || null,
+                                }));
+                              }}
                             />
                           </label>
                         </FieldShell>
                       </div>
-                      {hodDeptsError ? (
-                        <div className="px-6 pb-4 text-[12px] font-semibold text-rose-600">{hodDeptsError}</div>
-                      ) : null}
+
+                      {hodDeptsError && (
+                        <div className="px-6 pb-4 text-[12px] font-semibold text-rose-600">
+                          {hodDeptsError}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden">
+                {/* ── Vacant quarters table ── */}
+                <div
+                  className={`lms-data-transition bg-white rounded-2xl border shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden ${
+                    validationErrors.selectedQuarter
+                      ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+                      : "border-[#e2e8f0]"
+                  }`}
+                >
                   <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div className="flex items-center gap-2">
                       <Home size={16} className="text-[#1a2e5a]" />
-                      <h3 className="font-bold text-lg text-slate-900">Choose from Vacant Quarters Listing</h3>
+                      <h3 className="font-bold text-lg text-slate-900">
+                        Choose from Vacant Quarters Listing
+                        <RequiredMark />
+                      </h3>
                     </div>
                     <div className="text-[12px] font-semibold text-slate-500">
                       {selectedQuarter
@@ -471,9 +758,11 @@ export default function ApplyForQuartersEmployees() {
                     </div>
                   </div>
 
-                  {quartersError ? (
-                    <div className="px-6 pb-3 text-[12px] font-semibold text-rose-600">{quartersError}</div>
-                  ) : null}
+                  {quartersError && (
+                    <div className="px-6 pb-3 text-[12px] font-semibold text-rose-600">
+                      {quartersError}
+                    </div>
+                  )}
 
                   <div className="lms-quarter-grid bg-white pb-5 px-5 lg:pb-7 lg:px-7">
                     <AgGridTable
@@ -486,92 +775,17 @@ export default function ApplyForQuartersEmployees() {
                       showFilter={false}
                       contentAutoWidth={false}
                       contentAlign="center"
-                      emptyMessage={classId ? "No vacant quarters available" : "Loading vacant quarters..."}
+                      emptyMessage={
+                        classId
+                          ? "No vacant quarters available"
+                          : "Loading vacant quarters..."
+                      }
                       searchPlaceholder="Search quarter type, area, quarter number..."
                     />
                   </div>
-
-                  <div className="hidden mt-3 flex-wrap items-center justify-between gap-3">
-                    <div className="text-[12px] font-semibold text-slate-600">
-                      {filteredQuarters.length === 0
-                        ? "0 results"
-                        : `${pageStart + 1}-${Math.min(pageStart + pageSize, filteredQuarters.length)} of ${filteredQuarters.length}`}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={pageSize}
-                        onChange={(e) => {
-                          setPageSize(Number(e.target.value));
-                          setPage(1);
-                        }}
-                        className="rounded-lg border border-[#e2e8f0] bg-white px-2 py-1.5 text-[12px] font-semibold text-slate-700"
-                      >
-                        {[10, 25, 50, 100].map((n) => (
-                          <option key={n} value={n}>
-                            {n}/page
-                          </option>
-                        ))}
-                      </select>
-
-                      <button
-                        type="button"
-                        onClick={() => setPage(1)}
-                        disabled={safePage === 1}
-                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                      >
-                        First
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={safePage === 1}
-                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                      >
-                        Prev
-                      </button>
-                      <div className="text-[12px] font-bold text-slate-700 px-1">
-                        {safePage} / {totalPages}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={safePage === totalPages}
-                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPage(totalPages)}
-                        disabled={safePage === totalPages}
-                        className="rounded-lg border border-[#e2e8f0] bg-white px-3 py-1.5 text-[12px] font-bold text-slate-700 disabled:opacity-50"
-                      >
-                        Last
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
-                {successMessage ? (
-                  <div className="flex items-center gap-3 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3">
-                    <div className="text-[13px] font-semibold text-emerald-700">{successMessage}</div>
-                  </div>
-                ) : null}
-
-                {submitError ? (
-                  <div className="flex items-center gap-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3">
-                    <div className="text-[13px] font-semibold text-rose-700">{submitError}</div>
-                    <button
-                      type="button"
-                      onClick={() => setSubmitError("")}
-                      className="ml-auto text-rose-400 hover:text-rose-600 font-bold text-[16px]"
-                    >
-                      X
-                    </button>
-                  </div>
-                ) : null}
-
+                {/* ── Action buttons ── */}
                 <div className="flex items-center justify-end gap-3">
                   <button
                     type="button"
@@ -593,12 +807,17 @@ export default function ApplyForQuartersEmployees() {
             </main>
           </div>
         </div>
+
         <Footer />
       </div>
+
+      <Popup
+        open={popupState.open}
+        title={popupState.title}
+        message={popupState.message}
+        variant={popupState.variant}
+        onClose={() => setPopupState((prev) => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }
-
-
-
-

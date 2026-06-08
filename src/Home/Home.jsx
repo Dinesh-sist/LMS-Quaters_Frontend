@@ -64,11 +64,7 @@ export default function Home() {
             transform: translateY(0);
           }
         }
-        .gradient-animated {
-          background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #c17f2f, #1a2e5a);
-          background-size: 300% 300%;
-          animation: gradientMove 15s ease-in-out infinite;
-        }
+        
         .hero-bg-image {
           opacity: 0;
           transform: scale(1.035);
