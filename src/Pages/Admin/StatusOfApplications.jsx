@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-import { request } from "../../api";
+import { request, API_BASE } from "../../api";
 
 const statusStyles = {
-  Approved: "bg-emerald-100 text-emerald-700",
-  Rejected:  "bg-rose-100 text-rose-700",
-  Pending:   "bg-amber-100 text-amber-700",
+  approved: "bg-emerald-100 text-emerald-700",
+  rejected: "bg-rose-100   text-rose-700",
+  pending:  "bg-amber-100  text-amber-700",
 };
 
 const columns = [
@@ -16,15 +16,84 @@ const columns = [
   { key: "class",      header: "CLASS",          renderer: "class", minWidth: 155 },
   { key: "gradDate",   header: "GRAD DATE",      minWidth: 135 },
   {key: "dob",        header: "DATE OF BIRTH",             minWidth: 120 },
-  { key: "dept",       header: "DEPARTMENT",     minWidth: 180 },
   { key: "casteId",    header: "CASTE ID",       minWidth: 120 },
-  { key: "currentQtr", header: "CURRENT QTR",    minWidth: 145 },
   { key: "currentQtyType",       header: "CURRENT QTR TYPE",     minWidth: 180 },
   { key: "reqQtr",     header: "REQUESTED QTR",  minWidth: 145 },
   { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
   { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
-   { key: "proofFile",  header: "PROOF FILE",     minWidth: 150 },
+  {
+    key: "proofFile",
+    header: "PROOF FILE",
+    minWidth: 160,
+    render: (value) => {
+      if (!value) return <span className="text-slate-400 text-xs">—</span>;
+
+      const normalised = value.replace(/\\/g, "/").replace(/^.*uploads\//, "");
+      const fileUrl = `${API_BASE}/uploads/${normalised}`;
+      const fileName = normalised.split("/").pop();
+
+      const handleDownload = async (e) => {
+        e.preventDefault();
+        try {
+          const res = await fetch(fileUrl);
+          if (!res.ok) throw new Error("File not found");
+          const blob = await res.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = objectUrl;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(objectUrl);
+        } catch {
+          alert("Could not download the file. Please try again.");
+        }
+      };
+
+      return (
+        <button
+          type="button"
+          onClick={handleDownload}
+          title={`Download ${fileName}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            padding: "4px 10px",
+            borderRadius: "6px",
+            background: "#E6F1FB",
+            color: "#185FA5",
+            fontWeight: 600,
+            fontSize: "11px",
+            border: "1px solid #b3d0ef",
+            cursor: "pointer",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#c7dff5")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#E6F1FB")}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download
+        </button>
+      );
+    },
+  },
   { key: "reqDate",    header: "REQUEST DATE",   minWidth: 140 },
   { key: "rosterNo",   header: "ROSTER NO",      minWidth: 120 },
   
@@ -32,15 +101,19 @@ const columns = [
     key: "result",
     header: "STATUS",
     minWidth: 150,
-    render: (value) => (
-      <span
-        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
-          statusStyles[value] || "bg-slate-100 text-slate-600"
-        }`}
-      >
-        {value}
-      </span>
-    ),
+    render: (value) => {
+      const normalized = (value || "").toLowerCase();
+      const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+      return (
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+            statusStyles[normalized] || "bg-slate-100 text-slate-600"
+          }`}
+        >
+          {label}
+        </span>
+      );
+    },
   },
 ];
 

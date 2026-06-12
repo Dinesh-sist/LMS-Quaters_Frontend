@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AgGridTable from "../../Components/Table";
 import EmployeeLayout from "./EmployeeUI/EmployeeLayout";
-import { request } from "../../api";
+import { request, API_BASE } from "../../api";
 import { getUser } from "../../auth";
 
 
@@ -142,21 +142,93 @@ function statusLabel(value) {
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
 const columns = [
-  {key :"Id",           header: "ID",                minWidth: 80 },
-  {key :"Priority",     header: "PRIORITY",          minWidth: 80 },
-  {key :"UserId",       header: "USER ID",           minWidth: 80 },
-  { key:"EmpId",        header: "EMP ID",          renderer: "empId", minWidth: 140 },
-  { key:"EmpName",      header: "EMP NAME",         minWidth: 220 },
-  { key:"Class",        header: "CLASS",            renderer: "class", minWidth: 155 },
-  {key :"cast",          header: "CAST",              minWidth: 120 },
-  { key:"AllotCatId",   header: "ALLOT CAT ID",     minWidth: 150 },
-  {key :"EmailId",       header: "EMAILID",             minWidth: 220 },
-  {key :"reqdate",       header: "REQ DATE",            minWidth: 145 },
-  { key: "QtrRequested", header: "REQUESTED QTR",    minWidth: 150 },
-  { key: "QtrLocation",  header: "QTR LOCATION",     minWidth: 220 },
-  {key :"Qtrtype",      header: "QTR TYPE",         minWidth: 150 },
-  {key :"ExchangeReason",       header: "ExchangeReason",           minWidth: 250 },
-  {key: "AttachmentPath",   header: "ATTACHMENTPATH",     minWidth: 150 },
+  { key: "AppNo", header: "APP NO", minWidth: 140 },
+  { key: "EmpId", header: "EMP ID", minWidth: 130 },
+  { key: "EmpName", header: "EMP NAME", minWidth: 200 },
+  { key: "Class", header: "CLASS", minWidth: 140 },
+  { key: "Caste", header: "CASTE", minWidth: 110 },
+  { key: "GradDate", header: "GRAD DATE", minWidth: 130 },
+  { key: "EmailId", header: "EMAIL", minWidth: 210 },
+  { key: "ReqDate", header: "REQ DATE", minWidth: 120 },
+  { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 140 },
+  { key: "QtrLocation", header: "LOCATION", minWidth: 190 },
+  { key: "QtrType", header: "QTR TYPE", minWidth: 130 },
+  { key: "Reason", header: "REASON", minWidth: 140 },
+  { key: "ExchangeReason", header: "EXCHANGE REASON", minWidth: 200 },
+  {
+    key: "AttachmentPath",
+    header: "ATTACHMENT",
+    minWidth: 160,
+    render: (value) => {
+      if (!value) return <span className="text-slate-400 text-xs">—</span>;
+
+      const normalised = value.replace(/\\/g, "/").replace(/^.*uploads\//, "");
+      const fileUrl = `${API_BASE}/uploads/${normalised}`;
+      const fileName = normalised.split("/").pop();
+
+      // Blob-fetch forces a real download instead of opening in the browser tab
+      const handleDownload = async (e) => {
+        e.preventDefault();
+        try {
+          const res = await fetch(fileUrl);
+          if (!res.ok) throw new Error("File not found");
+          const blob = await res.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = objectUrl;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(objectUrl);
+        } catch {
+          alert("Could not download the file. Please try again.");
+        }
+      };
+
+      return (
+        <button
+          type="button"
+          onClick={handleDownload}
+          title={`Download ${fileName}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            padding: "4px 10px",
+            borderRadius: "6px",
+            background: "#E6F1FB",
+            color: "#185FA5",
+            fontWeight: 600,
+            fontSize: "11px",
+            textDecoration: "none",
+            border: "1px solid #b3d0ef",
+            cursor: "pointer",
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "#c7dff5")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "#E6F1FB")}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Download
+        </button>
+      );
+    },
+  },
   {
     key: "Status",
     header: "STATUS",
@@ -205,13 +277,14 @@ function PageSummaryBar({ rows }) {
   );
 }
 
+
 export default function CheckApproval() {
   const { state } = useLocation();
-  const [rows, setRows]             = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState("");
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showBanner, setShowBanner] = useState(!!state?.successMessage);
-    const user = getUser();
+  const user = getUser();
 
 
   useEffect(() => {
@@ -233,7 +306,7 @@ export default function CheckApproval() {
   }, []);
 
   //fetch the data's form the database and  display in the table format with the help of ag-grid table and also display the status of the application with the help of the status column and also display the success message if the application is approved or rejected or pending or cancelled and also display the error message if there is any error in fetching the data from the database and also display the loading message while fetching the data from the database and also display the empty message if there is no data in the database and also display the total number of requests and also display the number of approved requests and also display the number of pending requests and also display the number of rejected requests in the page summary bar.
-    return (
+  return (
     <EmployeeLayout
       title="Check Approval Status"
       subtitle="Land Data Management System - Approval Tracker"
@@ -282,3 +355,4 @@ export default function CheckApproval() {
     </EmployeeLayout>
   );
 }
+

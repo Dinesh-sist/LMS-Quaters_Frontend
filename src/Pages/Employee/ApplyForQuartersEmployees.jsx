@@ -22,17 +22,15 @@ import { getUser } from "../../auth";
 const inputCls = (focused, id, hasError = false, disabled = false) =>
   `w-full box-border rounded-[7px] px-3 py-[9px] text-[13.5px] outline-none transition-all duration-200 font-[inherit]
   ${disabled ? "bg-slate-100 text-slate-400 cursor-not-allowed" : "bg-white text-slate-800"}
-  ${
-    hasError
-      ? "border-[1.5px] border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
-      : focused === id
+  ${hasError
+    ? "border-[1.5px] border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+    : focused === id
       ? "border-[1.5px] border-orange-400 shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
       : "border-[1.5px] border-[#e2e8f0]"
   }`;
 
 const selectCls = (focused, id, hasError = false, disabled = false) =>
-  `${inputCls(focused, id, hasError, disabled)} appearance-none bg-no-repeat bg-[right_12px_center] pr-9 ${
-    disabled ? "" : "cursor-pointer"
+  `${inputCls(focused, id, hasError, disabled)} appearance-none bg-no-repeat bg-[right_12px_center] pr-9 ${disabled ? "" : "cursor-pointer"
   }`;
 
 const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")`;
@@ -45,6 +43,7 @@ function getNameSizeClass(name = "") {
   return "text-xs md:text-base 2xl:text-lg";
 }
 
+
 function InfoField({ label, value, placeholder = "-" }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
@@ -52,9 +51,8 @@ function InfoField({ label, value, placeholder = "-" }) {
         {label}
       </p>
       <p
-        className={`text-[11px] xl:text-[13px] font-semibold ${
-          value ? "text-slate-900" : "text-slate-300"
-        }`}
+        className={`text-[11px] xl:text-[13px] font-semibold ${value ? "text-slate-900" : "text-slate-300"
+          }`}
       >
         {value || placeholder}
       </p>
@@ -106,6 +104,8 @@ export default function ApplyForQuartersEmployees() {
     employeeId: user?.username || "",
     classOfEmployee: "",
     casteOfEmployee: "",
+    dateOfJoining: "",
+    gradDate: "",
     department: "",
     reason: "",
     exchangeReason: "",
@@ -235,6 +235,8 @@ export default function ApplyForQuartersEmployees() {
           employeeId: data?.employeeId || s.employeeId,
           classOfEmployee: data?.classOfEmployee || s.classOfEmployee,
           casteOfEmployee: data?.casteOfEmployee || s.casteOfEmployee,
+          dateOfJoining: data?.dateOfJoining || s.dateOfJoining,
+          gradDate: data?.gradDate || s.gradDate,
           department: data?.department || s.department,
         }));
       } catch (err) {
@@ -257,8 +259,8 @@ export default function ApplyForQuartersEmployees() {
         const data = await request("/api/allotment-hods");
         const depts = Array.isArray(data?.items)
           ? data.items
-              .map((r) => r?.ALLOT_HOD_DEPT)
-              .filter((v) => typeof v === "string" && v.trim() !== "")
+            .map((r) => r?.ALLOT_HOD_DEPT)
+            .filter((v) => typeof v === "string" && v.trim() !== "")
           : [];
         const uniqueDepts = [...new Set(depts)];
         if (!cancelled) setHodDepts(uniqueDepts);
@@ -429,27 +431,49 @@ export default function ApplyForQuartersEmployees() {
   //     setSubmitting(false);
   //   }
   // };
-const handleApply = async () => {
+  const handleApply = async () => {
     setSubmitError("");
 
-    if (!emp.department)        { setSubmitError("Please select a department."); return; }
-    if (!emp.reason)            { setSubmitError("Please select a reason."); return; }
+    if (!emp.department) { setSubmitError("Please select a department."); return; }
+    if (!emp.reason) { setSubmitError("Please select a reason."); return; }
     if (!emp.selectedQuarterId) { setSubmitError("Please select a quarter."); return; }
 
     try {
       setSubmitting(true);
 
-      //  FIX: Use the request helper function which automatically adds auth token
+      // Step 1 — Submit the application as plain JSON
       const data = await request("/api/admin/checkapprovalsave", {
         method: "POST",
         body: {
-          quarterId:      parseInt(emp.selectedQuarterId),
-          reason:         emp.reason,
+          quarterId: parseInt(emp.selectedQuarterId),
+          reason: emp.reason,
           exchangeReason: emp.exchangeReason || "",
-          department:     emp.department,
+          department: emp.department,
         },
-        auth: true,  
+        auth: true,
       });
+
+      // Step 2 — If the employee selected a file, upload it now
+      if (emp.attachment && data?.id) {
+        try {
+          console.log("[Upload] Starting file upload for application id:", data.id);
+          const fd = new FormData();
+          fd.append("attachment", emp.attachment);
+          const uploadResult = await request(`/api/admin/upload-attachment/${data.id}`, {
+            method: "POST",
+            body: fd,
+            auth: true,
+          });
+          console.log("[Upload] Success:", uploadResult);
+        } catch (uploadErr) {
+          console.error("[Upload] FAILED:", uploadErr.message, uploadErr);
+          // Still navigate but warn the user
+          setSubmitError(`Application submitted (${data.appNo}), but file upload failed: ${uploadErr.message}. You can retry the upload later.`);
+          setSubmitting(false);
+          return; // stop here so user sees the error
+        }
+      }
+
       navigate("/Quarters/Approval", {
         state: {
           successMessage: `Your quarter application has been submitted successfully! Application No: ${data.appNo}`,
@@ -565,7 +589,7 @@ const handleApply = async () => {
                           </h3>
                         </div>
                       </div>
-                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-5 sm:gap-x-6">
+                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-y-5 sm:gap-x-6">
                         <InfoField
                           label="Name of the Employee"
                           value={emp.employeeName}
@@ -579,6 +603,11 @@ const handleApply = async () => {
                           label="Caste of Employee"
                           value={emp.casteOfEmployee}
                         />
+                        <InfoField
+                          label="Date of Joining"
+                          value={emp.dateOfJoining}
+                        />
+
                       </div>
                     </div>
 
@@ -695,13 +724,12 @@ const handleApply = async () => {
                         {/* Attachment */}
                         <FieldShell label="Attachment" required={isExchange}>
                           <label
-                            className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${
-                              validationErrors.attachment
+                            className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${validationErrors.attachment
                                 ? "border-rose-500 bg-white text-rose-600 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
                                 : isExchange
-                                ? "border-[#e2e8f0] bg-white text-[#1d4ed8] cursor-pointer"
-                                : "border-[#e2e8f0] bg-slate-100 text-slate-400 cursor-not-allowed"
-                            }`}
+                                  ? "border-[#e2e8f0] bg-white text-[#1d4ed8] cursor-pointer"
+                                  : "border-[#e2e8f0] bg-slate-100 text-slate-400 cursor-not-allowed"
+                              }`}
                           >
                             <span className="truncate">
                               {emp.attachment?.name ||
@@ -737,11 +765,10 @@ const handleApply = async () => {
 
                 {/* ── Vacant quarters table ── */}
                 <div
-                  className={`lms-data-transition bg-white rounded-2xl border shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden ${
-                    validationErrors.selectedQuarter
+                  className={`lms-data-transition bg-white rounded-2xl border shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden ${validationErrors.selectedQuarter
                       ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
                       : "border-[#e2e8f0]"
-                  }`}
+                    }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -784,6 +811,14 @@ const handleApply = async () => {
                     />
                   </div>
                 </div>
+
+                {/* ── Error message ── */}
+                {submitError && (
+                  <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] font-semibold text-rose-700">
+                    <span className="text-rose-500 text-[16px]">✕</span>
+                    {submitError}
+                  </div>
+                )}
 
                 {/* ── Action buttons ── */}
                 <div className="flex items-center justify-end gap-3">
