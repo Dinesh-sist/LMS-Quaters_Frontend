@@ -43,6 +43,7 @@ function getNameSizeClass(name = "") {
   return "text-xs md:text-base 2xl:text-lg";
 }
 
+
 function InfoField({ label, value, placeholder = "-" }) {
   return (
     <div className="flex min-w-0 flex-col gap-1">
@@ -105,6 +106,8 @@ export default function ApplyForQuartersEmployees() {
     employeeId: user?.username || "",
     classOfEmployee: "",
     casteOfEmployee: "",
+    dateOfJoining: "",
+    gradDate: "",
     department: "",
     reason: "",
     exchangeReason: "",
@@ -262,6 +265,8 @@ export default function ApplyForQuartersEmployees() {
           employeeId: data?.employeeId || s.employeeId,
           classOfEmployee: data?.classOfEmployee || s.classOfEmployee,
           casteOfEmployee: data?.casteOfEmployee || s.casteOfEmployee,
+          dateOfJoining: data?.dateOfJoining || s.dateOfJoining,
+          gradDate: data?.gradDate || s.gradDate,
           department: data?.department || s.department,
         }));
       } catch (err) {
@@ -354,6 +359,97 @@ export default function ApplyForQuartersEmployees() {
     setValidationErrors({});
   };
 
+  // const handleApply = async () => {
+  //   const nextErrors = {
+  //     department: !emp.department,
+  //     reason: !emp.reason,
+  //     selectedQuarter: emp.selectedQuarterId == null || emp.selectedQuarterId === "",
+  //     exchangeReason: isExchange && !emp.exchangeReason.trim(),
+  //     attachment: isExchange && !emp.attachment,
+  //   };
+  //   const hasError = Object.values(nextErrors).some(Boolean);
+  //   setValidationErrors(nextErrors);
+
+  //   if (hasError) {
+  //     showPopup({
+  //       title: "Required fields missing",
+  //       message: "Fill in all required fields to complete the application.",
+  //       variant: "error",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     setSubmitting(true);
+
+  //     // Resolve the quarterId from the selected row (keeps original type from API)
+  //     const selectedRow = vacantQuarterRows.find(
+  //       (r) => String(r.rowKey) === String(emp.selectedQuarterRowKey)
+  //     );
+  //     const rawId = selectedRow?.quarterId ?? emp.selectedQuarterId;
+
+  //     // Prefer a numeric ID if the value is purely numeric, otherwise send as-is
+  //     const numericId = Number(rawId);
+  //     const resolvedQuarterId = Number.isFinite(numericId) && numericId > 0
+  //       ? numericId
+  //       : rawId; // send the original string ID if it isn't a clean positive integer
+
+  //     if (!resolvedQuarterId) {
+  //       showPopup({
+  //         title: "Invalid quarter selection",
+  //         message: "Could not determine the selected quarter ID. Please re-select a quarter and try again.",
+  //         variant: "error",
+  //       });
+  //       setSubmitting(false);
+  //       return;
+  //     }
+
+  //     let payload;
+
+  //     if (emp.attachment) {
+  //       payload = new FormData();
+  //       payload.append("attachment", emp.attachment);
+  //       payload.append("quarterId", String(resolvedQuarterId));
+  //       payload.append("department", emp.department);
+  //       payload.append("reason", emp.reason);
+  //       if (isExchange)
+  //         payload.append("exchangeReason", emp.exchangeReason || "");
+  //       payload.append("employeeId", emp.employeeId || user?.username || "");
+  //       payload.append("classOfEmployee", emp.classOfEmployee || "");
+  //       payload.append("casteOfEmployee", emp.casteOfEmployee || "");
+  //     } else {
+  //       payload = {
+  //         quarterId: resolvedQuarterId,
+  //         department: emp.department,
+  //         reason: emp.reason,
+  //         ...(isExchange ? { exchangeReason: emp.exchangeReason || "" } : {}),
+  //         employeeId: emp.employeeId || user?.username,
+  //         classOfEmployee: emp.classOfEmployee,
+  //         casteOfEmployee: emp.casteOfEmployee,
+  //       };
+  //     }
+
+  //     const data = await saveQuarterApplication(payload);
+  //     const message = `Your quarter application has been submitted successfully! Application No: ${
+  //       data?.appNo || "N/A"
+  //     }`;
+
+  //     navigate("/Quarters/Approval", {
+  //       state: { successMessage: message },
+  //     });
+  //   } catch (err) {
+  //     console.error("Application submission error:", err);
+  //     showPopup({
+  //       title: "Application failed",
+  //       message:
+  //         err?.message ||
+  //         "Failed to submit application. Please try again.",
+  //       variant: "error",
+  //     });
+  //     setSubmitting(false);
+  //   }
+  // };
+//   const handleApply = async () => {
   const handleApply = async () => {
     if (!isApplicationOpen) {
       showPopup({
@@ -373,6 +469,7 @@ export default function ApplyForQuartersEmployees() {
     try {
       setSubmitting(true);
 
+      // Step 1 — Submit the application as plain JSON
       const data = await request("/api/admin/checkapprovalsave", {
         method: "POST",
         body: {
@@ -383,6 +480,27 @@ export default function ApplyForQuartersEmployees() {
         },
         auth: true,
       });
+
+      // Step 2 — If the employee selected a file, upload it now
+      if (emp.attachment && data?.id) {
+        try {
+          console.log("[Upload] Starting file upload for application id:", data.id);
+          const fd = new FormData();
+          fd.append("attachment", emp.attachment);
+          const uploadResult = await request(`/api/admin/upload-attachment/${data.id}`, {
+            method: "POST",
+            body: fd,
+            auth: true,
+          });
+          console.log("[Upload] Success:", uploadResult);
+        } catch (uploadErr) {
+          console.error("[Upload] FAILED:", uploadErr.message, uploadErr);
+          // Still navigate but warn the user
+          setSubmitError(`Application submitted (${data.appNo}), but file upload failed: ${uploadErr.message}. You can retry the upload later.`);
+          setSubmitting(false);
+          return; // stop here so user sees the error
+        }
+      }
 
       navigate("/Quarters/Approval", {
         state: {
@@ -512,11 +630,30 @@ export default function ApplyForQuartersEmployees() {
                           </h3>
                         </div>
                       </div>
-                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-5 sm:gap-x-6">
-                        <InfoField label="Name of the Employee" value={emp.employeeName} />
+                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-y-5 sm:gap-x-6">
+                        <InfoField
+                          label="Name of the Employee"
+                          value={emp.employeeName}
+                        />
                         <InfoField label="Employee ID" value={emp.employeeId} />
-                        <InfoField label="Class of Employee" value={emp.classOfEmployee} />
-                        <InfoField label="Caste of Employee" value={emp.casteOfEmployee} />
+                        <InfoField
+                          label="Class of Employee"
+                          value={emp.classOfEmployee}
+                        />
+                        <InfoField
+                          label="Caste of Employee"
+                          value={emp.casteOfEmployee}
+                        />
+                        <InfoField
+                          label="Date of Joining"
+                          value={emp.dateOfJoining}
+                        />
+
+//                       <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-y-5 sm:gap-x-6">
+//                         <InfoField label="Name of the Employee" value={emp.employeeName} />
+//                         <InfoField label="Employee ID" value={emp.employeeId} />
+//                         <InfoField label="Class of Employee" value={emp.classOfEmployee} />
+//                         <InfoField label="Caste of Employee" value={emp.casteOfEmployee} />
                       </div>
                     </div>
                     {/* End Employee information card */}
@@ -545,6 +682,128 @@ export default function ApplyForQuartersEmployees() {
                             </h3>
                           </div>
                         </div>
+                      </div>
+//                       <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
+//                         {/* Department */}
+//                         <FieldShell label="Department" required>
+//                           <select
+//                             value={emp.department}
+//                             onChange={(e) => {
+//                               clearValidationError("department");
+//                               setEmp((s) => ({
+//                                 ...s,
+//                                 department: e.target.value,
+//                               }));
+//                             }}
+//                             className={selectCls(
+//                               focused,
+//                               "emp_department",
+//                               validationErrors.department
+//                             )}
+//                             style={{ backgroundImage: SELECT_ARROW }}
+//                             onFocus={() => setFocused("emp_department")}
+//                             onBlur={() => setFocused(null)}
+//                           >
+//                             <option value="">Choose a Department</option>
+//                             {hodDepts.map((dept) => (
+//                               <option key={dept} value={dept}>
+//                                 {dept}
+//                               </option>
+//                             ))}
+//                           </select>
+//                         </FieldShell>
+
+//                         {/* Reason */}
+//                         <FieldShell label="Application Reason" required>
+//                           <select
+//                             value={emp.reason}
+                            onChange={(e) => {
+                              const reason = e.target.value;
+                              clearValidationError("reason");
+                              if (reason !== "exchange") {
+                                clearValidationError("exchangeReason");
+                                clearValidationError("attachment");
+                              }
+                              setEmp((s) => ({
+                                ...s,
+                                reason,
+                                exchangeReason:
+                                  reason === "exchange"
+                                    ? s.exchangeReason
+                                    : "",
+                                attachment:
+                                  reason === "exchange" ? s.attachment : null,
+                              }));
+                            }}
+                            className={selectCls(
+                              focused,
+                              "emp_reason",
+                              validationErrors.reason
+                            )}
+                            style={{ backgroundImage: SELECT_ARROW }}
+                            onFocus={() => setFocused("emp_reason")}
+                            onBlur={() => setFocused(null)}
+                          >
+                            <option value="">Choose a Reason</option>
+                            <option value="fresh">Fresh Allotment</option>
+                            <option value="exchange">Exchange</option>
+                            <option value="renewal">Renewal</option>
+                          </select>
+                        </FieldShell>
+
+                        {/* Exchange reason */}
+                        <FieldShell
+                          label="Exchange Reason"
+                          required={isExchange}
+                        >
+                          <input
+                            type="text"
+                            value={emp.exchangeReason}
+                            onChange={(e) => {
+                              clearValidationError("exchangeReason");
+                              setEmp((s) => ({
+                                ...s,
+                                exchangeReason: e.target.value,
+                              }));
+                            }}
+                            disabled={!isExchange}
+                            className={inputCls(
+                              focused,
+                              "emp_exchangeReason",
+                              validationErrors.exchangeReason,
+                              !isExchange
+                            )}
+                            onFocus={() => setFocused("emp_exchangeReason")}
+                            onBlur={() => setFocused(null)}
+                            placeholder={
+                              isExchange
+                                ? "Enter exchange reason"
+                                : "Available when Exchange is selected"
+                            }
+                          />
+                        </FieldShell>
+
+                        {/* Attachment */}
+                        <FieldShell label="Attachment" required={isExchange}>
+                          <label
+                            className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${validationErrors.attachment
+                                ? "border-rose-500 bg-white text-rose-600 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+                                : isExchange
+                                  ? "border-[#e2e8f0] bg-white text-[#1d4ed8] cursor-pointer"
+                                  : "border-[#e2e8f0] bg-slate-100 text-slate-400 cursor-not-allowed"
+                              }`}
+                          >
+                            <span className="truncate">
+                              {emp.attachment?.name ||
+                                (isExchange
+                                  ? "File Upload"
+                                  : "Available when Exchange is selected")}
+                            </span>
+                            <Upload size={15} className="shrink-0" />
+                            <input
+                              type="file"
+                              disabled={!isExchange}
+                              className="hidden"
 
                         <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
                           {/* Department */}
@@ -660,14 +919,32 @@ export default function ApplyForQuartersEmployees() {
                 {/* ── End Profile card + form details ── */}
 
                 {/* ── Vacant quarters table ── */}
-                <div className={`relative rounded-2xl ${!isApplicationOpen ? "border-[2px] border-red-500" : ""}`}>
-                  {!isApplicationOpen && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center">
-                      <div className="bg-white/95 px-6 py-3 rounded-lg shadow-lg border border-red-300">
-                        <p className="font-bold text-red-600">
-                          🚫 Application is closed right now
-                        </p>
-                      </div>
+                <div
+                  className={`lms-data-transition bg-white rounded-2xl border shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden ${validationErrors.selectedQuarter
+                      ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+                      : "border-[#e2e8f0]"
+                    }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                    <div className="flex items-center gap-2">
+                      <Home size={16} className="text-[#1a2e5a]" />
+                      <h3 className="font-bold text-lg text-slate-900">
+                        Choose from Vacant Quarters Listing
+                        <RequiredMark />
+                      </h3>
+                    </div>
+                    <div className="text-[12px] font-semibold text-slate-500">
+                      {selectedQuarter
+                        ? `Selected: ${selectedQuarter.quarterNumber}`
+                        : "Select one available quarter"}
+//                 <div className={`relative rounded-2xl ${!isApplicationOpen ? "border-[2px] border-red-500" : ""}`}>
+//                   {!isApplicationOpen && (
+//                     <div className="absolute inset-0 z-20 flex items-center justify-center">
+//                       <div className="bg-white/95 px-6 py-3 rounded-lg shadow-lg border border-red-300">
+//                         <p className="font-bold text-red-600">
+//                           🚫 Application is closed right now
+//                         </p>
+//                       </div>
                     </div>
                   )}
 
@@ -719,6 +996,14 @@ export default function ApplyForQuartersEmployees() {
                   {/* End quarters inner card */}
                 </div>
                 {/* ── End Vacant quarters table ── */}
+
+                {/* ── Error message ── */}
+                {submitError && (
+                  <div className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] font-semibold text-rose-700">
+                    <span className="text-rose-500 text-[16px]">✕</span>
+                    {submitError}
+                  </div>
+                )}
 
                 {/* ── Action buttons ── */}
                 <div className="flex items-center justify-end gap-3">
