@@ -17,7 +17,7 @@ const sidebarNav = [
   },
   {
     key: "approval",
-    label: "Check Approval",
+    label: "Check Status of applications",
     to: "/Quarters/Approval",
     icon: (
       <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
