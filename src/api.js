@@ -83,4 +83,19 @@ export function updatePublication(payload) {
   });
 }
 
+export function getHouseAllotmentCommitteeHistory() {
+  return request("/api/admin/house-allotment-committee-history", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function saveHouseAllotmentCommitteeHistory(payload) {
+  return request("/api/admin/house-allotment-committee-history", {
+    method: "POST",
+    body: payload,
+    auth: true,
+  });
+}
+
 export { API_BASE, request };

@@ -11,6 +11,7 @@ export default function EmployeeLayout({
   description = "Outsider Services",
   welcomeName = "Employee",
   logoutTo = "/QuartersApplyLogin",
+  headerRight = null,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -49,9 +50,12 @@ export default function EmployeeLayout({
             <main className="flex-1 overflow-y-auto px-5 py-7 md:px-8 xl:px-10">
               <div className="mx-auto w-full max-w-[1540px] space-y-6">
                 {(title || subtitle) && (
-                  <div>
-                    {title && <h1 className="text-2xl font-bold text-slate-900">{title}</h1>}
-                    {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      {title && <h1 className="text-2xl font-bold text-slate-900">{title}</h1>}
+                      {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+                    </div>
+                    {headerRight ? <div className="shrink-0">{headerRight}</div> : null}
                   </div>
                 )}
                 {children}
