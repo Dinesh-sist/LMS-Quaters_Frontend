@@ -298,6 +298,7 @@ export default function SetDateForApplication() {
   const [isAltering, setIsAltering] = useState(false);
   const isPublished =
     currentWindow?.Current_State === "Published";
+  const isStopDisabled = !isPublished || isAltering;
   const loadCurrentWindow = async () => {
     try {
       const data = await getLatestPublication();
@@ -407,10 +408,24 @@ export default function SetDateForApplication() {
     }
   };
   useEffect(() => {
-    loadCurrentWindow();
+    let isActive = true;
+
+    (async () => {
+      try {
+        const data = await getLatestPublication();
+        if (isActive) setCurrentWindow(data);
+      } catch (err) {
+        console.error("Failed to load publication:", err);
+      }
+    })();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const handleStopPublication = async () => {
+    if (isStopDisabled) return;
     try {
       await stopPublication();
 
@@ -642,11 +657,11 @@ export default function SetDateForApplication() {
             <button
               type="button"
               onClick={handleStopPublication}
-              disabled={!isPublished}
+              disabled={isStopDisabled}
               className={`inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white transition
-            ${isPublished
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-slate-400 cursor-not-allowed"
+                ${isStopDisabled
+                  ? "bg-slate-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
                 }`}
             >
               Stop Publication

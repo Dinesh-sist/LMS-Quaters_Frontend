@@ -2,11 +2,8 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AgGridTable from "../../Components/Table";
 import EmployeeLayout from "./EmployeeUI/EmployeeLayout";
-import { request, API_BASE } from "../../api";
+import { request, API_BASE, getLatestPublication } from "../../api";
 import { getUser } from "../../auth";
-
-
-
 
 const statusStyles = {
   approved: "bg-emerald-100 text-emerald-700",
@@ -19,6 +16,28 @@ function statusLabel(value) {
   if (!value) return "—";
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
+
+function formatDate(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function toDateKey(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const columns = [
   { key: "AppNo", header: "APP NO", minWidth: 140 },
   { key: "EmpId", header: "EMP ID", minWidth: 130 },
@@ -108,6 +127,18 @@ const columns = [
     },
   },
   {
+    key: "PublishedDateFrom",
+    header: "PUBLISHED FROM",
+    minWidth: 150,
+    render: (value) => formatDate(value),
+  },
+  {
+    key: "PublishedDateTo",
+    header: "PUBLISHED TO",
+    minWidth: 150,
+    render: (value) => formatDate(value),
+  },
+  {
     key: "Status",
     header: "STATUS",
     minWidth: 180,
@@ -162,8 +193,9 @@ export default function CheckApproval() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showBanner, setShowBanner] = useState(!!state?.successMessage);
+  const [viewMode, setViewMode] = useState("current");
+  const [currentPublication, setCurrentPublication] = useState(null);
   const user = getUser();
-
 
   useEffect(() => {
     let isActive = true;
@@ -183,6 +215,45 @@ export default function CheckApproval() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    getLatestPublication()
+      .then((data) => {
+        if (isActive) setCurrentPublication(data || null);
+      })
+      .catch(() => {
+        if (isActive) setCurrentPublication(null);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const currentWindowKey = {
+    from: toDateKey(currentPublication?.From_Date),
+    to: toDateKey(currentPublication?.To_Date),
+  };
+
+  const currentApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return false;
+    return (
+      toDateKey(row?.PublishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.PublishedDateTo) === currentWindowKey.to
+    );
+  });
+
+  const historyApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return true;
+    return !(
+      toDateKey(row?.PublishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.PublishedDateTo) === currentWindowKey.to
+    );
+  });
+
+  const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
+
   //fetch the data's form the database and  display in the table format with the help of ag-grid table and also display the status of the application with the help of the status column and also display the success message if the application is approved or rejected or pending or cancelled and also display the error message if there is any error in fetching the data from the database and also display the loading message while fetching the data from the database and also display the empty message if there is no data in the database and also display the total number of requests and also display the number of approved requests and also display the number of pending requests and also display the number of rejected requests in the page summary bar.
   return (
     <EmployeeLayout
@@ -191,6 +262,32 @@ export default function CheckApproval() {
       role="user"
       description="Approval Tracking"
       welcomeName={user?.name || user?.username || "Employee"} logoutTo="/QuartersApplyLogin"
+      headerRight={
+        <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setViewMode("current")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              viewMode === "current"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Current Applications
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("history")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              viewMode === "history"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            History of Applications
+          </button>
+        </div>
+      }
     >
 
       {/* Success Banner */}
@@ -210,7 +307,7 @@ export default function CheckApproval() {
         </div>
       )}
 
-      <PageSummaryBar rows={rows} />
+      <PageSummaryBar rows={visibleRows} />
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -221,7 +318,7 @@ export default function CheckApproval() {
       <div className="w-full overflow-x-auto rounded-xl">
         <AgGridTable
           columns={columns}
-          rows={rows}
+          rows={visibleRows}
           searchable
           pageSize={8}
           showExport
