@@ -51,8 +51,9 @@ function InfoField({ label, value, placeholder = "-" }) {
         {label}
       </p>
       <p
-        className={`text-[11px] xl:text-[13px] font-semibold ${value ? "text-slate-900" : "text-slate-300"
+        className={`min-w-0 text-[12px] font-semibold leading-relaxed xl:text-[13px] ${value ? "text-slate-900" : "text-slate-300"
           }`}
+        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
       >
         {value || placeholder}
       </p>
@@ -589,8 +590,8 @@ export default function ApplyForQuartersEmployees() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="font-['Segoe_UI',system-ui,sans-serif] h-screen flex flex-col overflow-hidden bg-[#EEF2FF]">
-      <div className="h-full bg-[#EEF2FF] overflow-hidden flex flex-col">
+    <div className="font-['Segoe_UI',system-ui,sans-serif] bg-[#EEF2FF] flex flex-col lg:h-screen lg:overflow-hidden">
+      <div className="bg-[#EEF2FF] flex flex-col lg:h-full lg:overflow-hidden">
         <TopHeader
           role="newuser"
           description="Employee Services"
@@ -599,11 +600,11 @@ export default function ApplyForQuartersEmployees() {
           logoutTo="/QuartersApplyLogin"
         />
 
-        <div className="flex-1 flex overflow-hidden min-h-0">
+        <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
           <Sidebar />
 
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
-            <main className="flex-1 overflow-y-auto px-9 py-7">
+            <main className="flex-1 overflow-y-auto bg-[#EEF2FF] px-8 py-7">
 
               {/* ── Page heading ── */}
               <div className="mb-[22px]">
@@ -629,7 +630,7 @@ export default function ApplyForQuartersEmployees() {
                   </div>
                 )}
 
-                <h1 className="text-2xl font-bold text-slate-900">
+                <h1 className="max-w-full text-[22px] font-bold leading-tight text-slate-900 sm:text-2xl lg:text-[26px]">
                   Application Form for Quarter Allotment for Employees
                 </h1>
                 <p className="mt-1 text-sm text-slate-500">
@@ -641,19 +642,19 @@ export default function ApplyForQuartersEmployees() {
               <div className="max-w-8xl mx-auto flex flex-col gap-6">
 
                 {/* ── Profile card + form details ── */}
-                <div className="flex flex-col xl:flex-row xl:items-start gap-6">
+                <div className="flex flex-col md:flex-row md:items-center xl:items-start gap-6 shrink-0">
 
                   {/* Profile card */}
-                  <div className="xl:w-64 shrink-0">
+                  <div className="lg:w-64 lg:h-full shrink-0">
                     <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-6">
-                      <div className="flex flex-col items-center gap-4 text-center">
-                        <div className="flex w-full flex-row items-center gap-3 md:flex-col md:gap-0">
+                      <div className="flex flex-col items-center lg:text-center gap-4 lg:gap-0">
+                        <div className="flex flex-row md:flex-col items-center md:items-center gap-3 md:gap-0 shrink-0 w-full md:w-auto">
                           {/* Avatar */}
                           <div className="w-16 h-16 md:w-28 md:h-28 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-xl md:text-3xl lg:text-5xl font-bold text-[#1a2e5a] shrink-0">
                             {initials}
                           </div>
 
-                          <div className="flex min-w-0 flex-1 flex-col items-start gap-1 md:flex-none md:items-center">
+                          <div className="flex flex-col items-start md:items-center gap-1 md:gap-0 min-w-0 flex-1 md:flex-none">
                             <h2
                               className={`font-bold leading-tight md:mt-2 text-slate-800 w-full md:text-center ${nameSizeClass}`}
                               style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
@@ -666,7 +667,7 @@ export default function ApplyForQuartersEmployees() {
                           </div>
                         </div>
 
-                        <div className="w-full h-px bg-white/65 my-1 md:my-3" />
+                        <div className="w-full h-px bg-white/65 my-1 md:my-3 lg:my-5" />
 
                         <div className="flex flex-col gap-3 text-left w-full min-w-0">
                           <div className="flex items-center gap-2 text-xs text-slate-700">
@@ -702,7 +703,7 @@ export default function ApplyForQuartersEmployees() {
                           </h3>
                         </div>
                       </div>
-                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-y-5 sm:gap-x-6">
+                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-y-5 sm:gap-x-6">
                         <InfoField
                           label="Name of the Employee"
                           value={emp.employeeName}

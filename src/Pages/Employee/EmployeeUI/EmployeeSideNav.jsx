@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
@@ -37,7 +37,20 @@ function getStoredCollapsed() {
 export default function Sidebar({ onNavigate, forceExpanded = false }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(getStoredCollapsed);
-  const isCollapsed = forceExpanded ? false : collapsed;
+  const [isLargeScreen, setIsLargeScreen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia("(min-width: 1024px)").matches;
+  });
+  const isCollapsed = forceExpanded ? false : isLargeScreen && collapsed;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const handleChange = () => setIsLargeScreen(media.matches);
+    handleChange();
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
 
   const toggleCollapsed = () => {
     setCollapsed((current) => {
@@ -51,8 +64,8 @@ export default function Sidebar({ onNavigate, forceExpanded = false }) {
 
   return (
     <aside
-      className={`shrink-0 bg-white flex flex-col overflow-visible border-r border-[#dde3ee] transition-[width] duration-200 ${
-        isCollapsed ? "w-[76px]" : "w-[252px]"
+      className={`h-auto w-full shrink-0 bg-white flex flex-col overflow-visible border-r border-[#dde3ee] py-2 shadow-sm transition-all duration-200 lg:h-full ${
+        isCollapsed ? "lg:w-[76px]" : "lg:w-[252px]"
       }`}
     >
 
