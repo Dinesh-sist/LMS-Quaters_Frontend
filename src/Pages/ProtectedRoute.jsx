@@ -18,7 +18,8 @@ export default function ProtectedRoute({ children, role }) {
   }
 
   if (role && user.role !== role) {
-    return <Navigate to={getLoginRedirect(user.role)} replace />;
+    clearAuth();
+    return <Navigate to={getLoginRedirect(role)} replace />;
   }
 
   return children;

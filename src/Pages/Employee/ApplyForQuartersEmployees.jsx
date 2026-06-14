@@ -61,6 +61,28 @@ function InfoField({ label, value, placeholder = "-" }) {
   );
 }
 
+function StatusPill({ value }) {
+  const status = String(value || "").toLowerCase();
+  const styles = {
+    approved: "bg-emerald-100 text-emerald-700",
+    pending: "bg-amber-100 text-amber-700",
+    rejected: "bg-rose-100 text-rose-700",
+    cancelled: "bg-slate-100 text-slate-600",
+  };
+
+  if (!status) return <span className="text-[11px] font-semibold text-slate-400">-</span>;
+
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${styles[status] || "bg-slate-100 text-slate-600"
+        }`}
+    >
+      {label}
+    </span>
+  );
+}
+
 function RequiredMark() {
   return <span className="ml-1 align-top text-rose-500">*</span>;
 }
@@ -159,6 +181,7 @@ export default function ApplyForQuartersEmployees() {
   const [classId, setClassId] = useState(null);
   const [publication, setPublication] = useState(null);
   const [isApplicationOpen, setIsApplicationOpen] = useState(false);
+  const [approvedQuarter, setApprovedQuarter] = useState(null);
 
   const [emp, setEmp] = useState({
     employeeName: user?.name || "",
@@ -345,6 +368,31 @@ export default function ApplyForQuartersEmployees() {
 
     loadEmployeeProfile();
     return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadApprovedQuarter() {
+      try {
+        const data = await request("/api/admin/check-approval", { auth: true });
+        if (cancelled) return;
+
+        const items = Array.isArray(data?.items) ? data.items : [];
+        const approved = items.find((row) => String(row?.Status || "").toLowerCase() === "approved") || null;
+        setApprovedQuarter(approved);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Approved quarter load error:", err);
+          setApprovedQuarter(null);
+        }
+      }
+    }
+
+    loadApprovedQuarter();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -702,8 +750,9 @@ export default function ApplyForQuartersEmployees() {
                             Employee Information
                           </h3>
                         </div>
+                        <StatusPill value={approvedQuarter?.Status} />
                       </div>
-                      <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-y-5 sm:gap-x-6">
+                      <div className="flex inline-flex px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-1 xl:grid-cols-5 gap-y-5 sm:gap-x-6">
                         <InfoField
                           label="Name of the Employee"
                           value={emp.employeeName}
@@ -721,6 +770,26 @@ export default function ApplyForQuartersEmployees() {
                           label="Date of Joining"
                           value={emp.dateOfJoining}
                         />
+                      </div>
+                      <div className="border-t border-dashed border-slate-200 pt-3 pb-5 xl:px-6">
+                        <div className="mb-3 flex items-center gap-2">
+                          <FileText size={16} className="text-[#1a2e5a]" />
+                          <p className="font-semibold text-md text-slate-900">
+                            Current Approved Quarter
+                          </p>
+                        </div>
+                        {approvedQuarter ? (
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                            <InfoField label="Application Number" value={approvedQuarter.AppNo} />
+                            <InfoField label="Quarter Number" value={approvedQuarter.QtrRequested} />
+                            <InfoField label="Quarter Type" value={approvedQuarter.QtrType} />
+                            <InfoField label="Quarter Location" value={approvedQuarter.QtrLocation} />
+                          </div>
+                        ) : (
+                          <p className="text-[12px] font-semibold text-slate-400">
+                            No approved quarter is available yet.
+                          </p>
+                        )}
                       </div>
                     </div>
                     {/* End Employee information card */}
@@ -822,8 +891,7 @@ export default function ApplyForQuartersEmployees() {
                           label="Exchange Reason"
                           required={isExchange}
                         >
-                          <input
-                            type="text"
+                          <select
                             value={emp.exchangeReason}
                             onChange={(e) => {
                               clearValidationError("exchangeReason");
@@ -833,20 +901,24 @@ export default function ApplyForQuartersEmployees() {
                               }));
                             }}
                             disabled={!isExchange}
-                            className={inputCls(
+                            className={selectCls(
                               focused,
                               "emp_exchangeReason",
                               validationErrors.exchangeReason,
                               !isExchange
                             )}
+                            style={{ backgroundImage: SELECT_ARROW }}
                             onFocus={() => setFocused("emp_exchangeReason")}
                             onBlur={() => setFocused(null)}
-                            placeholder={
-                              isExchange
-                                ? "Enter exchange reason"
-                                : "Available when Exchange is selected"
-                            }
-                          />
+                          >
+                            <option value="">
+                              {isExchange
+                                ? "Choose Exchange Reason"
+                                : "Available when Exchange is selected"}
+                            </option>
+                            <option value="Medical">Medical</option>
+                            <option value="Broken">Broken</option>
+                          </select>
                         </FieldShell>
 
                         {/* Attachment */}

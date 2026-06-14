@@ -38,7 +38,7 @@ function toDateKey(value) {
   return `${year}-${month}-${day}`;
 }
 
-const columns = [
+const makeColumns = (onDelete) => [
   { key: "AppNo", header: "APP NO", minWidth: 140 },
   { key: "EmpId", header: "EMP ID", minWidth: 130 },
   { key: "EmpName", header: "EMP NAME", minWidth: 200 },
@@ -151,6 +151,22 @@ const columns = [
       </span>
     ),
   },
+  {
+    key: "action",
+    header: "ACTION",
+    minWidth: 120,
+    sortable: false,
+    filterable: false,
+    render: (_, row) => (
+      <button
+        type="button"
+        onClick={() => onDelete(row)}
+        className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 active:scale-95"
+      >
+        Delete
+      </button>
+    ),
+  },
 ];
 
 function PageSummaryBar({ rows }) {
@@ -186,6 +202,47 @@ function PageSummaryBar({ rows }) {
   );
 }
 
+function DeleteConfirmModal({ row, submitting, onCancel, onConfirm }) {
+  if (!row) return null;
+
+  return (
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/50 px-4 backdrop-blur-[2px]">
+      <div className="w-full max-w-[520px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.22)]">
+        <div className="border-b border-slate-100 bg-[#f8fbff] px-6 py-4">
+          <h3 className="mt-2 text-lg font-bold text-slate-900">
+            Delete application {row.AppNo || `#${row.Id}`}?
+          </h3>
+        </div>
+
+        <div className="px-6 py-4">
+          <p className="text-md leading-6 text-black-600">
+            Are you sure, Do you want to permanently delete the application ?
+          </p>
+
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={submitting}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={submitting}
+              className="rounded-xl border border-rose-200 bg-rose-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {submitting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export default function CheckApproval() {
   const { state } = useLocation();
@@ -195,6 +252,8 @@ export default function CheckApproval() {
   const [showBanner, setShowBanner] = useState(!!state?.successMessage);
   const [viewMode, setViewMode] = useState("current");
   const [currentPublication, setCurrentPublication] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const user = getUser();
 
   useEffect(() => {
@@ -253,6 +312,30 @@ export default function CheckApproval() {
   });
 
   const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
+  const handleDelete = async (row) => {
+    if (!row?.Id) return;
+    setDeleteTarget(row);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget?.Id) return;
+
+    try {
+      setDeleting(true);
+      await request(`/api/admin/applications/${deleteTarget.Id}`, {
+        method: "DELETE",
+        auth: true,
+      });
+      setRows((prev) => prev.filter((item) => item.Id !== deleteTarget.Id));
+      setDeleteTarget(null);
+    } catch (err) {
+      setError(err?.message || "Failed to delete the application.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const columns = makeColumns(handleDelete);
 
   //fetch the data's form the database and  display in the table format with the help of ag-grid table and also display the status of the application with the help of the status column and also display the success message if the application is approved or rejected or pending or cancelled and also display the error message if there is any error in fetching the data from the database and also display the loading message while fetching the data from the database and also display the empty message if there is no data in the database and also display the total number of requests and also display the number of approved requests and also display the number of pending requests and also display the number of rejected requests in the page summary bar.
   return (
@@ -327,6 +410,16 @@ export default function CheckApproval() {
           emptyMessage={loading ? "Loading approval statuses..." : "No approval records found."}
         />
       </div>
+
+      <DeleteConfirmModal
+        row={deleteTarget}
+        submitting={deleting}
+        onCancel={() => {
+          if (deleting) return;
+          setDeleteTarget(null);
+        }}
+        onConfirm={confirmDelete}
+      />
     </EmployeeLayout>
   );
 }
