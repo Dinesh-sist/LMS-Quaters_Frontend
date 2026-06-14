@@ -10,6 +10,7 @@ const statusStyles = {
 };
 
 const columns = [
+  { key: "priorityNo", header: "PRIORITY NO", minWidth: 120 },
   { key: "appNo",      header: "APP NO",         minWidth: 130 },
   { key: "empId",      header: "EMP ID",         renderer: "empId", minWidth: 135 },
   { key: "empName",    header: "EMP NAME",       minWidth: 220 },
