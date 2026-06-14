@@ -2,6 +2,19 @@ import { useEffect, useState } from "react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import { Files, HouseHeart, HousePlus, Users } from "lucide-react";
 import { request } from "../../api";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Bar, Pie } from "react-chartjs-2";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const stats = [
   {
@@ -20,7 +33,6 @@ const stats = [
     cardBg: "border-sky-300/70 bg-gradient-to-br from-blue-700 via-sky-500 to-cyan-400",
     hoverBg: "bg-gradient-to-br from-blue-800 via-sky-600 to-cyan-200",
     valueColor: "text-white",
-
     icon: <Users size={20} strokeWidth={1.8} />,
   },
   {
@@ -30,7 +42,6 @@ const stats = [
     cardBg: "border-emerald-300/70 bg-gradient-to-br from-teal-700 via-emerald-500 to-lime-400",
     hoverBg: "bg-gradient-to-br from-teal-800 via-emerald-600 to-lime-200",
     valueColor: "text-white",
-
     icon: <HousePlus size={20} strokeWidth={1.8} />,
   },
   {
@@ -41,48 +52,8 @@ const stats = [
     hoverBg: "bg-gradient-to-br from-red-800 via-rose-600 to-pink-200",
     valueColor: "text-white",
     icon: <Files size={20} strokeWidth={1.8} />,
-  }
+  },
 ];
-
-const requests = [
-  { id: 3095, fileNo: "22005", module: "Allotment", status: "Review", stage: "Pending" },
-  { id: 3335, fileNo: "22025", module: "Renewal", status: "Scrutiny", stage: "Pending" },
-  { id: 5535, fileNo: "22045", module: "Lease", status: "Approval", stage: "Active" },
-];
-
-const statusClasses = {
-  Review: "bg-sky-100 text-sky-800",
-  Scrutiny: "bg-amber-100 text-amber-800",
-  Approval: "bg-emerald-100 text-emerald-800",
-};
-
-const notices = [
-  "Site resettlement update released",
-  "Culture and labour unit circular published",
-  "Corridor maintenance notice issued",
-];
-
-const activities = [
-  "Estate officer updated new vacancy records for internal review.",
-  "Proposal review moved to the scrutiny stage for committee action.",
-  "Latest allotment document uploaded to the current request record.",
-];
-
-const landData = [
-  { label: "Industrial", value: 35, color: "#378ADD" },
-  { label: "Housing", value: 25, color: "#7F77DD" },
-  { label: "Utilities", value: 18, color: "#EF9F27" },
-  { label: "Reserve", value: 14, color: "#1D9E75" },
-  { label: "Other", value: 8, color: "#888780" },
-];
-
-const landChartBackground = `conic-gradient(${landData
-  .map((item, index) => {
-    const start = landData.slice(0, index).reduce((sum, entry) => sum + entry.value, 0);
-    const end = start + item.value;
-    return `${item.color} ${start}% ${end}%`;
-  })
-  .join(", ")})`;
 
 function SectionCard({ title, action, delay = 0, children }) {
   return (
@@ -98,6 +69,174 @@ function SectionCard({ title, action, delay = 0, children }) {
     </section>
   );
 }
+
+// Shared dark tooltip style
+const TOOLTIP_STYLE = {
+  backgroundColor: "rgba(15, 23, 42, 0.88)",
+  titleColor: "#f1f5f9",
+  bodyColor: "#cbd5e1",
+  padding: 10,
+  cornerRadius: 6,
+  displayColors: true,
+  boxWidth: 10,
+  boxHeight: 10,
+};
+
+// ── LEFT: Horizontal bar – employees by quarter type ──────────────────────────
+// animations.x: bars grow left→right from 0 to their value on mount
+const quarterTypeChartData = {
+  labels: ["Type A", "Type B", "Type B IIR", "Type C", "Type C Modified", "Type D", "1 Room"],
+  datasets: [
+    {
+      label: "Employees",
+      data: [48, 120, 35, 80, 22, 60, 15],
+      backgroundColor: "#378ADD",
+      borderRadius: 0,
+      borderSkipped: false,
+      categoryPercentage: 1.0,
+      barPercentage: 0.45,
+    },
+  ],
+};
+
+const quarterTypeChartOptions = {
+  indexAxis: "y",
+  responsive: true,
+  maintainAspectRatio: false,
+  // 'animations' (plural) targets individual properties; 'x' controls bar width growth
+  animations: {
+    x: {
+      duration: 1600,
+      easing: "easeOutQuart",
+      from: 0,         // every bar starts at x=0 (left edge) and grows rightward
+    },
+  },
+  layout: { padding: { top: 4, bottom: 4 } },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      ...TOOLTIP_STYLE,
+      callbacks: { label: (ctx) => `  ${ctx.parsed.x} employees` },
+    },
+  },
+  scales: {
+    x: {
+      grid: { color: "rgba(0,0,0,0.05)" },
+      ticks: { color: "#64748b", font: { size: 11 } },
+    },
+    y: {
+      grid: { display: false },
+      ticks: {
+        color: "#1e293b",
+        font: { size: 11, weight: "500" },
+        backdropColor: "rgba(241,245,249,0.85)",
+        backdropPadding: { x: 6, y: 3 },
+        showLabelBackdrop: true,
+      },
+    },
+  },
+};
+
+// ── RIGHT TOP: Vertical bar – employees by class ──────────────────────────────
+// animations.y: bars grow bottom→top from 0 to their value on mount
+const employeeClassChartData = {
+  labels: ["Jr. Class 1", "Sr. Class 1", "Class 2", "Class 3", "Class 4"],
+  datasets: [
+    {
+      label: "Employees",
+      data: [90, 60, 140, 200, 110],
+      backgroundColor: ["#7F77DD", "#534AB7", "#1D9E75", "#EF9F27", "#D85A30"],
+      borderRadius: 0,
+      borderSkipped: false,
+      barThickness: 38,
+    },
+  ],
+};
+
+const employeeClassChartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  // 'y' controls bar height growth — bars shoot up from the baseline
+  animations: {
+    y: {
+      duration: 1600,
+      easing: "easeOutQuart",
+      from: (ctx) => {
+        // start each bar from the bottom of the chart area (the zero line)
+        if (ctx.type === "data" && ctx.mode === "default") {
+          return ctx.chart.scales.y.getPixelForValue(0);
+        }
+      },
+    },
+  },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      ...TOOLTIP_STYLE,
+      callbacks: { label: (ctx) => `  ${ctx.parsed.y} employees` },
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: {
+        color: "#1e293b",
+        font: { size: 10, weight: "500" },
+        backdropColor: "rgba(241,245,249,0.85)",
+        backdropPadding: { x: 5, y: 2 },
+        showLabelBackdrop: true,
+      },
+    },
+    y: {
+      grid: { color: "rgba(0,0,0,0.05)" },
+      ticks: { color: "#64748b", font: { size: 10 } },
+    },
+  },
+};
+
+// ── RIGHT BOTTOM: Pie chart ───────────────────────────────────────────────────
+// animateRotate: slices sweep in from 0° | animateScale: pie scales up from centre
+const applicationStatusPieData = {
+  labels: ["Pending", "Approved", "Rejected"],
+  datasets: [
+    {
+      data: [45, 120, 30],
+      backgroundColor: ["#EF9F27", "#1D9E75", "#E24B4A"],
+      borderColor: ["#fff", "#fff", "#fff"],
+      borderWidth: 3,
+      hoverOffset: 8,
+    },
+  ],
+};
+
+const applicationStatusPieOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: {
+    duration: 1600,
+    easing: "easeOutQuart",
+    animateRotate: true,
+    animateScale: true,
+  },
+  plugins: {
+    legend: {
+      display: true,
+      position: "right",
+      labels: {
+        color: "#1e293b",
+        font: { size: 12, weight: "500" },
+        padding: 16,
+        usePointStyle: true,
+        pointStyleWidth: 10,
+      },
+    },
+    tooltip: {
+      ...TOOLTIP_STYLE,
+      callbacks: { label: (ctx) => `  ${ctx.label}: ${ctx.parsed} applications` },
+    },
+  },
+};
+
 export default function AdminDashboard() {
   const [totalQuarters, setTotalQuarters] = useState("...");
   const [quarterCounts, setQuarterCounts] = useState({
@@ -109,10 +248,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadTotalQuarters() {
       try {
-        const data = await request("/api/estate-quarters/total-count", {
-          auth: true,
-        });
-
+        const data = await request("/api/estate-quarters/total-count", { auth: true });
         setTotalQuarters(Number(data.total || 0).toLocaleString("en-IN"));
       } catch (err) {
         console.error("Total quarters count error:", err);
@@ -120,13 +256,9 @@ export default function AdminDashboard() {
       }
     }
 
-    loadTotalQuarters();
     async function loadQuarterStatusCounts() {
       try {
-        const data = await request("/api/estate-quarters/status-counts", {
-          auth: true,
-        });
-
+        const data = await request("/api/estate-quarters/status-counts", { auth: true });
         setQuarterCounts({
           occupied: Number(data.occupied || 0).toLocaleString("en-IN"),
           vacant: Number(data.vacant || 0).toLocaleString("en-IN"),
@@ -137,26 +269,15 @@ export default function AdminDashboard() {
       }
     }
 
+    loadTotalQuarters();
     loadQuarterStatusCounts();
   }, []);
 
   const dashboardStats = stats.map((item) => {
-    if (item.label === "Total Number of Quarters") {
-      return { ...item, value: totalQuarters };
-    }
-
-    if (item.label === "Number of Occupied Quarters") {
-      return { ...item, value: quarterCounts.occupied };
-    }
-
-    if (item.label === "Number of Vacant Quarters") {
-      return { ...item, value: quarterCounts.vacant };
-    }
-
-    if (item.label === "Number of quaters beyond repair") {
-      return { ...item, value: quarterCounts.beyondRepair };
-    }
-
+    if (item.label === "Total Number of Quarters") return { ...item, value: totalQuarters };
+    if (item.label === "Number of Occupied Quarters") return { ...item, value: quarterCounts.occupied };
+    if (item.label === "Number of Vacant Quarters") return { ...item, value: quarterCounts.vacant };
+    if (item.label === "Number of quaters beyond repair") return { ...item, value: quarterCounts.beyondRepair };
     return item;
   });
 
@@ -165,11 +286,13 @@ export default function AdminDashboard() {
       title="Dashboard"
       subtitle="A quick overview of quarter management activity, requests, and notices."
     >
+      {/* ── Top 4 Stat Cards ── */}
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {dashboardStats.map((item, index) => (
           <div
             key={item.label}
-            className={`lms-card-land group relative overflow-hidden rounded-3xl border p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.18)] ${item.cardBg}`} style={{ animationDelay: `${index * 90}ms` }}
+            className={`lms-card-land group relative overflow-hidden rounded-3xl border p-5 shadow-[0_14px_34px_rgba(15,23,42,0.08)] transition-all duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.18)] ${item.cardBg}`}
+            style={{ animationDelay: `${index * 90}ms` }}
           >
             <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-out group-hover:opacity-100 ${item.hoverBg}`} />
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.38),transparent_34%)] transition-opacity duration-500 ease-out group-hover:opacity-90" />
@@ -189,130 +312,31 @@ export default function AdminDashboard() {
         ))}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.3fr_1fr]">
-        <SectionCard title="Latest Requests" action="Current cycle" delay={380}>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-[11px] uppercase tracking-[0.18em] text-slate-400">
-                  <th className="px-2 py-3 font-semibold">ID</th>
-                  <th className="px-2 py-3 font-semibold">File No.</th>
-                  <th className="px-2 py-3 font-semibold">Module</th>
-                  <th className="px-2 py-3 font-semibold">Status</th>
-                  <th className="px-2 py-3 font-semibold">Stage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((request) => (
-                  <tr key={request.id} className="border-b border-slate-100 last:border-b-0">
-                    <td className="px-2 py-3 text-slate-700">{request.id}</td>
-                    <td className="px-2 py-3 font-medium text-slate-900">{request.fileNo}</td>
-                    <td className="px-2 py-3 text-slate-700">{request.module}</td>
-                    <td className="px-2 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusClasses[request.status]
-                          }`}
-                      >
-                        {request.status}
-                      </span>
-                    </td>
-                    <td
-                      className={`px-2 py-3 font-medium ${request.stage === "Active" ? "text-emerald-700" : "text-slate-500"
-                        }`}
-                    >
+      {/* ── Charts Section ── */}
+      <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
 
-                      {request.stage}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <SectionCard title="Employees by Quarter Type" delay={380}>
+          <div className="h-[480px]">
+            <Bar data={quarterTypeChartData} options={quarterTypeChartOptions} />
           </div>
         </SectionCard>
 
-        <SectionCard title="Server Notices" delay={470}>
-          <div className="space-y-4">
-            {notices.map((notice) => (
-              <div key={notice} className="flex items-start gap-3 rounded-2xl bg-slate-50 px-3 py-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                    <path d="M12 5.25v6.75l4.5 2.25" />
-                    <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" />
-                  </svg>
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-900">{notice}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Latest internal update shared for department awareness.
-                  </p>
-                </div>
-                <span className="text-xs text-slate-400">11h ago</span>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      </section>
+        <div className="flex flex-col gap-4">
 
-      <section className="grid gap-4 xl:grid-cols-[1fr_1.1fr]">
-        <SectionCard title="Land Usage Overview" delay={560}>
-          <div className="flex flex-col gap-6 md:flex-row md:items-center">
-            <div className="relative mx-auto h-40 w-40 shrink-0">
-              <div
-                className="h-full w-full rounded-full"
-                style={{ background: landChartBackground }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-[22px] flex items-center justify-center rounded-full bg-white text-center shadow-inner">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">PPA</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-900">Land</p>
-                </div>
-              </div>
+          <SectionCard title="Employees by Class" delay={470}>
+            <div className="h-44">
+              <Bar data={employeeClassChartData} options={employeeClassChartOptions} />
             </div>
-            <div className="grid flex-1 gap-3">
-              {landData.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 px-3 py-2.5"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="inline-block h-3 w-3 rounded-sm"
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-sm text-slate-700">{item.label}</span>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">{item.value}%</span>
-                </div>
-              ))}
+          </SectionCard>
+
+          <SectionCard title="Applications by Status" delay={560}>
+            <div className="h-52">
+              <Pie data={applicationStatusPieData} options={applicationStatusPieOptions} />
             </div>
-          </div>
-        </SectionCard>
+          </SectionCard>
 
-        <SectionCard title="Recent Activity" delay={650}>
-          <div className="space-y-4">
-            {activities.map((activity, index) => (
-              <div key={activity} className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
-                    {index + 1}
-                  </div>
-                  {index !== activities.length - 1 ? (
-                    <div className="mt-2 h-full w-px bg-slate-200" />
-                  ) : null}
-                </div>
-                <div className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <p className="text-sm font-medium leading-6 text-slate-900">{activity}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Most recent action captured within the current workflow timeline.
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
+        </div>
       </section>
-
     </AdminLayout>
   );
 }
