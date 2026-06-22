@@ -1,68 +1,44 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   ArrowUpCircle,
   ArrowDownCircle,
   Users,
   X,
   ShieldCheck,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import AgGridTable from "../../Components/Table";
 import Popup from "../../Components/Popup";
+import { getEmployeeClasses, updateEmployeeClass } from "../../api"; // ← adjust path to wherever request.js lives
 
-// ─── Static mock data ────────────────────────────────────────────────────────
+// ─── Class config (UI-only constants, not data) ──────────────────────────────
 
-const SEED_EMPLOYEES = [
-  // Class 1
-  { empId: "EMP001", empName: "Arjun Krishnamurthy",    department: "Civil Engineering",       currentClass: "Class 1" },
-  { empId: "EMP002", empName: "Priya Subramaniam",       department: "Electrical Engineering",  currentClass: "Class 1" },
-  { empId: "EMP003", empName: "Ramesh Venkataraman",     department: "Administration",           currentClass: "Class 1" },
-  { empId: "EMP004", empName: "Deepa Narayanan",         department: "Finance",                 currentClass: "Class 1" },
-  { empId: "EMP005", empName: "Vijay Annamalai",         department: "Human Resources",         currentClass: "Class 1" },
-  { empId: "EMP006", empName: "Kavitha Rajan",           department: "IT & Systems",            currentClass: "Class 1" },
-  { empId: "EMP007", empName: "Suresh Iyer",             department: "Operations",              currentClass: "Class 1" },
-  { empId: "EMP008", empName: "Meena Chandrasekaran",    department: "Legal",                   currentClass: "Class 1" },
-  // Class 2
-  { empId: "EMP101", empName: "Balaji Murugan",          department: "Civil Engineering",       currentClass: "Class 2" },
-  { empId: "EMP102", empName: "Saranya Pillai",          department: "Electrical Engineering",  currentClass: "Class 2" },
-  { empId: "EMP103", empName: "Gopal Sundarajan",        department: "Administration",           currentClass: "Class 2" },
-  { empId: "EMP104", empName: "Anitha Selvam",           department: "Finance",                 currentClass: "Class 2" },
-  { empId: "EMP105", empName: "Karthik Balasubramanian", department: "Human Resources",         currentClass: "Class 2" },
-  { empId: "EMP106", empName: "Lakshmi Raghunathan",     department: "IT & Systems",            currentClass: "Class 2" },
-  { empId: "EMP107", empName: "Senthil Kumar",           department: "Operations",              currentClass: "Class 2" },
-  { empId: "EMP108", empName: "Padmavathi Natarajan",    department: "Legal",                   currentClass: "Class 2" },
-  // Class 3
-  { empId: "EMP201", empName: "Dinesh Prabakaran",       department: "Civil Engineering",       currentClass: "Class 3" },
-  { empId: "EMP202", empName: "Revathi Sivasubramanian", department: "Electrical Engineering",  currentClass: "Class 3" },
-  { empId: "EMP203", empName: "Mahesh Arunachalam",      department: "Administration",           currentClass: "Class 3" },
-  { empId: "EMP204", empName: "Geetha Rajagopalan",      department: "Finance",                 currentClass: "Class 3" },
-  { empId: "EMP205", empName: "Muthu Pandian",           department: "Human Resources",         currentClass: "Class 3" },
-  { empId: "EMP206", empName: "Nirmala Venkatesan",      department: "IT & Systems",            currentClass: "Class 3" },
-  { empId: "EMP207", empName: "Prakash Durai",           department: "Operations",              currentClass: "Class 3" },
-  { empId: "EMP208", empName: "Suganya Mohan",           department: "Legal",                   currentClass: "Class 3" },
-  // Class 4
-  { empId: "EMP301", empName: "Kannan Thangavelu",       department: "Civil Engineering",       currentClass: "Class 4" },
-  { empId: "EMP302", empName: "Selvi Arumugam",          department: "Electrical Engineering",  currentClass: "Class 4" },
-  { empId: "EMP303", empName: "Ravi Shankar",            department: "Administration",           currentClass: "Class 4" },
-  { empId: "EMP304", empName: "Vasantha Kumari",         department: "Finance",                 currentClass: "Class 4" },
-  { empId: "EMP305", empName: "Mani Elumalai",           department: "Human Resources",         currentClass: "Class 4" },
-  { empId: "EMP306", empName: "Chitra Gunasekaran",      department: "IT & Systems",            currentClass: "Class 4" },
-  { empId: "EMP307", empName: "Periasamy Ramasamy",      department: "Operations",              currentClass: "Class 4" },
-  { empId: "EMP308", empName: "Indirani Palanisamy",     department: "Legal",                   currentClass: "Class 4" },
-];
-
-const CLASS_OPTIONS = ["Class 1", "Class 2", "Class 3", "Class 4"];
+const CLASS_OPTIONS = ["Sr.Class 1", "Jr.Class 1", "Class 2", "Class 3", "Class 4"];
 // Class 1 = highest (rank 1), Class 4 = lowest (rank 4)
-const CLASS_RANK = { "Class 1": 1, "Class 2": 2, "Class 3": 3, "Class 4": 4 };
+const CLASS_RANK = { "Sr.Class 1": 1, "Jr.Class 1": 2, "Class 2": 3, "Class 3": 4, "Class 4": 5 };
 
 const CLASS_BADGE = {
-  "Class 1": { bg: "#ede9fe", color: "#6d28d9", border: "#c4b5fd" },
+  "Jr.Class 1": { bg: "#ede9fe", color: "#6d28d9", border: "#c4b5fd" },
+  "Sr.Class 1": { bg: "#ede9fe", color: "#6d28d9", border: "#c4b5fd" },
   "Class 2": { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
   "Class 3": { bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" },
   "Class 4": { bg: "#f1f5f9", color: "#475569", border: "#cbd5e1" },
 };
 
 const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")`;
+
+// ─── Helper: normalize whatever shape the API returns into a flat array ──────
+// Handles: raw array, { data: [...] }, { employees: [...] }, { classes: [...] }
+
+function normalizeEmployeesResponse(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.employees)) return payload.employees;
+  if (Array.isArray(payload?.classes)) return payload.classes;
+  return [];
+}
 
 // ─── Class badge cell renderer (for AgGrid) ──────────────────────────────────
 
@@ -87,14 +63,14 @@ function ClassBadgeRenderer({ value }) {
 }
 
 // ─── Action cell renderer (for AgGrid) ───────────────────────────────────────
-// We pass callbacks via a closure generated per render cycle.
 
-function makeActionRenderer(onPromote, onDemote) {
+function makeActionRenderer(onPromote, onDemote, busyEmpId) {
   return function ActionRenderer({ data }) {
     if (!data) return null;
     const rank = CLASS_RANK[data.currentClass];
-    const canPromote = rank > 1;
-    const canDemote  = rank < 4;
+    const isBusy = busyEmpId === data.empId;
+    const canPromote = rank > 1 && !isBusy;
+    const canDemote  = rank < 4 && !isBusy;
 
     const baseBtn = {
       display: "inline-flex", alignItems: "center", gap: 4,
@@ -153,7 +129,7 @@ function makeActionRenderer(onPromote, onDemote) {
 
 // ─── Action Modal ─────────────────────────────────────────────────────────────
 
-function ActionModal({ employee, mode, onClose, onConfirm }) {
+function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
   const [selectedClass, setSelectedClass] = useState("");
   const [error, setError] = useState("");
 
@@ -171,7 +147,6 @@ function ActionModal({ employee, mode, onClose, onConfirm }) {
       return;
     }
     onConfirm(employee.empId, selectedClass, isPromote);
-    onClose();
   };
 
   return (
@@ -179,7 +154,7 @@ function ActionModal({ employee, mode, onClose, onConfirm }) {
       {/* Blurred backdrop */}
       <div
         className="fixed inset-0 z-40 backdrop-blur-sm bg-slate-900/40"
-        onClick={onClose}
+        onClick={!submitting ? onClose : undefined}
       />
 
       {/* Centered modal */}
@@ -214,7 +189,8 @@ function ActionModal({ employee, mode, onClose, onConfirm }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
+              disabled={submitting}
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <X size={15} />
             </button>
@@ -268,8 +244,9 @@ function ActionModal({ employee, mode, onClose, onConfirm }) {
                   <button
                     key={cls}
                     type="button"
+                    disabled={submitting}
                     onClick={() => { setSelectedClass(cls); setError(""); }}
-                    className="flex items-center gap-2 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all duration-150"
+                    className="flex items-center gap-2 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                     style={isSelected ? {
                       background: badge.bg,
                       color: badge.color,
@@ -332,20 +309,23 @@ function ActionModal({ employee, mode, onClose, onConfirm }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-[13px] font-semibold hover:bg-slate-50 transition-colors"
+              disabled={submitting}
+              className="px-5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-[13px] font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className={`px-6 py-2 rounded-xl text-[13px] font-bold text-white transition-all duration-150 ${
+              disabled={submitting}
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[13px] font-bold text-white transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed ${
                 isPromote
                   ? "bg-emerald-600 hover:bg-emerald-700 shadow-[0_4px_12px_rgba(16,185,129,0.25)]"
                   : "bg-rose-600 hover:bg-rose-700 shadow-[0_4px_12px_rgba(239,68,68,0.25)]"
               }`}
             >
-              Confirm {isPromote ? "Promotion" : "Demotion"}
+              {submitting && <Loader2 size={14} className="animate-spin" />}
+              {submitting ? "Saving…" : `Confirm ${isPromote ? "Promotion" : "Demotion"}`}
             </button>
           </div>
         </div>
@@ -364,10 +344,32 @@ function ActionModal({ employee, mode, onClose, onConfirm }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function EmployeeClassUpdation() {
-  const [employees, setEmployees]   = useState(SEED_EMPLOYEES);
+  const [employees, setEmployees]   = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [loadError, setLoadError]   = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [modal, setModal]           = useState({ open: false, employee: null, mode: null });
+  const [submitting, setSubmitting] = useState(false);
+  const [busyEmpId, setBusyEmpId]   = useState(null);
   const [popup, setPopup]           = useState({ open: false, title: "", message: "", variant: "info" });
+
+  // ── Fetch employees from backend ──────────────────────────────────────────
+  const fetchEmployees = useCallback(async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const res = await getEmployeeClasses();
+      setEmployees(normalizeEmployeesResponse(res));
+    } catch (err) {
+      setLoadError(err?.message || "Failed to load employee classes.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   // ── Filtered rows for the selected class ──────────────────────────────────
   const tableRows = employees.filter((e) => e.currentClass === selectedClass);
@@ -383,28 +385,47 @@ export default function EmployeeClassUpdation() {
     setModal({ open: true, employee: emp, mode: "promote" }), []);
   const openDemote  = useCallback((emp) =>
     setModal({ open: true, employee: emp, mode: "demote"  }), []);
-  const closeModal  = () => setModal({ open: false, employee: null, mode: null });
+  const closeModal  = () => {
+    if (submitting) return;
+    setModal({ open: false, employee: null, mode: null });
+  };
 
-  // ── Confirm class change ──────────────────────────────────────────────────
-  const handleConfirm = (empId, newClass, isPromote) => {
+  // ── Confirm class change → call backend, then sync local state ───────────
+  const handleConfirm = async (empId, newClass, isPromote) => {
     const emp = employees.find((e) => e.empId === empId);
-    setEmployees((prev) =>
-      prev.map((e) => e.empId === empId ? { ...e, currentClass: newClass } : e)
-    );
-    setPopup({
-      open: true,
-      variant: isPromote ? "success" : "error",
-      title: isPromote ? "Employee Promoted" : "Employee Demoted",
-      message: `${emp?.empName} has been ${isPromote ? "promoted to" : "demoted to"} ${newClass}.`,
-    });
+    setSubmitting(true);
+    setBusyEmpId(empId);
+    try {
+      await updateEmployeeClass(empId, newClass);
+
+      setEmployees((prev) =>
+        prev.map((e) => (e.empId === empId ? { ...e, currentClass: newClass } : e))
+      );
+
+      setModal({ open: false, employee: null, mode: null });
+      setPopup({
+        open: true,
+        variant: isPromote ? "success" : "error",
+        title: isPromote ? "Employee Promoted" : "Employee Demoted",
+        message: `${emp?.empName} has been ${isPromote ? "promoted to" : "demoted to"} ${newClass}.`,
+      });
+    } catch (err) {
+      setPopup({
+        open: true,
+        variant: "error",
+        title: "Update Failed",
+        message: err?.message || "Could not update this employee's class. Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+      setBusyEmpId(null);
+    }
   };
 
   // ── AgGrid column definitions ─────────────────────────────────────────────
-  // The action renderer is re-created only when the callbacks change (they're
-  // stable useCallbacks so this effectively never re-creates unnecessarily).
   const ActionRenderer = useCallback(
-    makeActionRenderer(openPromote, openDemote),
-    [openPromote, openDemote]
+    makeActionRenderer(openPromote, openDemote, busyEmpId),
+    [openPromote, openDemote, busyEmpId]
   );
 
   const columns = [
@@ -445,6 +466,23 @@ export default function EmployeeClassUpdation() {
       title="Employee Class Updation"
       subtitle="Promote or demote employees across classification tiers."
     >
+      {/* ── Load error banner ── */}
+      {loadError && (
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4">
+          <AlertTriangle size={18} className="text-rose-500 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            <p className="text-[13px] font-bold text-rose-700">Couldn't load employees</p>
+            <p className="text-[12px] text-rose-600 mt-0.5">{loadError}</p>
+          </div>
+          <button
+            onClick={fetchEmployees}
+            className="px-3 py-1.5 rounded-lg bg-white border border-rose-200 text-[12px] font-semibold text-rose-700 hover:bg-rose-50 transition-colors shrink-0"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* ── Class stat cards ── */}
       <div className="lms-page-transition grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
         {classStats.map(({ label, count }, i) => {
@@ -468,7 +506,9 @@ export default function EmployeeClassUpdation() {
               >
                 {label}
               </p>
-              <p className="text-2xl font-bold" style={{ color: badge.color }}>{count}</p>
+              <p className="text-2xl font-bold" style={{ color: badge.color }}>
+                {loading ? "–" : count}
+              </p>
               <p className="mt-0.5 text-[11px] font-medium" style={{ color: badge.color, opacity: 0.7 }}>employees</p>
             </div>
           );
@@ -508,7 +548,8 @@ export default function EmployeeClassUpdation() {
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 text-[13px] font-semibold text-slate-700 outline-none transition-all duration-200 cursor-pointer hover:border-orange-300 focus:border-orange-400 focus:shadow-[0_0_0_3px_rgba(232,119,34,0.12)]"
+              disabled={loading}
+              className="h-10 appearance-none rounded-xl border border-slate-200 bg-white pl-4 pr-9 text-[13px] font-semibold text-slate-700 outline-none transition-all duration-200 cursor-pointer hover:border-orange-300 focus:border-orange-400 focus:shadow-[0_0_0_3px_rgba(232,119,34,0.12)] disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 backgroundImage: SELECT_ARROW,
                 backgroundRepeat: "no-repeat",
@@ -524,7 +565,15 @@ export default function EmployeeClassUpdation() {
         </div>
 
         {/* ── Table area ── */}
-        {!selectedClass ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+            <Loader2 size={28} className="text-[#e87722] animate-spin mb-4" />
+            <p className="text-[15px] font-bold text-slate-700 mb-1">Loading employees…</p>
+            <p className="text-[13px] text-slate-400 font-medium max-w-xs">
+              Fetching the latest classification data from the server.
+            </p>
+          </div>
+        ) : !selectedClass ? (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-orange-50 border border-orange-100 mb-4">
               <Users size={28} className="text-[#e87722]" />
@@ -560,6 +609,7 @@ export default function EmployeeClassUpdation() {
           mode={modal.mode}
           onClose={closeModal}
           onConfirm={handleConfirm}
+          submitting={submitting}
         />
       )}
 
