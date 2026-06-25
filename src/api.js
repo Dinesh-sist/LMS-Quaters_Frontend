@@ -10,11 +10,19 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers,
-    body: body == null ? undefined : isFormData ? body : JSON.stringify(body),
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers,
+      body: body == null ? undefined : isFormData ? body : JSON.stringify(body),
+    });
+  } catch (err) {
+    if (err.message.toLowerCase().includes("failed to fetch") || err.name === "TypeError") {
+      throw new Error("failed to fetch");
+    }
+    throw err;
+  }
 
 
   const data = await res.json().catch(() => ({}));
