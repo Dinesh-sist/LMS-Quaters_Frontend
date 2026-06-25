@@ -35,8 +35,6 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   return data;
 }
 
-
-
 export function login(username, password) {
   return request("/api/auth/login", { method: "POST", body: { username, password } });
 }
@@ -50,7 +48,15 @@ export function lookupEmployee(employeeId, dateOfBirth) {
 }
 
 export function getEmployeeClasses() {
-  return request("/api/employee/classes");
+  return request("/api/employeeupdation/employee/classes", { method: "GET", auth: true });
+}
+
+export function updateEmployeeClass(empId, newClass) {
+  return request("/api/employeeupdation/employee-classes/update", {
+    method: "POST",
+    body: { empId, newClass },
+    auth: true,
+  });
 }
 
 export function getQuarterApplications() {
@@ -103,7 +109,15 @@ export function saveHouseAllotmentCommitteeHistory(payload) {
     method: "POST",
     body: payload,
     auth: true,
+  });  
+}
+
+export function getDashboardStats() { 
+  return request("/api/estate-quarters/employees-by-type", {
+    method: "GET",
+    auth: true,
   });
 }
+
 
 export { API_BASE, request };

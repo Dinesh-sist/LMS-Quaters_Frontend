@@ -83,33 +83,15 @@ const TOOLTIP_STYLE = {
   boxHeight: 10,
 };
 
-// ── LEFT: Horizontal bar – employees by quarter type ──────────────────────────
-// animations.x: bars grow left→right from 0 to their value on mount
-const quarterTypeChartData = {
-  labels: ["Type A", "Type B", "Type B IIR", "Type C", "Type C Modified", "Type D", "1 Room"],
-  datasets: [
-    {
-      label: "Employees",
-      data: [48, 120, 35, 80, 22, 60, 15],
-      backgroundColor: "#378ADD",
-      borderRadius: 0,
-      borderSkipped: false,
-      categoryPercentage: 1.0,
-      barPercentage: 0.45,
-    },
-  ],
-};
-
 const quarterTypeChartOptions = {
   indexAxis: "y",
   responsive: true,
   maintainAspectRatio: false,
-  // 'animations' (plural) targets individual properties; 'x' controls bar width growth
   animations: {
     x: {
       duration: 1600,
       easing: "easeOutQuart",
-      from: 0,         // every bar starts at x=0 (left edge) and grows rightward
+      from: 0,
     },
   },
   layout: { padding: { top: 4, bottom: 4 } },
@@ -138,32 +120,14 @@ const quarterTypeChartOptions = {
   },
 };
 
-// ── RIGHT TOP: Vertical bar – employees by class ──────────────────────────────
-// animations.y: bars grow bottom→top from 0 to their value on mount
-const employeeClassChartData = {
-  labels: ["Jr. Class 1", "Sr. Class 1", "Class 2", "Class 3", "Class 4"],
-  datasets: [
-    {
-      label: "Employees",
-      data: [90, 60, 140, 200, 110],
-      backgroundColor: ["#7F77DD", "#534AB7", "#1D9E75", "#EF9F27", "#D85A30"],
-      borderRadius: 0,
-      borderSkipped: false,
-      barThickness: 38,
-    },
-  ],
-};
-
 const employeeClassChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  // 'y' controls bar height growth — bars shoot up from the baseline
   animations: {
     y: {
       duration: 1600,
       easing: "easeOutQuart",
       from: (ctx) => {
-        // start each bar from the bottom of the chart area (the zero line)
         if (ctx.type === "data" && ctx.mode === "default") {
           return ctx.chart.scales.y.getPixelForValue(0);
         }
@@ -193,21 +157,6 @@ const employeeClassChartOptions = {
       ticks: { color: "#64748b", font: { size: 10 } },
     },
   },
-};
-
-// ── RIGHT BOTTOM: Pie chart ───────────────────────────────────────────────────
-// animateRotate: slices sweep in from 0° | animateScale: pie scales up from centre
-const applicationStatusPieData = {
-  labels: ["Pending", "Approved", "Rejected"],
-  datasets: [
-    {
-      data: [45, 120, 30],
-      backgroundColor: ["#EF9F27", "#1D9E75", "#E24B4A"],
-      borderColor: ["#fff", "#fff", "#fff"],
-      borderWidth: 3,
-      hoverOffset: 8,
-    },
-  ],
 };
 
 const applicationStatusPieOptions = {
@@ -246,10 +195,54 @@ export default function AdminDashboard() {
     beyondRepair: "...",
   });
 
+  // ── Chart Data States ──
+  const [quarterTypeChartData, setQuarterTypeChartData] = useState({
+    labels: [],
+    datasets: [
+      {
+        label: "Employees",
+        data: [],
+        backgroundColor: "#378ADD",
+        borderRadius: 0,
+        borderSkipped: false,
+        categoryPercentage: 1.0,
+        barPercentage: 0.45,
+      },
+    ],
+  });
+
+  const [employeeClassChartData, setEmployeeClassChartData] = useState({
+    labels: [],
+    datasets: [
+      {
+        label: "Employees",
+        data: [],
+        backgroundColor: ["#7F77DD", "#534AB7", "#1D9E75", "#EF9F27", "#D85A30"],
+        borderRadius: 0,
+        borderSkipped: false,
+        barThickness: 38,
+      },
+    ],
+  });
+
+  const [applicationStatusPieData, setApplicationStatusPieData] = useState({
+    labels: ["Pending", "Approved", "Rejected"],
+    datasets: [
+      {
+        data: [],
+        backgroundColor: ["#EF9F27", "#1D9E75", "#E24B4A"],
+        borderColor: ["#fff", "#fff", "#fff"],
+        borderWidth: 3,
+        hoverOffset: 8,
+      },
+    ],
+  });
+
+  // ── Load Top Stats ──
   useEffect(() => {
     async function loadTotalQuarters() {
       try {
-        const data = await request("/api/estate-quarters/total-count", { auth: true });
+        const data = await request("/api/dashboard/estate-quarters/total-count", { auth: true });
         setTotalQuarters(Number(data.total || 0).toLocaleString("en-IN"));
       } catch (err) {
         console.error("Total quarters count error:", err);
@@ -259,7 +252,7 @@ export default function AdminDashboard() {
 
     async function loadQuarterStatusCounts() {
       try {
-        const data = await request("/api/estate-quarters/status-counts", { auth: true });
+        const data = await request("/api/dashboard/estate-quarters/status-counts", { auth: true });
         setQuarterCounts({
           occupied: Number(data.occupied || 0).toLocaleString("en-IN"),
           vacant: Number(data.vacant || 0).toLocaleString("en-IN"),
@@ -272,6 +265,88 @@ export default function AdminDashboard() {
 
     loadTotalQuarters();
     loadQuarterStatusCounts();
+  }, []);
+
+  // ── Load Quarter Type Chart Data ──
+  useEffect(() => {
+    async function loadEmployeesByType() {
+      try {
+        const data = await request("/api/dashboard/estate-quarters/employees-by-type", { auth: true });
+        if (data && Array.isArray(data)) {
+          const labels = data.map((item) => item.type);
+          const counts = data.map((item) => item.count);
+
+          setQuarterTypeChartData((prev) => ({
+            ...prev,
+            labels,
+            datasets: [
+              {
+                ...prev.datasets[0],
+                data: counts,
+              },
+            ],
+          }));
+        }
+      } catch (err) {
+        console.error("Employees by quarter type error:", err);
+      }
+    }
+
+    loadEmployeesByType();
+  }, []);
+
+  // ── Load Employee Class Chart Data ──
+  useEffect(() => {
+    async function loadEmployeesByClass() {
+      try {
+        const data = await request("/api/dashboard/employees/count-by-class", { auth: true });
+        if (data && Array.isArray(data)) {
+          const labels = data.map((item) => item.className);
+          const counts = data.map((item) => item.count);
+
+          setEmployeeClassChartData((prev) => ({
+            ...prev,
+            labels,
+            datasets: [
+              {
+                ...prev.datasets[0],
+                data: counts,
+              },
+            ],
+          }));
+        }
+      } catch (err) {
+        console.error("Employees by class error:", err);
+      }
+    }
+
+    loadEmployeesByClass();
+  }, []);
+
+  // ── Load Application Status Chart Data ──
+  useEffect(() => {
+    async function loadApplicationStatus() {
+      try {
+        const data = await request("/api/dashboard/applications/status-counts", { auth: true });
+        if (data) {
+          const statusData = [data.pending || 0, data.approved || 0, data.rejected || 0];
+
+          setApplicationStatusPieData((prev) => ({
+            ...prev,
+            datasets: [
+              {
+                ...prev.datasets[0],
+                data: statusData,
+              },
+            ],
+          }));
+        }
+      } catch (err) {
+        console.error("Applications by status error:", err);
+      }
+    }
+
+    loadApplicationStatus();
   }, []);
 
   const dashboardStats = stats.map((item) => {
