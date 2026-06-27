@@ -67,11 +67,11 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     return opts.length
       ? opts
       : [
-          { value: "Class I", label: "Class I" },
-          { value: "Class II", label: "Class II" },
-          { value: "Class III", label: "Class III" },
-          { value: "Class IV", label: "Class IV" },
-        ];
+        { value: "Class I", label: "Class I" },
+        { value: "Class II", label: "Class II" },
+        { value: "Class III", label: "Class III" },
+        { value: "Class IV", label: "Class IV" },
+      ];
   }, [classOptions]);
 
   const fetchClasses = useCallback(async () => {
@@ -595,10 +595,10 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
             <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
               <div>
                 <div className="mb-4 flex items-center gap-4">
-                  
+
                   <div>
-                    
-                      <h1
+
+                    <h1
                       className="employee-login-title m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px] xl:text-[32px]"
                       style={{ fontFamily: "Georgia, serif" }}
                     >
@@ -712,6 +712,6 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         <Footer sticky={false} />
       </div>
     </div>
-  );  
+  );
 }
 
