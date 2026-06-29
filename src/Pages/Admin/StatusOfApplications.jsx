@@ -10,7 +10,7 @@ const statusStyles = {
 };
 
 const columns = [
-  { key: "priorityNo", header: "PRIORITY NO", minWidth: 120 },
+  { key: "priorityNo", header: "PRIORITY NO", minWidth: 140 },
   { key: "appNo",      header: "APP NO",         minWidth: 130 },
   { key: "empId",      header: "EMP ID",         renderer: "empId", minWidth: 135 },
   { key: "empName",    header: "EMP NAME",       minWidth: 220 },
@@ -19,9 +19,9 @@ const columns = [
   {key: "dob",        header: "DATE OF BIRTH",             minWidth: 120 },
   { key: "casteId",    header: "CASTE ID",       minWidth: 120 },
   { key: "currentQtyType",       header: "CURRENT QTR TYPE",     minWidth: 180 },
-  { key: "reqQtr",     header: "REQUESTED QTR",  minWidth: 145 },
-  { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
-  { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
+  { key: "reqQtr",     header: "REQUESTED QTR",  minWidth: 160 },
+  { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 240 },
+  { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 200 },
   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
   {
     key: "proofFile",
@@ -95,8 +95,8 @@ const columns = [
       );
     },
   },
-  { key: "reqDate",    header: "REQUEST DATE",   minWidth: 140 },
-  { key: "rosterNo",   header: "ROSTER NO",      minWidth: 120 },
+  { key: "reqDate",    header: "REQUEST DATE",   minWidth: 160 },
+  { key: "rosterNo",   header: "ROSTER NO",      minWidth: 140 },
   
   {
     key: "result",

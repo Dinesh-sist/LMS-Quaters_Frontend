@@ -293,7 +293,7 @@ export default function TranslateButton({ showPopup = true }) {
         type="button"
         onClick={handleToggle}
         disabled={!isReady}
-        className="group inline-flex items-center gap-1.5 rounded-lg border border-white/85 bg-transparent px-3 py-1.5 text-[14px] font-semibold text-white transition-all hover:border-orange-300 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-60 lg:text-[10px]  "
+        className="group inline-flex items-center gap-1.5 rounded-lg border border-white/85 bg-transparent px-3 py-1.5 text-[10px] font-semibold text-white transition-all hover:border-orange-300 hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-60 lg:text-[14px]"
         title={isHindi ? "Switch to English" : "Switch to Hindi"}
         aria-label={isHindi ? "Switch language to English" : "Switch language to Hindi"}      >
         <svg

@@ -32,7 +32,7 @@ const makeColumns = (onReview) => [
   { key: "Caste", header: "CASTE", minWidth: 110 },
   { key: "EmailId", header: "EMAIL", minWidth: 210 },
   { key: "ReqDate", header: "REQ DATE", minWidth: 120 },
-  { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 140 },
+  { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 160 },
 
   { key: "QtrLocation", header: "LOCATION", minWidth: 190 },
   { key: "QtrType", header: "QTR TYPE", minWidth: 130 },

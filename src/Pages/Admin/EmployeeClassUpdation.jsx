@@ -21,7 +21,7 @@ const CLASS_RANK = { "Sr.Class 1": 1, "Jr.Class 1": 2, "Class 2": 3, "Class 3": 
 
 const CLASS_BADGE = {
   "Jr.Class 1": { bg: "#ede9fe", color: "#6d28d9", border: "#c4b5fd" },
-  "Sr.Class 1": { bg: "#ede9fe", color: "#6d28d9", border: "#c4b5fd" },
+  "Sr.Class 1": { bg: "#fcfee9", color: "#d9b928", border: "#d9b928" },
   "Class 2": { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
   "Class 3": { bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" },
   "Class 4": { bg: "#f1f5f9", color: "#475569", border: "#cbd5e1" },
@@ -484,7 +484,7 @@ export default function EmployeeClassUpdation() {
       )}
 
       {/* ── Class stat cards ── */}
-      <div className="lms-page-transition grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
+      <div className="lms-page-transition grid grid-cols-2 gap-3 sm:grid-cols-5 mb-6">
         {classStats.map(({ label, count }, i) => {
           const badge  = CLASS_BADGE[label];
           const active = selectedClass === label;

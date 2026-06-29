@@ -17,6 +17,7 @@ import AdminDashboard from './Pages/Admin/dashboard'
 import ProtectedRoute from './Pages/ProtectedRoute'
 import SetDateForApplication from './Pages/Admin/SetDateForApplication'
 import EmployeeClassUpdation from './Pages/Admin/EmployeeClassUpdation'
+import UpdateStatusOfQuarters from './Pages/Admin/UpdateStatusOfQuarters'
 import { consumeAuthRecovery, getToken, getUser, setAuth } from './auth'
 
 function TranslateRecovery() {
@@ -130,6 +131,14 @@ function App() {
           element={
             <ProtectedRoute role="admin">
               <EmployeeClassUpdation />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/quartersupdation"
+          element={
+            <ProtectedRoute role="admin">
+              <UpdateStatusOfQuarters />
             </ProtectedRoute>
           }
         />

@@ -882,7 +882,6 @@ export default function ApplyForQuartersEmployees() {
                             <option value="">Choose a Reason</option>
                             <option value="fresh">Fresh Allotment</option>
                             <option value="exchange">Exchange</option>
-                            <option value="renewal">Renewal</option>
                           </select>
                         </FieldShell>
 
