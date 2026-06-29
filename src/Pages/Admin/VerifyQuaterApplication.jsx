@@ -25,14 +25,15 @@ function StatusBadge({ value }) {
 
 /* ─── Column definitions ──────────────────────────────────────── */
 const makeColumns = (onReview) => [
-  { key: "AppNo", header: "APP NO", minWidth: 140 },
+  { key: "AppNo", header: "APP NO", minWidth: 190 },
   { key: "EmpId", header: "EMP ID", minWidth: 130 },
   { key: "EmpName", header: "EMP NAME", minWidth: 200 },
   { key: "Class", header: "CLASS", minWidth: 140 },
+  { key: "Basic", header: "BASIC", renderer: "basic", minWidth: 110 },
   { key: "Caste", header: "CASTE", minWidth: 110 },
   { key: "EmailId", header: "EMAIL", minWidth: 210 },
-  { key: "ReqDate", header: "REQ DATE", minWidth: 120 },
-  { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 140 },
+  { key: "ReqDate", header: "REQ DATE", minWidth: 150 },
+  { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 240 },
 
   { key: "QtrLocation", header: "LOCATION", minWidth: 190 },
   { key: "QtrType", header: "QTR TYPE", minWidth: 130 },
@@ -259,6 +260,7 @@ function ReviewModal({ app, onClose, onAction }) {
             <DetailRow label="Emp Name" value={app.EmpName} />
             <DetailRow label="Email" value={app.EmailId} />
             <DetailRow label="Class" value={app.Class} />
+            <DetailRow label="Basic Pay" value={app.Basic} />
             <DetailRow label="Caste" value={app.Caste} />
             <DetailRow label="Date of Joining" value={app.DateOfJoining} />
             <DetailRow label="Grad Date" value={app.GradDate} />

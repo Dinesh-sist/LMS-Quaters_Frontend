@@ -37,6 +37,8 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const normalizedClassOptions = useMemo(() => {
     const items = Array.isArray(classOptions) ? classOptions : [];
 
+  
+ 
     const opts = items
       .map((c) => ({
         priority: c?.Class_PRIORITY,
