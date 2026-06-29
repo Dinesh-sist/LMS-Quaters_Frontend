@@ -431,9 +431,9 @@ export default function AgGridTable({
       if (!displayedColumnIds.length) return;
 
       if (typeof api.autoSizeColumns === "function") {
-        api.autoSizeColumns(displayedColumnIds, true);
+        api.autoSizeColumns(displayedColumnIds, false);
       } else if (typeof api.autoSizeAllColumns === "function") {
-        api.autoSizeAllColumns(true);
+        api.autoSizeAllColumns(false);
       }
     });
   }, [contentAutoWidth]);
