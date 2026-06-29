@@ -3,7 +3,8 @@ import { getToken } from "./auth";
 const API_BASE = (import.meta.env?.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
 async function request(path, { method = "GET", body, auth = false } = {}) {
-  const isFormData = body instanceof FormData;
+  const isFormData = body instanceof FormData || (body && typeof body.append === 'function') || (body && body.toString() === '[object FormData]');
+  console.log("API request:", path, "isFormData:", isFormData, "body:", body);
   const headers = isFormData ? {} : { "Content-Type": "application/json" };
   if (auth) {
     const token = getToken();
