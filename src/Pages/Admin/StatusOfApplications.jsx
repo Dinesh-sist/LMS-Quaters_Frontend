@@ -96,15 +96,9 @@ const getColumns = (onDebarClick) => [
       );
     },
   },
-<<<<<<< HEAD
-  { key: "reqDate",    header: "REQUEST DATE",   minWidth: 160 },
-  { key: "rosterNo",   header: "ROSTER NO",      minWidth: 140 },
-  
-=======
   { key: "reqDate", header: "REQUEST DATE", minWidth: 240 },
   { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
 
->>>>>>> 03866df7ba1eff37e54fa16d9728c6e6260957c3
   {
     key: "result",
     header: "STATUS",
