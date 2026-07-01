@@ -3,18 +3,27 @@ import { getToken } from "./auth";
 const API_BASE = (import.meta.env?.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
 async function request(path, { method = "GET", body, auth = false } = {}) {
-  const isFormData = body instanceof FormData;
+  const isFormData = body instanceof FormData || (body && typeof body.append === 'function') || (body && body.toString() === '[object FormData]');
+  console.log("API request:", path, "isFormData:", isFormData, "body:", body);
   const headers = isFormData ? {} : { "Content-Type": "application/json" };
   if (auth) {
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers,
-    body: body == null ? undefined : isFormData ? body : JSON.stringify(body),
-  });
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers,
+      body: body == null ? undefined : isFormData ? body : JSON.stringify(body),
+    });
+  } catch (err) {
+    if (err.message.toLowerCase().includes("failed to fetch") || err.name === "TypeError") {
+      throw new Error("failed to fetch");
+    }
+    throw err;
+  }
 
 
   const data = await res.json().catch(() => ({}));
@@ -26,8 +35,6 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   }
   return data;
 }
-
-
 
 export function login(username, password) {
   return request("/api/auth/login", { method: "POST", body: { username, password } });
@@ -42,7 +49,15 @@ export function lookupEmployee(employeeId, dateOfBirth) {
 }
 
 export function getEmployeeClasses() {
-  return request("/api/employee/classes");
+  return request("/api/employeeupdation/employee/classes", { method: "GET", auth: true });
+}
+
+export function updateEmployeeClass(empId, newClass) {
+  return request("/api/employeeupdation/employee-classes/update", {
+    method: "POST",
+    body: { empId, newClass },
+    auth: true,
+  });
 }
 
 export function getQuarterApplications() {
@@ -92,6 +107,35 @@ export function getHouseAllotmentCommitteeHistory() {
 
 export function saveHouseAllotmentCommitteeHistory(payload) {
   return request("/api/admin/house-allotment-committee-history", {
+    method: "POST",
+    body: payload,
+    auth: true,
+  });  
+}
+
+export function getDashboardStats() { 
+  return request("/api/estate-quarters/employees-by-type", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function getQuarterAreas() {
+  return request("/api/estate-quarters/areas", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function getQuarterNumbers(areaType) {
+  return request(`/api/estate-quarters/numbers?areaType=${encodeURIComponent(areaType)}`, {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function updateQuarterStatus(payload) {
+  return request("/api/estate-quarters/update-status", {
     method: "POST",
     body: payload,
     auth: true,

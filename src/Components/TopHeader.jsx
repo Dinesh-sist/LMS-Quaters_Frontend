@@ -33,7 +33,7 @@ function FontSizeControls({ onDecrease, onIncrease }) {
       <button
         type="button"
         onClick={onDecrease}
-        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[8px]"
+        className="rounded-lg border border-white/85 px-3 py-1.5 text-[8px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[11px]"
         aria-label="Decrease font size"
         title="Decrease font size"
       >
@@ -43,7 +43,7 @@ function FontSizeControls({ onDecrease, onIncrease }) {
       <button
         type="button"
         onClick={onIncrease}
-        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[8px]"
+        className="rounded-lg border border-white/85 px-3 py-1.5 text-[8px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[11px]"
         aria-label="Increase font size"
         title="Increase font size"
       >
@@ -106,7 +106,7 @@ export default function TopHeader({
           <TranslateButton />
           <span className="hidden min-w-0 text-sm text-white sm:block">
             Welcome{" "}
-            <span className="tinos-regular inline-block max-w-[36vw] truncate align-bottom text-[18px] font-semibold text-orange-400 lg:max-w-[31vw] lg:text-[16px] 2xl:max-w-none">
+            <span className="tinos-regular inline-block max-w-[36vw] truncate align-bottom text-[16px] font-semibold text-orange-400 lg:max-w-[31vw] lg:text-[18px] 2xl:max-w-none">
               {displayName}
             </span>
           </span>

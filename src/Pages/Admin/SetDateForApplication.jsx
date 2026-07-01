@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Save } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Save, Upload, X, FileText } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import Popup from "../../Components/Popup";
 import { publishApplication, getLatestPublication, stopPublication, updatePublication } from "../../api";
@@ -296,6 +296,25 @@ export default function SetDateForApplication() {
     variant: "success",
   });
   const [isAltering, setIsAltering] = useState(false);
+  const fileInputRef = useRef(null);
+  const [circularFile, setCircularFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type === "application/pdf") {
+        setCircularFile(file);
+      } else {
+        setPopup({
+          open: true,
+          title: "Invalid File",
+          message: "Please upload a valid PDF file.",
+          variant: "error",
+        });
+      }
+    }
+  };
+
   const isPublished =
     currentWindow?.Current_State === "Published";
   const isStopDisabled = !isPublished || isAltering;
@@ -376,15 +395,19 @@ export default function SetDateForApplication() {
           variant: "success",
         });
       } else {
-        await publishApplication({
-          fromDate: formatDateForApi(fromDate),
-          toDate: formatDateForApi(toDate),
-        });
+        const payload = new FormData();
+        payload.append("fromDate", formatDateForApi(fromDate));
+        payload.append("toDate", formatDateForApi(toDate));
+        if (circularFile) {
+          payload.append("circular", circularFile);
+        }
+
+        await publishApplication(payload);
 
         setPopup({
           open: true,
           title: "Published Successfully",
-          message: "Application window has been published.",
+          message: "Application window has been published" + (circularFile ? " and circular has been emailed." : "."),
           variant: "success",
         });
       }
@@ -393,6 +416,7 @@ export default function SetDateForApplication() {
 
       setFromDate(null);
       setToDate(null);
+      setCircularFile(null);
       setIsAltering(false);
       setDateError("");
 
@@ -516,7 +540,7 @@ export default function SetDateForApplication() {
                   : fromDate
               } onSelect={handleFromDate}
               minDate={today}
-              disabled={isPublished}
+              disabled={isPublished || (!circularFile && !isAltering)}
             />
             <DatePickerCard
               label="To Date"
@@ -531,7 +555,7 @@ export default function SetDateForApplication() {
                   )
                   : fromDate
               }
-              disabled={isPublished && !isAltering}
+              disabled={(isPublished && !isAltering) || (!circularFile && !isAltering)}
             />
           </div>
 
@@ -542,17 +566,68 @@ export default function SetDateForApplication() {
             </div>
           )}
 
-          <div className="mt-5 rounded-2xl border border-orange-100 bg-orange-50 px-3 sm:px-4 py-3 sm:py-4">
+          <div className={`mt-5 rounded-2xl border px-3 sm:px-4 py-3 sm:py-4 transition-colors duration-300 ${!circularFile && !isAltering && !isPublished ? "border-red-200 bg-red-50" : "border-orange-100 bg-orange-50"}`}>
             <div className="flex items-start gap-3">
-              <Info size={17} className="mt-0.5 shrink-0 text-[#e87722]" />
+              <Info size={17} className={`mt-0.5 shrink-0 ${!circularFile && !isAltering && !isPublished ? "text-red-500" : "text-[#e87722]"}`} />
               <p className="text-xs sm:text-sm leading-6 text-slate-600">
-                Employees will be able to submit quarter applications only during the selected
-                date range. Keep both dates updated before publishing the application window.
+                {!circularFile && !isAltering && !isPublished ? (
+                  <>
+                    <strong className="text-red-700">Pending Upload:</strong> Please upload the official Circular PDF below to unlock date selection.
+                  </>
+                ) : (
+                  <>
+                    <strong className="text-orange-800">Ready to Publish:</strong> Select the From and To dates, then click Publish to open the application window.
+                  </>
+                )}
               </p>
             </div>
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-between">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="application/pdf"
+              className="hidden"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+            {circularFile ? (
+              <div className="flex w-full sm:w-auto max-w-xs items-center justify-between rounded-xl border border-blue-200 bg-blue-50 pl-4 pr-1 h-10 sm:h-11 shadow-sm text-sm font-semibold text-blue-800">
+                <div 
+                  className="flex items-center gap-2 truncate cursor-pointer hover:text-blue-600 transition"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(URL.createObjectURL(circularFile), '_blank');
+                  }}
+                  title="Click to preview PDF"
+                >
+                  <FileText size={17} className="shrink-0 text-blue-500" />
+                  <span className="truncate hover:underline">{circularFile.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCircularFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-blue-100 text-blue-400 hover:text-blue-600 transition"
+                  title="Remove File"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex h-10 sm:h-11 w-full sm:w-auto max-w-xs items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+              >
+                <Upload size={17} className="shrink-0" />
+                <span className="truncate">Upload Circular</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -560,9 +635,9 @@ export default function SetDateForApplication() {
                 isAltering
                   ? handleUpdatePublication
                   : handlePublish
-              } disabled={isPublished && !isAltering}
+              } disabled={(isPublished && !isAltering) || (!circularFile && !isAltering && !isPublished)}
               className={`inline-flex h-10 sm:h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition
-                ${isPublished && !isAltering
+                ${(isPublished && !isAltering) || (!circularFile && !isAltering && !isPublished)
                   ? "cursor-not-allowed bg-slate-400 shadow-none"
                   : "bg-[#e87722] shadow-[0_10px_24px_rgba(232,119,34,0.24)] hover:bg-[#d76516]"
                 }`}

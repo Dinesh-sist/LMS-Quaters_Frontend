@@ -188,6 +188,7 @@ export default function ApplyForQuartersEmployees() {
     employeeId: user?.username || "",
     classOfEmployee: "",
     casteOfEmployee: "",
+    dateOfBirth: "",
     dateOfJoining: "",
     gradDate: "",
     department: "",
@@ -196,6 +197,8 @@ export default function ApplyForQuartersEmployees() {
     attachment: null,
     selectedQuarterId: "",
     selectedQuarterRowKey: "",
+    debarredFromDate: "",
+    debarredToDate: "",
   });
 
   const isExchange = emp.reason === "exchange";
@@ -357,9 +360,12 @@ export default function ApplyForQuartersEmployees() {
           employeeId: data?.employeeId || s.employeeId,
           classOfEmployee: data?.classOfEmployee || s.classOfEmployee,
           casteOfEmployee: data?.casteOfEmployee || s.casteOfEmployee,
+          dateOfBirth: data?.dateOfBirth || s.dateOfBirth,
           dateOfJoining: data?.dateOfJoining || s.dateOfJoining,
           gradDate: data?.gradDate || s.gradDate,
           department: data?.department || s.department,
+          debarredFromDate: data?.debarredFromDate || s.debarredFromDate,
+          debarredToDate: data?.debarredToDate || s.debarredToDate,
         }));
       } catch (err) {
         console.error("Employee profile error:", err);
@@ -637,6 +643,19 @@ export default function ApplyForQuartersEmployees() {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let isBanned = false;
+  if (emp.debarredFromDate && emp.debarredToDate) {
+    const from = new Date(emp.debarredFromDate);
+    const to = new Date(emp.debarredToDate);
+    from.setHours(0, 0, 0, 0);
+    to.setHours(0, 0, 0, 0);
+    if (today >= from && today <= to) {
+      isBanned = true;
+    }
+  }
+
   return (
     <div className="font-['Segoe_UI',system-ui,sans-serif] bg-[#EEF2FF] flex flex-col lg:h-screen lg:overflow-hidden">
       <div className="bg-[#EEF2FF] flex flex-col lg:h-full lg:overflow-hidden">
@@ -651,8 +670,30 @@ export default function ApplyForQuartersEmployees() {
         <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
           <Sidebar />
 
-          <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
-            <main className="flex-1 overflow-y-auto bg-[#EEF2FF] px-8 py-7">
+          <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
+            {isBanned && (
+              <div className="absolute inset-0 z-30 flex flex-col items-center pt-24 bg-white/60 backdrop-blur-[6px]">
+                <div className="rounded-2xl bg-white p-8 shadow-2xl border border-red-200 text-center max-w-lg">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                    <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h2 className="mb-2 text-2xl font-bold text-slate-800">Account Restricted</h2>
+                  <p className="text-slate-600 text-sm">
+                    You are currently banned from accessing this portal.
+                  </p>
+                  <div className="mt-4 inline-flex flex-col rounded-lg bg-red-50 px-6 py-3 border border-red-100">
+                    <span className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Ban Period</span>
+                    <span className="font-semibold text-red-700">
+                      {formatPreviewDate(new Date(emp.debarredFromDate))} — {formatPreviewDate(new Date(emp.debarredToDate))}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <main className="relative flex-1 overflow-y-auto bg-[#EEF2FF] px-8 py-7">
 
               {/* ── Page heading ── */}
               <div className="mb-[22px]">
@@ -752,7 +793,7 @@ export default function ApplyForQuartersEmployees() {
                         </div>
                         <StatusPill value={approvedQuarter?.Status} />
                       </div>
-                      <div className="flex inline-flex px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-1 xl:grid-cols-5 gap-y-5 sm:gap-x-6">
+                      <div className="flex inline-flex px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-y-5 sm:gap-x-6">
                         <InfoField
                           label="Name of the Employee"
                           value={emp.employeeName}
@@ -765,6 +806,10 @@ export default function ApplyForQuartersEmployees() {
                         <InfoField
                           label="Caste of Employee"
                           value={emp.casteOfEmployee}
+                        />
+                        <InfoField
+                          label="Date of Birth"
+                          value={emp.dateOfBirth}
                         />
                         <InfoField
                           label="Date of Joining"
@@ -840,7 +885,7 @@ export default function ApplyForQuartersEmployees() {
                              onBlur={() => setFocused(null)}
                            >
                              <option value="">Choose a Department</option>
-                             {hodDepts.map((dept) => (
+                             {Array.from(new Set([...hodDepts, emp.department].filter(Boolean))).map((dept) => (
                                <option key={dept} value={dept}>
                                  {dept}
                                </option>
@@ -882,7 +927,6 @@ export default function ApplyForQuartersEmployees() {
                             <option value="">Choose a Reason</option>
                             <option value="fresh">Fresh Allotment</option>
                             <option value="exchange">Exchange</option>
-                            <option value="renewal">Renewal</option>
                           </select>
                         </FieldShell>
 

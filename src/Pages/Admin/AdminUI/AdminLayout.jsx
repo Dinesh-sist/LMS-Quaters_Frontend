@@ -7,8 +7,9 @@ export default function AdminLayout({ title, subtitle, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen bg-[#f5f7fb] text-slate-900">
+    <div className="h-screen w-screen overflow-hidden bg-[#f5f7fb] text-slate-900">
       <div className="flex h-full flex-col overflow-hidden">
+
         <TopHeader
           role="admin"
           description="Quarter Management Portal"
@@ -17,12 +18,16 @@ export default function AdminLayout({ title, subtitle, children }) {
           onOpenMenu={() => setSidebarOpen(true)}
         />
 
+        {/* ── Body row: sidebar + content side by side ── */}
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <div className="hidden h-full lg:flex">
+
+          {/* Desktop sidebar — shrink-0 so it never compresses */}
+          <div className="hidden shrink-0 h-full lg:flex">
             <AdminSideNav />
           </div>
 
-          {sidebarOpen ? (
+          {/* Mobile sidebar overlay */}
+          {sidebarOpen && (
             <div className="fixed inset-0 z-50 lg:hidden">
               <button
                 type="button"
@@ -34,15 +39,31 @@ export default function AdminLayout({ title, subtitle, children }) {
                 <AdminSideNav forceExpanded onNavigate={() => setSidebarOpen(false)} />
               </div>
             </div>
-          ) : null}
+          )}
 
+          {/* ── Main content area ──
+              min-w-0  → allows flex child to shrink below its content size
+              flex-1   → takes all remaining width after sidebar
+              overflow-hidden → no horizontal bleed
+          */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-indigo-50">
-            <main className="flex-1 overflow-y-auto px-5 py-7 md:px-8 xl:px-10"style={{ scrollbarGutter: "stable" }}>
-              <div className="mx-auto w-full max-w-[1540px] space-y-6">
+            <main
+              className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-5 md:px-6 xl:px-8"
+              style={{ scrollbarGutter: "stable" }}
+            >
+              {/* Inner centering wrapper
+                  w-full + min-w-0 = constrained to parent, never wider
+                  max-w-[1540px]   = looks good on ultrawide monitors
+              */}
+              <div className="mx-auto w-full min-w-0 max-w-[1540px] space-y-5">
                 {(title || subtitle) && (
                   <div>
-                    {title && <h1 className="text-2xl font-bold text-slate-900">{title}</h1>}
-                    {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+                    {title && (
+                      <h1 className="text-xl font-bold text-slate-900 md:text-2xl">{title}</h1>
+                    )}
+                    {subtitle && (
+                      <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+                    )}
                   </div>
                 )}
                 {children}
@@ -50,6 +71,7 @@ export default function AdminLayout({ title, subtitle, children }) {
             </main>
             <Footer />
           </div>
+
         </div>
       </div>
     </div>

@@ -47,7 +47,7 @@ export default function EmployeeLayout({
           ) : null}
 
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-            <main className="flex-1 overflow-y-auto px-5 py-7 md:px-8 xl:px-10">
+            <main className="relative flex-1 overflow-y-auto px-5 py-7 md:px-8 xl:px-10">
               <div className="mx-auto w-full max-w-[1540px] space-y-6">
                 {(title || subtitle) && (
                   <div className="flex flex-wrap items-start justify-between gap-3">
