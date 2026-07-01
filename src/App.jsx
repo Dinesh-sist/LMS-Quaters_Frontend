@@ -16,6 +16,7 @@ import HouseAllotmentCommitteeHistory from './Pages/Admin/HouseAllotmentCommitte
 import AdminDashboard from './Pages/Admin/dashboard'
 import ProtectedRoute from './Pages/ProtectedRoute'
 import SetDateForApplication from './Pages/Admin/SetDateForApplication'
+import AdminMappage from './Pages/Admin/AdminMappage'
 import { consumeAuthRecovery, getToken, getUser, setAuth } from './auth'
 
 function TranslateRecovery() {
@@ -116,15 +117,22 @@ function App() {
             </ProtectedRoute>
           }
         />
+          <Route
+            path="/admin/date"
+            element={
+              <ProtectedRoute role="admin">
+                <SetDateForApplication />
+              </ProtectedRoute>
+            }
+          />
         <Route
-          path="/admin/date"
+          path="/admin/map"
           element={
             <ProtectedRoute role="admin">
-              <SetDateForApplication />
+              <AdminMappage />
             </ProtectedRoute>
           }
         />
-        
       </Routes>
     </BrowserRouter>
   )
