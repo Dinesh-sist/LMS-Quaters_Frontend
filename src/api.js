@@ -120,5 +120,26 @@ export function getDashboardStats() {
   });
 }
 
+export function getQuarterAreas() {
+  return request("/api/estate-quarters/areas", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function getQuarterNumbers(areaType) {
+  return request(`/api/estate-quarters/numbers?areaType=${encodeURIComponent(areaType)}`, {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function updateQuarterStatus(payload) {
+  return request("/api/estate-quarters/update-status", {
+    method: "POST",
+    body: payload,
+    auth: true,
+  });
+}
 
 export { API_BASE, request };
