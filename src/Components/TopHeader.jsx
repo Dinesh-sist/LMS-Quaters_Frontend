@@ -33,7 +33,7 @@ function FontSizeControls({ onDecrease, onIncrease }) {
       <button
         type="button"
         onClick={onDecrease}
-        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c]"
+        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[8px]"
         aria-label="Decrease font size"
         title="Decrease font size"
       >
@@ -43,7 +43,7 @@ function FontSizeControls({ onDecrease, onIncrease }) {
       <button
         type="button"
         onClick={onIncrease}
-        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c]"
+        className="rounded-lg border border-white/85 px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[8px]"
         aria-label="Increase font size"
         title="Increase font size"
       >
@@ -79,7 +79,7 @@ export default function TopHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1f44] shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-5 lg:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-5 lg:flex-nowrap lg:gap-3 lg:px-5 xl:gap-4 xl:px-6">
         <div className="flex min-w-0 items-center gap-3">
           {typeof onOpenMenu === "function" && (
             <button
@@ -101,12 +101,12 @@ export default function TopHeader({
           <Brand />
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        <div className="flex flex-nowrap items-center justify-end gap-2 sm:gap-3 lg:shrink-0">
           <FontSizeControls onDecrease={decrease} onIncrease={increase} />
           <TranslateButton />
-          <span className="hidden text-sm text-white sm:block">
+          <span className="hidden min-w-0 text-sm text-white sm:block">
             Welcome{" "}
-            <span className="tinos-regular text-[18px] font-semibold text-orange-400 lg:text-[24px]">
+            <span className="tinos-regular inline-block max-w-[36vw] truncate align-bottom text-[18px] font-semibold text-orange-400 lg:max-w-[31vw] lg:text-[16px] 2xl:max-w-none">
               {displayName}
             </span>
           </span>
