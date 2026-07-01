@@ -9,6 +9,20 @@ const statusStyles = {
   pending: "bg-amber-100  text-amber-700",
 };
 
+// const columns = [
+//   { key: "priorityNo", header: "PRIORITY NO",    minWidth: 120 },
+//   { key: "appNo",      header: "APP NO",         minWidth: 130 },
+//   { key: "empId",      header: "EMP ID",         renderer: "empId", minWidth: 135 },
+//   { key: "empName",    header: "EMP NAME",       minWidth: 220 },
+//   { key: "class",      header: "CLASS",          renderer: "class", minWidth: 155 },
+//   { key: "gradDate",   header: "GRAD DATE",      minWidth: 135 },
+//   { key: "dob",        header: "DATE OF BIRTH",     minWidth: 120 },
+//   { key: "casteId",    header: "CASTE ID",       minWidth: 120 },
+//   { key: "currentQtyType",       header: "CURRENT QTR TYPE",     minWidth: 180 },
+//   { key: "reqQtr",     header: "REQUESTED QTR",  minWidth: 145 },
+//   { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
+//   { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
+//   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
 const getColumns = (onDebarClick) => [
   { key: "priorityNo", header: "PRIORITY NO", minWidth: 120 },
   { key: "appNo", header: "APP NO", minWidth: 130 },

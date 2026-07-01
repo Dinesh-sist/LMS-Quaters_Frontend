@@ -17,6 +17,11 @@ const sidebarNav = [
     key: "dashboard",
     label: "Dashboard",
     to: "/admin/dashboard",
+//     icon: (
+//       <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+//         <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+//       </svg>
+//     ),
     icon: <LayoutDashboard size={17} strokeWidth={1.8} />,
   },
   {
@@ -42,6 +47,18 @@ const sidebarNav = [
     label: "Set date for application",
     to: "/admin/date",
     icon: <CalendarClock size={17} strokeWidth={1.8} />,
+  },
+  {
+    key: "map",
+    label: "Map View of Quarters",
+    to: "/admin/map",
+    icon: (
+      <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/>
+        <path d="M15 5.764v15"/>
+        <path d="M9 3.236v15"/>
+      </svg>
+    ),
   },
   {
     key: "ClassUpdation",
