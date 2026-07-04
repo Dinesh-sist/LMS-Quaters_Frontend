@@ -97,7 +97,7 @@ export default function About() {
         <TopNavbar navTextColor="light" />
 
         <main className="relative z-10 flex flex-1 justify-center px-4 py-10 sm:px-6 md:px-8 lg:px-12">
-          <div className="w-full max-w-[900px] space-y-5">
+          <div className="w-full max-w-[1200px] space-y-5">
 
             {/* ── Hero card ── */}
             <section
@@ -108,7 +108,7 @@ export default function About() {
                 Land Management <br className="hidden sm:block" />
                 <span className="text-orange-500">System</span>
               </h1>
-              <p className="mt-3 max-w-[620px] text-[13px] leading-relaxed text-blue-950/60 sm:text-[15px] lg:text-[16px]">
+              <p className="mt-3 w-full text-[13px] leading-relaxed text-blue-950/60 sm:text-[15px] lg:text-[16px]">
                 A centralized platform for managing port land records, lease data, and estate
                 operations — built for accuracy, transparency, and efficiency.
               </p>
