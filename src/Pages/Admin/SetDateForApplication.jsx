@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Save, Upload, X, FileText } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Save, Upload, X, FileText, Eye } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import Popup from "../../Components/Popup";
-import { publishApplication, getLatestPublication, stopPublication, updatePublication } from "../../api";
+import CircularModal from "./CircularModal";
+import { publishApplication, getLatestPublication, stopPublication, updatePublication, generateCircular, previewCircular } from "../../api";
 const fullDateFormatter = new Intl.DateTimeFormat("en-US", {
   month: "long",
   day: "numeric",
@@ -296,28 +297,17 @@ export default function SetDateForApplication() {
     variant: "success",
   });
   const [isAltering, setIsAltering] = useState(false);
-  const fileInputRef = useRef(null);
-  const [circularFile, setCircularFile] = useState(null);
+  const [circularData, setCircularData] = useState(null);
+  const [showCircularModal, setShowCircularModal] = useState(false);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type === "application/pdf") {
-        setCircularFile(file);
-      } else {
-        setPopup({
-          open: true,
-          title: "Invalid File",
-          message: "Please upload a valid PDF file.",
-          variant: "error",
-        });
-      }
-    }
+  const handleCircularSave = (data) => {
+    setCircularData(data);
+    setShowCircularModal(false);
   };
 
-  const isPublished =
-    currentWindow?.Current_State === "Published";
+  const isPublished = currentWindow?.Current_State === "Published";
   const isStopDisabled = !isPublished || isAltering;
+  const hasCircular = !!circularData;
   const loadCurrentWindow = async () => {
     try {
       const data = await getLatestPublication();
@@ -328,6 +318,25 @@ export default function SetDateForApplication() {
       console.error("Failed to load publication:", err);
     }
   };
+
+  const handlePreview = async () => {
+    if (!circularData) return;
+    try {
+      setPopup({ open: true, title: "Generating Preview...", message: "Please wait while we generate the PDF.", variant: "info" });
+      const payload = {
+        ...circularData,
+        appFromDate: formatDateForApi(fromDate || new Date()),
+        appToDate: formatDateForApi(toDate || new Date()),
+      };
+      const blob = await previewCircular(payload);
+      setPopup((prev) => ({ ...prev, open: false }));
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      setPopup({ open: true, title: "Preview Failed", message: err?.message || "Could not generate preview.", variant: "error" });
+    }
+  };
+
   const formatPreviewDate = (date, fallback) =>
     date ? fullDateFormatter.format(date) : fallback;
 
@@ -368,67 +377,60 @@ export default function SetDateForApplication() {
 
   const handlePublish = async () => {
     if (isAltering) {
-      if (!toDate) {
-        setDateError("Please select a To Date.");
-        return;
-      }
+      if (!toDate) { setDateError("Please select a To Date."); return; }
     } else {
       if (!fromDate || !toDate) {
-        setDateError(
-          "Please select both From and To dates before publishing."
-        );
+        setDateError("Please select both From and To dates before publishing.");
         return;
       }
     }
 
     try {
-
       if (isAltering) {
-        await updatePublication({
-          toDate: formatDateForApi(toDate),
-        });
-
-        setPopup({
-          open: true,
-          title: "Publication Updated",
-          message: "Application window has been updated successfully.",
-          variant: "success",
-        });
+        await updatePublication({ toDate: formatDateForApi(toDate) });
+        setPopup({ open: true, title: "Publication Updated", message: "Application window has been updated successfully.", variant: "success" });
       } else {
         const payload = new FormData();
         payload.append("fromDate", formatDateForApi(fromDate));
         payload.append("toDate", formatDateForApi(toDate));
-        if (circularFile) {
-          payload.append("circular", circularFile);
-        }
-
         await publishApplication(payload);
 
-        setPopup({
-          open: true,
-          title: "Published Successfully",
-          message: "Application window has been published" + (circularFile ? " and circular has been emailed." : "."),
-          variant: "success",
-        });
+        // Generate & email circular if data is filled
+        if (circularData) {
+          try {
+            const result = await generateCircular({
+              ...circularData,
+              appFromDate: formatDateForApi(fromDate),
+              appToDate: formatDateForApi(toDate),
+            });
+            setPopup({
+              open: true,
+              title: "Published & Circular Sent",
+              message: `Application window published. Circular emailed to ${result.recipientCount || 0} recipient(s).`,
+              variant: "success",
+            });
+          } catch (emailErr) {
+            setPopup({
+              open: true,
+              title: "Published (Email Error)",
+              message: "Application window published but circular email failed: " + (emailErr?.message || "unknown error"),
+              variant: "error",
+            });
+          }
+        } else {
+          setPopup({ open: true, title: "Published Successfully", message: "Application window has been published.", variant: "success" });
+        }
       }
 
       await loadCurrentWindow();
-
       setFromDate(null);
       setToDate(null);
-      setCircularFile(null);
+      setCircularData(null);
       setIsAltering(false);
       setDateError("");
-
     } catch (error) {
       console.error("Publish Error:", error);
-
-      setPopup({
-        open: true,
-        title: isAltering ? "Update Failed" : "Publish Failed",
-        message: error?.message || "Something went wrong.",
-        variant: "error",
-      });
+      setPopup({ open: true, title: isAltering ? "Update Failed" : "Publish Failed", message: error?.message || "Something went wrong.", variant: "error" });
     }
   };
   useEffect(() => {
@@ -535,27 +537,27 @@ export default function SetDateForApplication() {
             <DatePickerCard
               label="From Date"
               selectedDate={
-                isAltering
-                  ? new Date(currentWindow?.From_Date)
+                isAltering && currentWindow?.From_Date
+                  ? new Date(currentWindow.From_Date)
                   : fromDate
               } onSelect={handleFromDate}
               minDate={today}
-              disabled={isPublished || (!circularFile && !isAltering)}
+              disabled={isPublished || (!hasCircular && !isAltering)}
             />
             <DatePickerCard
               label="To Date"
               selectedDate={toDate}
               onSelect={handleToDate}
               minDate={
-                isAltering
+                isAltering && currentWindow?.From_Date
                   ? new Date(
-                    new Date(currentWindow?.From_Date).setDate(
-                      new Date(currentWindow?.From_Date).getDate() + 1
+                    new Date(currentWindow.From_Date).setDate(
+                      new Date(currentWindow.From_Date).getDate() + 1
                     )
                   )
                   : fromDate
               }
-              disabled={(isPublished && !isAltering) || (!circularFile && !isAltering)}
+              disabled={(isPublished && !isAltering) || (!hasCircular && !isAltering)}
             />
           </div>
 
@@ -566,17 +568,17 @@ export default function SetDateForApplication() {
             </div>
           )}
 
-          <div className={`mt-5 rounded-2xl border px-3 sm:px-4 py-3 sm:py-4 transition-colors duration-300 ${!circularFile && !isAltering && !isPublished ? "border-red-200 bg-red-50" : "border-orange-100 bg-orange-50"}`}>
+          <div className={`mt-5 rounded-2xl border px-3 sm:px-4 py-3 sm:py-4 transition-colors duration-300 ${!hasCircular && !isAltering && !isPublished ? "border-red-200 bg-red-50" : "border-orange-100 bg-orange-50"}`}>
             <div className="flex items-start gap-3">
-              <Info size={17} className={`mt-0.5 shrink-0 ${!circularFile && !isAltering && !isPublished ? "text-red-500" : "text-[#e87722]"}`} />
+              <Info size={17} className={`mt-0.5 shrink-0 ${!hasCircular && !isAltering && !isPublished ? "text-red-500" : "text-[#e87722]"}`} />
               <p className="text-xs sm:text-sm leading-6 text-slate-600">
-                {!circularFile && !isAltering && !isPublished ? (
+                {!hasCircular && !isAltering && !isPublished ? (
                   <>
-                    <strong className="text-red-700">Pending Upload:</strong> Please upload the official Circular PDF below to unlock date selection.
+                    <strong className="text-red-700">Pending Circular:</strong> Click &ldquo;Create Circular&rdquo; below to fill the circular details and unlock date selection.
                   </>
                 ) : (
                   <>
-                    <strong className="text-orange-800">Ready to Publish:</strong> Select the From and To dates, then click Publish to open the application window.
+                    <strong className="text-orange-800">Ready to Publish:</strong> Select the From and To dates, then click Publish to generate & email the circular.
                   </>
                 )}
               </p>
@@ -584,36 +586,34 @@ export default function SetDateForApplication() {
           </div>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-between">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="application/pdf"
-              className="hidden"
-              onChange={handleFileChange}
-              style={{ display: "none" }}
-            />
-            {circularFile ? (
-              <div className="flex w-full sm:w-auto max-w-xs items-center justify-between rounded-xl border border-blue-200 bg-blue-50 pl-4 pr-1 h-10 sm:h-11 shadow-sm text-sm font-semibold text-blue-800">
-                <div 
-                  className="flex items-center gap-2 truncate cursor-pointer hover:text-blue-600 transition"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open(URL.createObjectURL(circularFile), '_blank');
-                  }}
-                  title="Click to preview PDF"
-                >
-                  <FileText size={17} className="shrink-0 text-blue-500" />
-                  <span className="truncate hover:underline">{circularFile.name}</span>
-                </div>
+            {/* Create / View Circular button */}
+            {circularData ? (
+              <div className="flex w-full sm:w-auto items-center gap-2 rounded-xl border border-green-200 bg-green-50 px-2 h-10 sm:h-11 shadow-sm text-sm font-semibold text-green-800">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCircularFile(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-blue-100 text-blue-400 hover:text-blue-600 transition"
-                  title="Remove File"
+                  onClick={handlePreview}
+                  className="flex items-center gap-2 truncate hover:text-green-600 transition px-2"
+                  title="Click to view PDF"
+                >
+                  <Eye size={17} className="shrink-0 text-green-500" />
+                  <span className="truncate">View Circular</span>
+                </button>
+                <div className="w-px h-5 bg-green-200"></div>
+                <button
+                  type="button"
+                  onClick={() => setShowCircularModal(true)}
+                  className="flex items-center gap-2 truncate hover:text-green-600 transition px-2"
+                  title="Edit circular details"
+                >
+                  <FileText size={17} className="shrink-0 text-green-500" />
+                  <span className="truncate">Edit</span>
+                </button>
+                <div className="w-px h-5 bg-green-200"></div>
+                <button
+                  type="button"
+                  onClick={() => setCircularData(null)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg hover:bg-green-100 text-green-400 hover:text-green-600 transition"
+                  title="Remove Circular"
                 >
                   <X size={18} />
                 </button>
@@ -621,35 +621,28 @@ export default function SetDateForApplication() {
             ) : (
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="inline-flex h-10 sm:h-11 w-full sm:w-auto max-w-xs items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900"
+                onClick={() => setShowCircularModal(true)}
+                disabled={isPublished && !isAltering}
+                className="inline-flex h-10 sm:h-11 w-full sm:w-auto max-w-xs items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Upload size={17} className="shrink-0" />
-                <span className="truncate">Upload Circular</span>
+                <FileText size={17} className="shrink-0" />
+                <span className="truncate">Create Circular</span>
               </button>
             )}
 
             <button
               type="button"
-              onClick={
-                isAltering
-                  ? handleUpdatePublication
-                  : handlePublish
-              } disabled={(isPublished && !isAltering) || (!circularFile && !isAltering && !isPublished)}
+              onClick={isAltering ? handleUpdatePublication : handlePublish}
+              disabled={(isPublished && !isAltering) || (!hasCircular && !isAltering && !isPublished)}
               className={`inline-flex h-10 sm:h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition
-                ${(isPublished && !isAltering) || (!circularFile && !isAltering && !isPublished)
+                ${(isPublished && !isAltering) || (!hasCircular && !isAltering && !isPublished)
                   ? "cursor-not-allowed bg-slate-400 shadow-none"
                   : "bg-[#e87722] shadow-[0_10px_24px_rgba(232,119,34,0.24)] hover:bg-[#d76516]"
                 }`}
             >
               <Save size={17} />
-              {
-                isAltering
-                  ? "Update Publication"
-                  : isPublished
-                    ? "Published"
-                    : "Publish"
-              }            </button>
+              {isAltering ? "Update Publication" : isPublished ? "Published" : "Publish"}
+            </button>
           </div>
         </div>
 
@@ -769,6 +762,13 @@ export default function SetDateForApplication() {
         message={popup.message}
         variant={popup.variant}
         onClose={() => setPopup((prev) => ({ ...prev, open: false }))}
+      />
+
+      <CircularModal
+        open={showCircularModal}
+        onClose={() => setShowCircularModal(false)}
+        onSave={handleCircularSave}
+        initialData={circularData}
       />
     </AdminLayout>
   );
