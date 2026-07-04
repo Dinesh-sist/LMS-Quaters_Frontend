@@ -37,8 +37,8 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const normalizedClassOptions = useMemo(() => {
     const items = Array.isArray(classOptions) ? classOptions : [];
 
-  
- 
+
+
     const opts = items
       .map((c) => ({
         priority: c?.Class_PRIORITY,
@@ -213,18 +213,18 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
           <TopNavbar navTextColor="light" />
 
-          <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
+          <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 ">
             <div className="hidden items-center justify-center lg:flex lg:self-stretch">
               <img
                 src={Image}
                 alt="Paradip Port Authority building"
-                className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] object-contain"
+                className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] lg:max-w-[600px] object-contain"
               />
             </div>
 
             <div className="flex items-center justify-center lg:justify-start">
               <form
-                className="flex max-h-full w-full max-w-[min(100%,560px)] flex-col gap-[clamp(12px,1.7vh,18px)] overflow-y-auto rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8"
+                className="flex max-h-full w-full max-w-[min(100%,560px)] flex-col gap-[clamp(12px,1.7vh,18px)] overflow-y-auto rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 "
                 onSubmit={handleRegister}
               >
                 <div>
@@ -255,7 +255,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Employee ID</label>
                     <input
                       type="text"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.employeeId}
                       onChange={(e) => setReg((r) => ({ ...r, employeeId: e.target.value }))}
                       placeholder="Employee ID"
@@ -269,7 +269,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <div className="flex items-center gap-2">
                       <input
                         type="date"
-                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.dateOfBirth}
                         onChange={(e) => setReg((r) => ({ ...r, dateOfBirth: e.target.value }))}
                       />
@@ -291,7 +291,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   </label>
                   <input
                     type="text"
-                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                     value={reg.employeeName}
                     onChange={(e) => setReg((r) => ({ ...r, employeeName: e.target.value }))}
                     placeholder="Employee name"
@@ -306,7 +306,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     </label>
                     <input
                       type="date"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.dateOfJoining}
                       onChange={(e) => setReg((r) => ({ ...r, dateOfJoining: e.target.value }))}
                       readOnly
@@ -317,7 +317,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Class Name</label>
                     <input
                       type="text"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.className}
                       onChange={(e) => setReg((r) => ({ ...r, className: e.target.value }))}
                       placeholder="Class name"
@@ -329,7 +329,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Choose a class</label>
                   <select
-                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200"
+                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200"
                     value={reg.classChoice}
                     onChange={(e) => setReg((r) => ({ ...r, classChoice: e.target.value }))}
                   >
@@ -347,7 +347,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Mobile number</label>
                     <input
                       type="tel"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.mobile}
                       onChange={(e) => setReg((r) => ({ ...r, mobile: e.target.value }))}
                       placeholder="Mobile"
@@ -359,7 +359,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <input
                       type="email"
                       autoComplete="email"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.email}
                       onChange={(e) => setReg((r) => ({ ...r, email: e.target.value }))}
                       placeholder="name@domain.com"
@@ -374,7 +374,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       <input
                         type={showRegPass ? "text" : "password"}
                         autoComplete="new-password"
-                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.password}
                         onChange={(e) => setReg((r) => ({ ...r, password: e.target.value }))}
                         placeholder="Create password"
@@ -413,7 +413,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       <input
                         type={showRegConfirmPass ? "text" : "password"}
                         autoComplete="new-password"
-                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.confirmPassword}
                         onChange={(e) => setReg((r) => ({ ...r, confirmPassword: e.target.value }))}
                         placeholder="Re-enter password"
@@ -451,7 +451,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <button
                   type="submit"
-                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isLoading}
                 >
                   {isLoading ? "Registering..." : "Submit Registration"}
@@ -459,7 +459,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <button
                   type="button"
-                  className="w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
                   onClick={() => {
                     setError("");
                     navigate("/QuartersApplyLogin");
@@ -551,27 +551,6 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
             margin-inline: auto;
           }
         }
-        @media (min-width: 1024px) and (max-width: 1180px) {
-          .employee-login-card {
-            max-width: 440px;
-            gap: 14px;
-            padding: 22px 22px;
-          }
-          .employee-login-title {
-            font-size: 27px;
-          }
-          .employee-login-copy {
-            font-size: 12px;
-          }
-          .employee-login-label {
-            font-size: 9px;
-            letter-spacing: 1.6px;
-          }
-          .employee-login-field,
-          .employee-login-action {
-            font-size: 11px;
-          }
-        }
         @media (prefers-reduced-motion: reduce) {
           .employee-gradient-bg,
           .employee-login-card {
@@ -584,24 +563,23 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-[#fcfefd] shadow-2xl">
         <TopNavbar navTextColor="light" />
 
-        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
+        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 ">
           <div className="hidden items-center justify-center lg:flex lg:self-stretch">
             <img
               src={Image}
               alt="Paradip Port Authority building"
-              className="h-auto max-h-[calc(100vh-100px)] w-full max-w-[min(70vw,880px)] object-contain"
-            />
+              className="h-auto max-h-[calc(100vh-100px)] w-full max-w-[min(70vw,880px)] lg:max-w-[720px] object-contain" />
           </div>
 
           <div className="employee-login-shell flex items-center justify-center lg:justify-start">
-            <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8">
+            <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7">
               <div>
                 <div className="mb-4 flex items-center gap-4">
 
                   <div>
 
                     <h1
-                      className="employee-login-title m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px] xl:text-[32px]"
+                      className="employee-login-title m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px] "
                       style={{ fontFamily: "Georgia, serif" }}
                     >
                       Employee Login
@@ -621,7 +599,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <input
                       type="text"
                       autoComplete="username"
-                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -651,7 +629,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <input
                       type={showPass ? "text" : "password"}
                       autoComplete="current-password"
-                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -684,7 +662,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <button
                   type="submit"
-                  className="employee-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="employee-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : "Login as Employee"}
@@ -692,7 +670,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <button
                   type="button"
-                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
                   onClick={async () => {
                     setError("");
                     navigate("/EmployeeRegister");

@@ -97,28 +97,25 @@ export default function StaffLogin() {
       <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
         <TopNavbar navTextColor="light" />
 
-        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 xl:px-10">
-          <div className="hidden items-center justify-center lg:flex lg:self-stretch">
-            <img
-              src={Image2}
-              alt="Staff at desk"
-              className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] object-contain"
-            />
-          </div>
+        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-10 lg:pb-8">          <div className="hidden items-center justify-center lg:flex lg:self-stretch">
+          <img
+            src={Image2}
+            alt="Staff at desk"
+            className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] lg:max-w-[600px] object-contain" />
+        </div>
 
           <div className="flex items-center justify-center lg:justify-start">
             <form
-              className="sl-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 xl:px-8"
-              onSubmit={handleSubmit}
+              className="sl-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-8" onSubmit={handleSubmit}
             >
               <div>
                 <h2
-                  className="m-0 mb-1 text-[clamp(22px,2.5vw,38px)] font-bold text-slate-900"
+                  className="m-0 mb-1 text-[clamp(22px,2.5vw,38px)] lg:text-[38px] font-bold text-slate-900"
                   style={{ fontFamily: "Georgia, serif" }}
                 >
                   Sign In
                 </h2>
-                <p className="m-0 text-[clamp(12px,1vw,13px)] leading-5 text-slate-400">
+                <p className="m-0 text-[13px] lg:text-[13px] leading-5 text-slate-400">
                   Use your official PPA staff credentials
                 </p>
               </div>
@@ -131,11 +128,10 @@ export default function StaffLogin() {
                       key={r}
                       type="button"
                       onClick={() => setRole(r)}
-                      className={`min-h-[clamp(38px,4.2vh,44px)] rounded-full border-2 px-2 py-1.5 text-center text-[clamp(11px,0.95vw,13px)] font-semibold transition-all duration-150 sm:px-3 sm:py-1 ${
-                        role === r
-                          ? "border-blue-950 bg-blue-950 text-white shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
-                          : "border-slate-200 bg-white text-slate-600 hover:opacity-80"
-                      }`}
+                      className={`min-h-[clamp(38px,4.2vh,44px)] rounded-full border-2 px-2 py-1.5 text-center text-[clamp(11px,0.95vw,13px)] lg:text-[13px] font-semibold transition-all duration-150 sm:px-3 sm:py-1 ${role === r
+                        ? "border-blue-950 bg-blue-950 text-white shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
+                        : "border-slate-200 bg-white text-slate-600 hover:opacity-80"
+                        }`}
                     >
                       {r}
                     </button>
@@ -149,8 +145,7 @@ export default function StaffLogin() {
                   <input
                     type="text"
                     autoComplete="username"
-                    className="sl-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
-                    value={username}
+                    className="sl-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300" value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="staff.username"
                   />
@@ -160,7 +155,7 @@ export default function StaffLogin() {
                     height="16"
                     viewBox="0 0 20 20"
                     fill="none"
-                                      >
+                  >
                     <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" />
                     <path
                       d="M3 18c0-4 3.134-6 7-6s7 2 7 6"
@@ -206,8 +201,7 @@ export default function StaffLogin() {
 
               <button
                 type="submit"
-                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={loading}
+                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60" disabled={loading}
               >
                 {loading ? "Verifying..." : `Login as ${role}`}
               </button>
