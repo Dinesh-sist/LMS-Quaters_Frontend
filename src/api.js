@@ -68,7 +68,7 @@ export function saveQuarterApplication(payload) {
   return request("/api/admin/checkapprovalsave", {
     method: "POST",
     body: payload,
-    auth: true 
+    auth: true
   });
 }
 export function publishApplication(payload) {
@@ -110,10 +110,10 @@ export function saveHouseAllotmentCommitteeHistory(payload) {
     method: "POST",
     body: payload,
     auth: true,
-  });  
+  });
 }
 
-export function getDashboardStats() { 
+export function getDashboardStats() {
   return request("/api/estate-quarters/employees-by-type", {
     method: "GET",
     auth: true,
@@ -140,6 +140,38 @@ export function updateQuarterStatus(payload) {
     body: payload,
     auth: true,
   });
+}
+
+export function getQuarterTypes() {
+  return request("/api/admin/quarter-types", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function generateCircular(payload) {
+  return request("/api/admin/generate-circular", {
+    method: "POST",
+    body: payload,
+    auth: true,
+  });
+}
+
+export async function previewCircular(payload) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/api/admin/preview-circular`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to generate preview");
+  }
+  return await res.blob();
 }
 
 export { API_BASE, request };
