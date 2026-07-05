@@ -8,16 +8,16 @@ import {
 } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import Popup from "../../Components/Popup";
-import { getQuarterAreas, updateQuarterStatus } from "../../api";
+import { getQuarterAreas, getQuarterCurrentStatus, updateQuarterStatus } from "../../api";
 
 const STATUS_OPTIONS = [
-  { value: "Vacant", dot: "bg-green-500" },
-  { value: "Occupied", dot: "bg-[#e87722]" },
-  { value: "Under Maintenance", dot: "bg-amber-500" },
-  { value: "Beyond Repair", dot: "bg-red-500" },
+  { value: "VACANT", dot: "bg-green-500" },
+  { value: "OCCUPIED", dot: "bg-[#e87722]" },
+  { value: "UNDER MAINTENANCE", dot: "bg-amber-500" },
+  { value: "BEYOND REPAIR", dot: "bg-red-500" },
 ];
 
-function SelectField({ label, icon, placeholder, value, onChange, options, renderOption }) {
+function SelectField({ label, icon, placeholder, value, onChange, options, renderOption, disabledValue }) {
   const [isOpen, setIsOpen] = useState(false);
   const fieldRef = useRef(null);
 
@@ -61,21 +61,34 @@ function SelectField({ label, icon, placeholder, value, onChange, options, rende
           {options.map((option) => {
             const optionValue = typeof option === "string" ? option : option.value;
             const isSelected = optionValue === value;
+            const isCurrent =
+              disabledValue &&
+              optionValue.toLowerCase() === disabledValue.toLowerCase();
             return (
               <button
                 key={optionValue}
                 type="button"
+                disabled={isCurrent}
                 onClick={() => {
+                  if (isCurrent) return;
                   onChange(optionValue);
                   setIsOpen(false);
                 }}
-                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
-                  isSelected
+                className={`flex w-full items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${isCurrent
+                  ? "cursor-not-allowed bg-slate-50 text-slate-400 opacity-60"
+                  : isSelected
                     ? "bg-orange-50 text-[#e87722]"
                     : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                }`}
+                  }`}
               >
-                {renderOption ? renderOption(option) : optionValue}
+                <span className="flex items-center gap-2.5">
+                  {renderOption ? renderOption(option) : optionValue}
+                </span>
+                {isCurrent && (
+                  <span className="shrink-0 rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                    Current
+                  </span>
+                )}
               </button>
             );
           })}
@@ -125,11 +138,10 @@ function ComboField({ label, icon, placeholder, value, onChange, options }) {
     <div ref={fieldRef} className="relative min-w-0">
       <p className="mb-2 text-sm font-semibold text-slate-900">{label}</p>
       <div
-        className={`flex h-14 w-full items-center gap-3 rounded-2xl border bg-white px-4 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] transition-colors ${
-          isOpen
-            ? "border-[#e87722] shadow-[0_0_0_4px_rgba(232,119,34,0.12)]"
-            : "border-orange-200 hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)]"
-        }`}
+        className={`flex h-14 w-full items-center gap-3 rounded-2xl border bg-white px-4 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] transition-colors ${isOpen
+          ? "border-[#e87722] shadow-[0_0_0_4px_rgba(232,119,34,0.12)]"
+          : "border-orange-200 hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)]"
+          }`}
       >
         <span className="shrink-0 text-slate-500">{icon}</span>
         <input
@@ -157,11 +169,10 @@ function ComboField({ label, icon, placeholder, value, onChange, options }) {
               key={option}
               type="button"
               onClick={() => { onChange(option); setIsOpen(false); }}
-              className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
-                option === value
-                  ? "bg-orange-50 text-[#e87722]"
-                  : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-              }`}
+              className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${option === value
+                ? "bg-orange-50 text-[#e87722]"
+                : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                }`}
             >
               {option}
             </button>
@@ -176,10 +187,13 @@ export default function UpdateStatusofQuarters() {
   const [area, setArea] = useState("");
   const [quarterNumber, setQuarterNumber] = useState("");
   const [status, setStatus] = useState("");
+  const [dbStatus, setDbStatus] = useState(""); // the value currently stored in DB (disabled in dropdown)
   const [formError, setFormError] = useState("");
   const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "success" });
   const [isSaving, setIsSaving] = useState(false);
   const [areaOptions, setAreaOptions] = useState([]);
+  // Auto-fetch state
+  const [fetchState, setFetchState] = useState("idle"); // idle | loading | found | not-found
 
   useEffect(() => {
     async function fetchAreas() {
@@ -193,7 +207,43 @@ export default function UpdateStatusofQuarters() {
     fetchAreas();
   }, []);
 
-  const isFormComplete = area && quarterNumber && status;
+  // Auto-fetch current status whenever area + quarterNumber are both filled
+  useEffect(() => {
+    if (!area.trim() || !quarterNumber.trim()) {
+      setStatus("");
+      setDbStatus("");
+      setFetchState("idle");
+      return;
+    }
+    setFetchState("loading");
+    const timer = setTimeout(async () => {
+      try {
+        const res = await getQuarterCurrentStatus(area.trim(), quarterNumber.trim());
+        const rawStatus = res.status || "";
+        // Normalise to match STATUS_OPTIONS values (capitalise properly)
+        const matched = STATUS_OPTIONS.find(
+          (opt) => opt.value.toLowerCase() === rawStatus.toLowerCase()
+        );
+        const normalised = matched ? matched.value : rawStatus;
+        setStatus("");       // force user to actively pick a different status
+        setDbStatus(normalised); // remember original DB value to disable in dropdown
+        setFetchState("found");
+      } catch (err) {
+        if (err?.status === 404) {
+          setStatus("");
+          setDbStatus("");
+          setFetchState("not-found");
+        } else {
+          console.error("Failed to fetch current quarter status", err);
+          setFetchState("idle");
+        }
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [area, quarterNumber]);
+
+  // Form is only complete when a NEW status (different from DB) is selected
+  const isFormComplete = area && quarterNumber && status && status !== dbStatus;
 
   const handleSave = async () => {
     if (!isFormComplete) {
@@ -267,20 +317,39 @@ export default function UpdateStatusofQuarters() {
               value={quarterNumber}
               onChange={setQuarterNumber}
             />
-            <SelectField
-              label="Status"
-              icon={<Info size={19} />}
-              placeholder="Select status"
-              value={status}
-              onChange={setStatus}
-              options={STATUS_OPTIONS}
-              renderOption={(option) => (
-                <>
-                  <span className={`h-2 w-2 rounded-full ${option.dot}`} />
-                  {option.value}
-                </>
+            <div className="relative min-w-0">
+              <p className="mb-2 text-sm font-semibold text-slate-900">Status</p>
+              {/* Auto-fetch badge */}
+              {fetchState === "loading" && (
+                <div className="flex h-14 w-full items-center gap-3 rounded-2xl border border-orange-200 bg-white px-4 shadow-[0_0_0_3px_rgba(232,119,34,0.08)]">
+                  <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[#e87722] border-t-transparent" />
+                  <span className="text-sm font-medium text-slate-400">Fetching current status…</span>
+                </div>
               )}
-            />
+              {fetchState === "not-found" && (
+                <div className="flex h-14 w-full items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4">
+                  <Info size={17} className="shrink-0 text-red-400" />
+                  <span className="text-sm font-medium text-red-500">Quarter not found in database</span>
+                </div>
+              )}
+              {(fetchState === "idle" || fetchState === "found") && (
+                <SelectField
+                  label=""
+                  icon={<Info size={19} />}
+                  placeholder={fetchState === "idle" ? "Fill area & number first" : `Change from: ${dbStatus || "—"}`}
+                  value={status}
+                  onChange={setStatus}
+                  options={STATUS_OPTIONS}
+                  disabledValue={dbStatus}
+                  renderOption={(option) => (
+                    <>
+                      <span className={`h-2 w-2 rounded-full ${option.dot}`} />
+                      {option.value}
+                    </>
+                  )}
+                />
+              )}
+            </div>
           </div>
 
           {formError && (
