@@ -134,6 +134,13 @@ export function getQuarterNumbers(areaType) {
   });
 }
 
+export function getQuarterCurrentStatus(area, quarterNumber) {
+  return request(
+    `/api/estate-quarters/current-status?area=${encodeURIComponent(area)}&quarterNumber=${encodeURIComponent(quarterNumber)}`,
+    { method: "GET", auth: true }
+  );
+}
+
 export function updateQuarterStatus(payload) {
   return request("/api/estate-quarters/update-status", {
     method: "POST",
