@@ -3,7 +3,7 @@ import AdminSideNav from "./AdminSideNav";
 import TopHeader from "../../../Components/TopHeader";
 import Footer from "../../../Components/Footer";
 
-export default function AdminLayout({ title, subtitle, children }) {
+export default function AdminLayout({ title, subtitle, headerRight = null, children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -57,13 +57,16 @@ export default function AdminLayout({ title, subtitle, children }) {
               */}
               <div className="mx-auto w-full min-w-0 max-w-[1540px] space-y-5">
                 {(title || subtitle) && (
-                  <div>
-                    {title && (
-                      <h1 className="text-xl font-bold text-slate-900 md:text-2xl">{title}</h1>
-                    )}
-                    {subtitle && (
-                      <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
-                    )}
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      {title && (
+                        <h1 className="text-xl font-bold text-slate-900 md:text-2xl">{title}</h1>
+                      )}
+                      {subtitle && (
+                        <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+                      )}
+                    </div>
+                    {headerRight && <div className="shrink-0">{headerRight}</div>}
                   </div>
                 )}
                 {children}

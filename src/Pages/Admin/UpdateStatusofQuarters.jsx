@@ -215,6 +215,7 @@ export default function UpdateStatusofQuarters() {
       setFetchState("idle");
       return;
     }
+
     setFetchState("loading");
     const timer = setTimeout(async () => {
       try {
@@ -309,6 +310,7 @@ export default function UpdateStatusofQuarters() {
             options={areaOptions}
           />
 
+
           <div className="mt-5 grid gap-5 md:grid-cols-2">
             <InputField
               label="Quarter Number"
@@ -352,6 +354,8 @@ export default function UpdateStatusofQuarters() {
             </div>
           </div>
 
+
+
           {formError && (
             <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
               <Info size={15} className="shrink-0 text-red-500" />
@@ -368,7 +372,6 @@ export default function UpdateStatusofQuarters() {
               </p>
             </div>
           </div>
-
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
@@ -382,7 +385,6 @@ export default function UpdateStatusofQuarters() {
           </div>
         </div>
       </section>
-
       <Popup
         open={popup.open}
         title={popup.title}
@@ -393,3 +395,5 @@ export default function UpdateStatusofQuarters() {
     </AdminLayout>
   );
 }
+
+
