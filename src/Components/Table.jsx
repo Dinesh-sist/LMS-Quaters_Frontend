@@ -318,14 +318,10 @@ export default function AgGridTable({
 
   const serialValueGetter = useCallback(
     (params) => {
-      const api = gridRef.current?.api;
       const idx = typeof params?.node?.rowIndex === "number" ? params.node.rowIndex : 0;
-      if (!api?.paginationGetCurrentPage) return idx + 1;
-      const page = api.paginationGetCurrentPage();
-      const size = api.paginationGetPageSize ? api.paginationGetPageSize() : pageSizeState;
-      return page * size + idx + 1;
+      return idx + 1;
     },
-    [pageSizeState]
+    []
   );
 
 
@@ -382,6 +378,14 @@ export default function AgGridTable({
           def.cellRenderer = RENDERER_MAP[col.renderer];
         } else if (typeof col.render === "function") {
           def.cellRenderer = (params) => col.render(params.value, params.data, params);
+        } else {
+          def.cellRenderer = (params) => {
+            const val = params.value;
+            if (val === null || val === undefined || val === "") {
+              return <span className="text-slate-400 text-xs font-semibold">—</span>;
+            }
+            return getDisplayText(val, col);
+          };
         }
 
         if (col.pinned) def.pinned = col.pinned;

@@ -1,13 +1,23 @@
 import { useEffect, useState } from "react";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-import { request, API_BASE } from "../../api";
+import { request, API_BASE, getLatestPublication } from "../../api";
 
 const statusStyles = {
   approved: "bg-emerald-100 text-emerald-700",
   rejected: "bg-rose-100   text-rose-700",
   pending: "bg-amber-100  text-amber-700",
 };
+
+function toDateKey(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 // const columns = [
 //   { key: "priorityNo", header: "PRIORITY NO",    minWidth: 120 },
@@ -145,7 +155,7 @@ const getColumns = (onDebarClick) => [
           </button>
         );
       }
-      return <span className="text-slate-400">-</span>;
+      return <span className="text-slate-400 text-xs font-semibold">—</span>;
     },
   },
 ];
@@ -188,6 +198,8 @@ export default function StatusOfApplications() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [viewMode, setViewMode] = useState("current");
+  const [currentPublication, setCurrentPublication] = useState(null);
   
   // Debar Modal State
   const [debarModalOpen, setDebarModalOpen] = useState(false);
@@ -212,6 +224,20 @@ export default function StatusOfApplications() {
 
   useEffect(() => {
     fetchApplications();
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+    getLatestPublication()
+      .then((data) => {
+        if (isActive) setCurrentPublication(data || null);
+      })
+      .catch(() => {
+        if (isActive) setCurrentPublication(null);
+      });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const handleDebarClick = (row) => {
@@ -256,15 +282,62 @@ export default function StatusOfApplications() {
 
   const columns = getColumns(handleDebarClick);
 
+  const currentWindowKey = {
+    from: toDateKey(currentPublication?.From_Date),
+    to: toDateKey(currentPublication?.To_Date),
+  };
 
+  const currentApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return false;
+    return (
+      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.publishedDateTo) === currentWindowKey.to
+    );
+  });
+
+  const historyApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return true;
+    return !(
+      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.publishedDateTo) === currentWindowKey.to
+    );
+  });
+
+  const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
 
   return (
     <AdminLayout
       title="Status of Applications"
       subtitle="Land Data Management System - Application Tracker"
+      headerRight={
+        <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setViewMode("current")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              viewMode === "current"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Current Applications
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("history")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              viewMode === "history"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            History of Applications
+          </button>
+        </div>
+      }
     >
       <div className="lms-data-transition space-y-6">
-        <PageSummaryBar rows={rows} />
+        <PageSummaryBar rows={visibleRows} />
 
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -275,7 +348,7 @@ export default function StatusOfApplications() {
         <div className="w-full overflow-x-auto rounded-xl">
           <AgGridTable
             columns={columns}
-            rows={rows}
+            rows={visibleRows}
             searchable
             pageSize={8}
             showExport
