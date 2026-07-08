@@ -28,6 +28,7 @@ const makeColumns = (onReview) => [
   { key: "AppNo", header: "APP NO", minWidth: 190 },
   { key: "EmpId", header: "EMP ID", minWidth: 130 },
   { key: "EmpName", header: "EMP NAME", minWidth: 200 },
+  { key: "Department", header: "DEPARTMENT", minWidth: 150 },
   { key: "Class", header: "CLASS", minWidth: 140 },
   { key: "Basic", header: "BASIC", renderer: "basic", minWidth: 110 },
   { key: "Caste", header: "CASTE", minWidth: 110 },
@@ -258,6 +259,7 @@ function ReviewModal({ app, onClose, onAction }) {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px 20px", marginBottom: "20px" }}>
             <DetailRow label="Emp ID" value={app.EmpId} />
             <DetailRow label="Emp Name" value={app.EmpName} />
+            <DetailRow label="Department" value={app.Department} />
             <DetailRow label="Email" value={app.EmailId} />
             <DetailRow label="Class" value={app.Class} />
             <DetailRow label="Basic Pay" value={app.Basic} />

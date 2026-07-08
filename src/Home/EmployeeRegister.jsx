@@ -221,6 +221,12 @@ export default function EmployeeRegister() {
               {/* Scrollable fields area */}
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 lg:px-8">
 
+              {error ? (
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[12px] font-semibold text-red-700">
+                  {error}
+                </div>
+              ) : null}
+
               {/* Fetch section */}
               <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3">
                 <div className="grid grid-cols-2 gap-4">
@@ -366,12 +372,6 @@ export default function EmployeeRegister() {
                   </div>
                 </Field>
               </div>
-
-              {error ? (
-                <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[12px] text-red-700">
-                  {error}
-                </div>
-              ) : null}
 
               </div>{/* end scrollable area */}
 
