@@ -178,6 +178,7 @@ export default function ApplyForQuartersEmployees() {
   const [hodDeptsError, setHodDeptsError] = useState("");
   const [quarters, setQuarters] = useState([]);
   const [quartersError, setQuartersError] = useState("");
+  const [publishedTypes, setPublishedTypes] = useState([]); // quarter types in the active circular
   const [classId, setClassId] = useState(null);
   const [publication, setPublication] = useState(null);
   const [isApplicationOpen, setIsApplicationOpen] = useState(false);
@@ -188,6 +189,7 @@ export default function ApplyForQuartersEmployees() {
     employeeId: user?.username || "",
     classOfEmployee: "",
     casteOfEmployee: "",
+    category: "",
     dateOfBirth: "",
     dateOfJoining: "",
     gradDate: "",
@@ -360,6 +362,7 @@ export default function ApplyForQuartersEmployees() {
           employeeId: data?.employeeId || s.employeeId,
           classOfEmployee: data?.classOfEmployee || s.classOfEmployee,
           casteOfEmployee: data?.casteOfEmployee || s.casteOfEmployee,
+          category: data?.category || s.category,
           dateOfBirth: data?.dateOfBirth || s.dateOfBirth,
           dateOfJoining: data?.dateOfJoining || s.dateOfJoining,
           gradDate: data?.gradDate || s.gradDate,
@@ -444,7 +447,10 @@ export default function ApplyForQuartersEmployees() {
           seen.add(String(id));
           return true;
         });
-        if (!cancelled) setQuarters(uniqueItems);
+        if (!cancelled) {
+          setQuarters(uniqueItems);
+          setPublishedTypes(Array.isArray(data?.publishedTypes) ? data.publishedTypes : []);
+        }
       } catch (err) {
         if (!cancelled)
           setQuartersError(err?.message || "Failed to load quarters");
@@ -601,6 +607,9 @@ export default function ApplyForQuartersEmployees() {
         method: "POST",
         body: {
           quarterId: parseInt(emp.selectedQuarterId),
+          quarterNo: selectedQuarter.quarterNumber,
+          quarterType: selectedQuarter.quarterType,
+          location: selectedQuarter.areaType,
           reason: emp.reason,
           exchangeReason: emp.exchangeReason || "",
           department: emp.department,
@@ -804,6 +813,10 @@ export default function ApplyForQuartersEmployees() {
                           value={emp.classOfEmployee}
                         />
                         <InfoField
+                          label="Category"
+                          value={emp.category}
+                        />
+                        <InfoField
                           label="Caste of Employee"
                           value={emp.casteOfEmployee}
                         />
@@ -811,10 +824,7 @@ export default function ApplyForQuartersEmployees() {
                           label="Date of Birth"
                           value={emp.dateOfBirth}
                         />
-                        <InfoField
-                          label="Date of Joining"
-                          value={emp.dateOfJoining}
-                        />
+
                       </div>
                       <div className="border-t border-dashed border-slate-200 pt-3 pb-5 xl:px-6">
                         <div className="mb-3 flex items-center gap-2">
@@ -1039,6 +1049,32 @@ export default function ApplyForQuartersEmployees() {
                   {quartersError && (
                     <div className="px-6 pb-3 text-[12px] font-semibold text-rose-600">
                       {quartersError}
+                    </div>
+                  )}
+
+                  {/* ── Not-eligible notice ── */}
+                  {isApplicationOpen &&
+                    publishedTypes.length > 0 &&
+                    eligibleVacantQuarterRows.length === 0 &&
+                    !quartersError && (
+                    <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm">
+                      <div className="flex items-start gap-4 px-5 py-5">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                          <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14px] font-bold text-amber-800">
+                            Your eligible quarter type is not open for applications currently
+                          </p>
+                          <p className="mt-1 text-[12.5px] leading-relaxed text-amber-700">
+                            The current circular has opened applications only for:{" "}
+                            <span className="font-semibold">{publishedTypes.join(", ")}</span>.
+                            Your grade is not eligible for these types. Please wait for the next circular.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
 

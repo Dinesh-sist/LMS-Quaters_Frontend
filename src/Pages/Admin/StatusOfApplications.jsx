@@ -1,13 +1,27 @@
 import { useEffect, useState } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-import { request, API_BASE } from "../../api";
+import { request, API_BASE, getLatestPublication } from "../../api";
+import Logo from "../../assets/Logo.png";
 
 const statusStyles = {
   approved: "bg-emerald-100 text-emerald-700",
   rejected: "bg-rose-100   text-rose-700",
   pending: "bg-amber-100  text-amber-700",
 };
+
+
+function toDateKey(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 // const columns = [
 //   { key: "priorityNo", header: "PRIORITY NO",    minWidth: 120 },
@@ -28,6 +42,7 @@ const getColumns = (onDebarClick) => [
   { key: "appNo", header: "APP NO", minWidth: 130 },
   { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
   { key: "empName", header: "EMP NAME", minWidth: 220 },
+  { key: "dept", header: "DEPARTMENT", minWidth: 150 },
   { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
   { key: "basic", header: "BASIC", renderer: "basic", minWidth: 110 },
   { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
@@ -145,7 +160,7 @@ const getColumns = (onDebarClick) => [
           </button>
         );
       }
-      return <span className="text-slate-400">-</span>;
+      return <span className="text-slate-400 text-xs font-semibold">—</span>;
     },
   },
 ];
@@ -160,10 +175,122 @@ function DetailRow({ label, value }) {
   );
 }
 
+
+
 /* ── Option 2: Title row with inline metric badges ── */
 function PageSummaryBar({ rows }) {
 
   const shortlisted = rows.filter((d) => d.result === "Shortlisted").length;
+
+  const downloadApprovedPDF = () => {
+    const approvedRows = rows.filter((d) => String(d.result).toLowerCase() === "approved");
+    if (approvedRows.length === 0) {
+      alert("No approved applications to download.");
+      return;
+    }
+
+    const doc = new jsPDF("landscape");
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const dateStr = new Date().toLocaleDateString("en-IN", {
+      day: "2-digit", month: "short", year: "numeric",
+    });
+
+
+    const generatePDF = () => {
+      // Top Header (Centered)
+      doc.setFontSize(22);
+      doc.setFont(undefined, "bold");
+      doc.setTextColor(24, 95, 165); // Theme Color
+      doc.text("PARADIP PORT AUTHORITY", pageWidth / 2, 22, { align: "center" });
+
+      doc.setFontSize(14);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(100);
+      doc.text("Land Data Management System", pageWidth / 2, 30, { align: "center" });
+
+      // Separator Line
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(14, 36, pageWidth - 14, 36);
+
+      // Sub Header
+      doc.setFontSize(16);
+      doc.setTextColor(0);
+      doc.setFont(undefined, "bold");
+      doc.text("Approved Quarter Applications", 14, 46);
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(150);
+      doc.text(`Generated on: ${dateStr}`, 14, 52);
+
+      const tableColumn = [
+        "S.NO",
+        "EMP ID",
+        "CLASS",
+        "GRAD DATE",
+        "DEPARTMENT",
+        "CASTE ID",
+        "CURRENT QUARTER TYPE",
+        "REQUESTED QTR",
+        "EXCHANGE",
+        "ROSTER NO",
+        "STATUS"
+      ];
+
+      const tableRows = approvedRows.map((row, index) => {
+        const statusLabel = row.result ? (row.result.charAt(0).toUpperCase() + row.result.slice(1).toLowerCase()) : "-";
+        return [
+          index + 1,
+          row.empId || "-",
+          row.class || "-",
+          row.gradDate || "-",
+          row.dept || "-",
+          row.casteId || "-",
+          row.currentQtyType || "-",
+          row.reqQtr || "-",
+          row.exchange || "-",
+          row.rosterNo || "-",
+          statusLabel
+        ];
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 58,
+        theme: "grid", // Adds column and row lines
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          lineColor: [220, 220, 220],
+          lineWidth: 0.1,
+          textColor: [40, 40, 40]
+        },
+        headStyles: {
+          fillColor: [24, 95, 165],
+          textColor: 255,
+          halign: "center",
+          fontStyle: "bold"
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        bodyStyles: { halign: "center" }
+      });
+
+      doc.save(`Approved_Applications_${dateStr.replace(/ /g, "_")}.pdf`);
+    };
+
+    const img = new Image();
+    img.src = Logo;
+    img.onload = () => {
+      // Draw logo on the right side
+      doc.addImage(img, "PNG", pageWidth - 38, 10, 24, 24);
+      generatePDF();
+    };
+    img.onerror = () => {
+      generatePDF();
+    };
+  };
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -172,6 +299,16 @@ function PageSummaryBar({ rows }) {
       </span>
       <div className="flex flex-wrap gap-2">
 
+        <button
+          type="button"
+          onClick={downloadApprovedPDF}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#185FA5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0f477f] shadow-sm"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download Approved List (PDF)
+        </button>
 
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
@@ -188,7 +325,9 @@ export default function StatusOfApplications() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
+  const [viewMode, setViewMode] = useState("current");
+  const [currentPublication, setCurrentPublication] = useState(null);
+
   // Debar Modal State
   const [debarModalOpen, setDebarModalOpen] = useState(false);
   const [selectedUserToDebar, setSelectedUserToDebar] = useState(null);
@@ -212,6 +351,20 @@ export default function StatusOfApplications() {
 
   useEffect(() => {
     fetchApplications();
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+    getLatestPublication()
+      .then((data) => {
+        if (isActive) setCurrentPublication(data || null);
+      })
+      .catch(() => {
+        if (isActive) setCurrentPublication(null);
+      });
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const handleDebarClick = (row) => {
@@ -256,15 +409,60 @@ export default function StatusOfApplications() {
 
   const columns = getColumns(handleDebarClick);
 
+  const currentWindowKey = {
+    from: toDateKey(currentPublication?.From_Date),
+    to: toDateKey(currentPublication?.To_Date),
+  };
 
+  const currentApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return false;
+    return (
+      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.publishedDateTo) === currentWindowKey.to
+    );
+  });
+
+  const historyApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return true;
+    return !(
+      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.publishedDateTo) === currentWindowKey.to
+    );
+  });
+
+  const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
 
   return (
     <AdminLayout
       title="Status of Applications"
       subtitle="Land Data Management System - Application Tracker"
+      headerRight={
+        <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setViewMode("current")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "current"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+              }`}
+          >
+            Current Applications
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("history")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "history"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+              }`}
+          >
+            History of Applications
+          </button>
+        </div>
+      }
     >
       <div className="lms-data-transition space-y-6">
-        <PageSummaryBar rows={rows} />
+        <PageSummaryBar rows={visibleRows} />
 
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -275,7 +473,7 @@ export default function StatusOfApplications() {
         <div className="w-full overflow-x-auto rounded-xl">
           <AgGridTable
             columns={columns}
-            rows={rows}
+            rows={visibleRows}
             searchable
             pageSize={8}
             showExport
@@ -284,7 +482,7 @@ export default function StatusOfApplications() {
           />
         </div>
       </div>
-      
+
       {/* Debar Modal */}
       {debarModalOpen && selectedUserToDebar && (
         <div
@@ -375,7 +573,7 @@ export default function StatusOfApplications() {
               <p style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "12px" }}>
                 Debarment Period
               </p>
-              
+
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 20px" }}>
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -453,3 +651,6 @@ export default function StatusOfApplications() {
     </AdminLayout>
   );
 }
+
+
+

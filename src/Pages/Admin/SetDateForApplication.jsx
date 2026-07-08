@@ -393,6 +393,10 @@ export default function SetDateForApplication() {
         const payload = new FormData();
         payload.append("fromDate", formatDateForApi(fromDate));
         payload.append("toDate", formatDateForApi(toDate));
+        // Store which quarter types are published so the employee page can filter
+        if (circularData?.quarterTypes?.length > 0) {
+          payload.append("quarterTypes", JSON.stringify(circularData.quarterTypes));
+        }
         await publishApplication(payload);
 
         // Generate & email circular if data is filled
