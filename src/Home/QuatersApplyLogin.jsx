@@ -99,7 +99,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     setIsLoading(true);
     try {
       const data = await login(username.trim(), password);
-      if (data?.user?.role !== "employee") {
+      if (data?.user?.role?.toLowerCase() !== "employee") {
         setError("This account is not an employee.");
         return;
       }

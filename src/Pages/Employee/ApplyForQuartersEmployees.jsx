@@ -179,10 +179,10 @@ export default function ApplyForQuartersEmployees() {
   const [quarters, setQuarters] = useState([]);
   const [quartersError, setQuartersError] = useState("");
   const [publishedTypes, setPublishedTypes] = useState([]); // quarter types in the active circular
-  const [classId, setClassId] = useState(null);
   const [publication, setPublication] = useState(null);
   const [isApplicationOpen, setIsApplicationOpen] = useState(false);
   const [approvedQuarter, setApprovedQuarter] = useState(null);
+  const [empClassName, setEmpClassName] = useState("");
 
   const [emp, setEmp] = useState({
     employeeName: user?.name || "",
@@ -201,6 +201,8 @@ export default function ApplyForQuartersEmployees() {
     selectedQuarterRowKey: "",
     debarredFromDate: "",
     debarredToDate: "",
+    areaType: "",
+    quarterNo: "",
   });
 
   const isExchange = emp.reason === "exchange";
@@ -258,9 +260,7 @@ export default function ApplyForQuartersEmployees() {
     })
     .filter((row) => row.quarterId != null);
 
-  const eligibleVacantQuarterRows = vacantQuarterRows.filter((row) =>
-    getRosterEligibility(emp.casteOfEmployee, row.quarterType, row.nextRosterNo).allowed
-  );
+  const eligibleVacantQuarterRows = vacantQuarterRows;
 
   const selectedQuarter = eligibleVacantQuarterRows.find(
     (q) => String(q.rowKey) === String(emp.selectedQuarterRowKey)
@@ -355,7 +355,8 @@ export default function ApplyForQuartersEmployees() {
       try {
         const data = await request("/api/employee/me", { auth: true });
         if (cancelled) return;
-        setClassId(data?.classId ?? null);
+        const cls = data?.classOfEmployee || "";
+        setEmpClassName(cls);
         setEmp((s) => ({
           ...s,
           employeeName: data?.employeeName || s.employeeName,
@@ -369,6 +370,8 @@ export default function ApplyForQuartersEmployees() {
           department: data?.department || s.department,
           debarredFromDate: data?.debarredFromDate || s.debarredFromDate,
           debarredToDate: data?.debarredToDate || s.debarredToDate,
+          areaType: data?.areaType || s.areaType,
+          quarterNo: data?.quarterNo || s.quarterNo,
         }));
       } catch (err) {
         console.error("Employee profile error:", err);
@@ -429,22 +432,22 @@ export default function ApplyForQuartersEmployees() {
   }, []);
 
   useEffect(() => {
-    if (!classId) return;
+    if (!empClassName) return;
     let cancelled = false;
 
     async function loadQuarters() {
       try {
         setQuartersError("");
         const data = await request(
-          "/api/estate-quarters/vacant?classId=" + classId,
+          "/api/estate-quarters/vacant?className=" + encodeURIComponent(empClassName),
           { auth: true }
         );
         const items = Array.isArray(data?.items) ? data.items : [];
         const seen = new Set();
         const uniqueItems = items.filter((q) => {
-          const id = q?.Id ?? q?.ID ?? q?.QuarterId ?? q?.QuarterID;
-          if (id == null || seen.has(String(id))) return false;
-          seen.add(String(id));
+          const key = `${q?.QuarterNo ?? ""}|${q?.QuarterType ?? ""}|${q?.Location ?? ""}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
           return true;
         });
         if (!cancelled) {
@@ -459,7 +462,7 @@ export default function ApplyForQuartersEmployees() {
 
     loadQuarters();
     return () => { cancelled = true; };
-  }, [classId]);
+  }, [empClassName]);
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
@@ -824,6 +827,14 @@ export default function ApplyForQuartersEmployees() {
                           label="Date of Birth"
                           value={emp.dateOfBirth}
                         />
+                        <InfoField
+                          label="Area Type"
+                          value={emp.areaType}
+                        />
+                        <InfoField
+                          label="Quarter No"
+                          value={emp.quarterNo}
+                        />
 
                       </div>
                       <div className="border-t border-dashed border-slate-200 pt-3 pb-5 xl:px-6">
@@ -1090,7 +1101,7 @@ export default function ApplyForQuartersEmployees() {
                       contentAutoWidth={false}
                       contentAlign="center"
                       emptyMessage={
-                        classId
+                        empClassName
                           ? "No vacant quarters available"
                           : "Loading vacant quarters..."
                       }

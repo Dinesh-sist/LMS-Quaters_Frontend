@@ -101,6 +101,7 @@ function makeQuarterTypeOpts() {
   };
 }
 
+
 const employeeClassOpts = {
   responsive: true,
   maintainAspectRatio: false,
@@ -120,6 +121,7 @@ const employeeClassOpts = {
     },
   },
 };
+
 
 const pieOpts = {
   responsive: true,
@@ -340,3 +342,4 @@ export default function AdminDashboard() {
     </AdminLayout>
   );
 }
+
