@@ -25,40 +25,80 @@ function StatusBadge({ value }) {
 
 /* ─── Column definitions ──────────────────────────────────────── */
 const makeColumns = (onReview) => [
-  { key: "AppNo", header: "APP NO", minWidth: 190 },
-  { key: "EmpId", header: "EMP ID", minWidth: 130 },
-  { key: "EmpName", header: "EMP NAME", minWidth: 200 },
-  { key: "Department", header: "DEPARTMENT", minWidth: 150 },
+  { key: "Id", header: "SNO", minWidth: 100 },
+  { key: "EmpId", header: "EmpID", minWidth: 130 },
+  { key: "EmpName", header: "Emp_Name", minWidth: 200 },
   { key: "Class", header: "CLASS", minWidth: 140 },
-  { key: "Basic", header: "BASIC", renderer: "basic", minWidth: 110 },
-  { key: "Caste", header: "CASTE", minWidth: 110 },
-  { key: "EmailId", header: "EMAIL", minWidth: 210 },
-  { key: "ReqDate", header: "REQ DATE", minWidth: 150 },
-  { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 240 },
-
-  { key: "QtrLocation", header: "LOCATION", minWidth: 190 },
-  { key: "QtrType", header: "QTR TYPE", minWidth: 130 },
-  { key: "Reason", header: "REASON", minWidth: 140 },
+  { key: "GradDate", header: "GRAD_Date", minWidth: 140 },
+  { key: "DateOfJoining", header: "Date_of_Join", minWidth: 155 },
+  { key: "Basic", header: "Basic", renderer: "basic", minWidth: 110 },
+  { key: "DateOfBirth", header: "DATA_OF_BIRTH", minWidth: 150 },
+  { key: "Department", header: "DEPT", minWidth: 150 },
+  { key: "Caste", header: "CASTE_ID", minWidth: 120 },
   {
-    key: "Status",
-    header: "STATUS",
-    minWidth: 140,
-    render: (value) => <StatusBadge value={value} />,
+    key: "CurrentQtr",
+    header: "CURRENT QTR",
+    minWidth: 150,
+    render: (_, row) =>
+      row?.CurrentAreaType && row?.CurrentQuarterNo
+        ? `${String(row.CurrentAreaType).trim()}/${String(row.CurrentQuarterNo).trim()}`
+        : "—",
   },
+  { key: "CurrentQuarterType", header: "CURRENT QTY_Type", minWidth: 180 },
+  { key: "QtrRequested", header: "REQ_QTR", minWidth: 120 },
+  { key: "QtrLocation", header: "REQ_QTR_Location", minWidth: 160 },
+  { key: "QtrType", header: "REQ_QTR_Type", minWidth: 180 },
+  { key: "ExchangeReason", header: "Exchange", minWidth: 140, render: (val) => val || "—" },
   {
-    key: "action",
-    header: "ACTION",
-    minWidth: 120,
-    render: (_, row) => (
-      <button
-        type="button"
-        onClick={() => onReview(row)}
-        className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100 active:scale-95"
-      >
-        Review
-      </button>
-    ),
+    key: "AttachmentPath",
+    header: "Proof File",
+    minWidth: 150,
+    render: (value) => {
+      if (!value) return <span className="text-slate-400">—</span>;
+      const normalised = value.replace(/\\/g, "/").replace(/^.*uploads\//, "");
+      const fileUrl = `${API_BASE}/uploads/${normalised}`;
+      const fileName = normalised.split("/").pop();
+      const handleDownload = async (e) => {
+        e.preventDefault();
+        try {
+          const res = await fetch(fileUrl);
+          if (!res.ok) throw new Error("Not found");
+          const blob = await res.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = objectUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(objectUrl);
+        } catch {
+          alert("Could not download the file.");
+        }
+      };
+      return (
+        <button
+          type="button"
+          onClick={handleDownload}
+          style={{
+            background: "none",
+            border: "none",
+            color: "#2563eb",
+            textDecoration: "underline",
+            fontWeight: 700,
+            fontSize: "13px",
+            cursor: "pointer",
+            padding: 0,
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#1d4ed8")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#2563eb")}
+        >
+          Download
+        </button>
+      );
+    }
   },
+  { key: "ReqDate", header: "REQ_Date", minWidth: 160 },
 ];
 
 /* ─── Summary bar ─────────────────────────────────────────────── */
@@ -266,6 +306,9 @@ function ReviewModal({ app, onClose, onAction }) {
             <DetailRow label="Caste" value={app.Caste} />
             <DetailRow label="Date of Joining" value={app.DateOfJoining} />
             <DetailRow label="Grad Date" value={app.GradDate} />
+            <DetailRow label="Current Quarter Type" value={app.CurrentQuarterType} />
+            <DetailRow label="Current Area Type" value={app.CurrentAreaType} />
+            <DetailRow label="Current Quarter No" value={app.CurrentQuarterNo} />
             <DetailRow label="Req Date" value={app.ReqDate} />
           </div>
 
