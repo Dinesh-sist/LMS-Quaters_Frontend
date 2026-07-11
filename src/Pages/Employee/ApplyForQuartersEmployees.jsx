@@ -29,6 +29,8 @@ const inputCls = (focused, id, hasError = false, disabled = false) =>
       : "border-[1.5px] border-[#e2e8f0]"
   }`;
 
+
+
 const selectCls = (focused, id, hasError = false, disabled = false) =>
   `${inputCls(focused, id, hasError, disabled)} appearance-none bg-no-repeat bg-[right_12px_center] pr-9 ${disabled ? "" : "cursor-pointer"
   }`;
@@ -153,6 +155,17 @@ function getRosterEligibility(caste, quarterType, rosterNo) {
 
     return { allowed: true };
   }
+
+  
+
+
+
+
+
+
+
+
+
 
   return { allowed: true };
 }
@@ -400,6 +413,7 @@ export default function ApplyForQuartersEmployees() {
         }
       }
     }
+    
 
     loadApprovedQuarter();
     return () => {
@@ -581,7 +595,7 @@ export default function ApplyForQuartersEmployees() {
   //     setSubmitting(false);
   //   }
   // };
-//   const handleApply = async () => {
+  //   const handleApply = async () => {
   const handleApply = async () => {
     if (!isApplicationOpen) {
       showPopup({
@@ -885,133 +899,133 @@ export default function ApplyForQuartersEmployees() {
                           </div>
                         </div>
                         <div className="px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
-                         {/* Department */}
-                         <FieldShell label="Department" required>
-                           <select
-                             value={emp.department}
-                             onChange={(e) => {
-                               clearValidationError("department");
-                               setEmp((s) => ({
-                                 ...s,
-                                 department: e.target.value,
-                               }));
-                             }}
-                             className={selectCls(
-                               focused,
-                               "emp_department",
-                               validationErrors.department
-                             )}
-                             style={{ backgroundImage: SELECT_ARROW }}
-                             onFocus={() => setFocused("emp_department")}
-                             onBlur={() => setFocused(null)}
-                           >
-                             <option value="">Choose a Department</option>
-                             {Array.from(new Set([...hodDepts, emp.department].filter(Boolean))).map((dept) => (
-                               <option key={dept} value={dept}>
-                                 {dept}
-                               </option>
-                             ))}
-                           </select>
-                         </FieldShell>
+                          {/* Department */}
+                          <FieldShell label="Department" required>
+                            <select
+                              value={emp.department}
+                              onChange={(e) => {
+                                clearValidationError("department");
+                                setEmp((s) => ({
+                                  ...s,
+                                  department: e.target.value,
+                                }));
+                              }}
+                              className={selectCls(
+                                focused,
+                                "emp_department",
+                                validationErrors.department
+                              )}
+                              style={{ backgroundImage: SELECT_ARROW }}
+                              onFocus={() => setFocused("emp_department")}
+                              onBlur={() => setFocused(null)}
+                            >
+                              <option value="">Choose a Department</option>
+                              {Array.from(new Set([...hodDepts, emp.department].filter(Boolean))).map((dept) => (
+                                <option key={dept} value={dept}>
+                                  {dept}
+                                </option>
+                              ))}
+                            </select>
+                          </FieldShell>
 
-                         {/* Reason */}
-                         <FieldShell label="Application Reason" required>
-                           <select
-                             value={emp.reason}
-                            onChange={(e) => {
-                              const reason = e.target.value;
-                              clearValidationError("reason");
-                              if (reason !== "exchange") {
+                          {/* Reason */}
+                          <FieldShell label="Application Reason" required>
+                            <select
+                              value={emp.reason}
+                              onChange={(e) => {
+                                const reason = e.target.value;
+                                clearValidationError("reason");
+                                if (reason !== "exchange") {
+                                  clearValidationError("exchangeReason");
+                                  clearValidationError("attachment");
+                                }
+                                setEmp((s) => ({
+                                  ...s,
+                                  reason,
+                                  exchangeReason:
+                                    reason === "exchange"
+                                      ? s.exchangeReason
+                                      : "",
+                                  attachment:
+                                    reason === "exchange" ? s.attachment : null,
+                                }));
+                              }}
+                              className={selectCls(
+                                focused,
+                                "emp_reason",
+                                validationErrors.reason
+                              )}
+                              style={{ backgroundImage: SELECT_ARROW }}
+                              onFocus={() => setFocused("emp_reason")}
+                              onBlur={() => setFocused(null)}
+                            >
+                              <option value="">Choose a Reason</option>
+                              <option value="fresh">Fresh Allotment</option>
+                              <option value="exchange">Exchange</option>
+                            </select>
+                          </FieldShell>
+
+                          {/* Exchange reason */}
+                          <FieldShell
+                            label="Exchange Reason"
+                            required={isExchange}
+                          >
+                            <select
+                              value={emp.exchangeReason}
+                              onChange={(e) => {
                                 clearValidationError("exchangeReason");
-                                clearValidationError("attachment");
-                              }
-                              setEmp((s) => ({
-                                ...s,
-                                reason,
-                                exchangeReason:
-                                  reason === "exchange"
-                                    ? s.exchangeReason
-                                    : "",
-                                attachment:
-                                  reason === "exchange" ? s.attachment : null,
-                              }));
-                            }}
-                            className={selectCls(
-                              focused,
-                              "emp_reason",
-                              validationErrors.reason
-                            )}
-                            style={{ backgroundImage: SELECT_ARROW }}
-                            onFocus={() => setFocused("emp_reason")}
-                            onBlur={() => setFocused(null)}
-                          >
-                            <option value="">Choose a Reason</option>
-                            <option value="fresh">Fresh Allotment</option>
-                            <option value="exchange">Exchange</option>
-                          </select>
-                        </FieldShell>
+                                setEmp((s) => ({
+                                  ...s,
+                                  exchangeReason: e.target.value,
+                                }));
+                              }}
+                              disabled={!isExchange}
+                              className={selectCls(
+                                focused,
+                                "emp_exchangeReason",
+                                validationErrors.exchangeReason,
+                                !isExchange
+                              )}
+                              style={{ backgroundImage: SELECT_ARROW }}
+                              onFocus={() => setFocused("emp_exchangeReason")}
+                              onBlur={() => setFocused(null)}
+                            >
+                              <option value="">
+                                {isExchange
+                                  ? "Choose Exchange Reason"
+                                  : "Available when Exchange is selected"}
+                              </option>
+                              <option value="Medical">Medical</option>
+                              <option value="Broken">Broken</option>
+                            </select>
+                          </FieldShell>
 
-                        {/* Exchange reason */}
-                        <FieldShell
-                          label="Exchange Reason"
-                          required={isExchange}
-                        >
-                          <select
-                            value={emp.exchangeReason}
-                            onChange={(e) => {
-                              clearValidationError("exchangeReason");
-                              setEmp((s) => ({
-                                ...s,
-                                exchangeReason: e.target.value,
-                              }));
-                            }}
-                            disabled={!isExchange}
-                            className={selectCls(
-                              focused,
-                              "emp_exchangeReason",
-                              validationErrors.exchangeReason,
-                              !isExchange
-                            )}
-                            style={{ backgroundImage: SELECT_ARROW }}
-                            onFocus={() => setFocused("emp_exchangeReason")}
-                            onBlur={() => setFocused(null)}
-                          >
-                            <option value="">
-                              {isExchange
-                                ? "Choose Exchange Reason"
-                                : "Available when Exchange is selected"}
-                            </option>
-                            <option value="Medical">Medical</option>
-                            <option value="Broken">Broken</option>
-                          </select>
-                        </FieldShell>
-
-                        {/* Attachment */}
-                        <FieldShell label="Attachment" required={isExchange}>
-                          <label
-                            className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${validationErrors.attachment
+                          {/* Attachment */}
+                          <FieldShell label="Attachment" required={isExchange}>
+                            <label
+                              className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${validationErrors.attachment
                                 ? "border-rose-500 bg-white text-rose-600 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
                                 : isExchange
                                   ? "border-[#e2e8f0] bg-white text-[#1d4ed8] cursor-pointer"
                                   : "border-[#e2e8f0] bg-slate-100 text-slate-400 cursor-not-allowed"
-                              }`}
-                          >
-                            <span className="truncate">
-                              {emp.attachment?.name ||
-                                (isExchange
-                                  ? "File Upload"
-                                  : "Available when Exchange is selected")}
-                            </span>
-                            <Upload size={15} className="shrink-0" />
-                            <input
-                              type="file"
-                              disabled={!isExchange}
-                              className="hidden"
-                              onChange={(e) => {
-                                clearValidationError("attachment");
-                                setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }));
-                              }}
-                            />
+                                }`}
+                            >
+                              <span className="truncate">
+                                {emp.attachment?.name ||
+                                  (isExchange
+                                    ? "File Upload"
+                                    : "Available when Exchange is selected")}
+                              </span>
+                              <Upload size={15} className="shrink-0" />
+                              <input
+                                type="file"
+                                disabled={!isExchange}
+                                className="hidden"
+                                onChange={(e) => {
+                                  clearValidationError("attachment");
+                                  setEmp((s) => ({ ...s, attachment: e.target.files?.[0] || null }));
+                                }}
+                              />
                             </label>
                           </FieldShell>
                         </div>
@@ -1036,10 +1050,10 @@ export default function ApplyForQuartersEmployees() {
                 {/* ── Vacant quarters table ── */}
                 <div
                   className={`lms-data-transition bg-white rounded-2xl border shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden ${!isApplicationOpen
-                      ? "blur-[2px] opacity-60 border-[#e2e8f0]"
-                      : validationErrors.selectedQuarter
-                        ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
-                        : "border-[#e2e8f0]"
+                    ? "blur-[2px] opacity-60 border-[#e2e8f0]"
+                    : validationErrors.selectedQuarter
+                      ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+                      : "border-[#e2e8f0]"
                     }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -1068,26 +1082,26 @@ export default function ApplyForQuartersEmployees() {
                     publishedTypes.length > 0 &&
                     eligibleVacantQuarterRows.length === 0 &&
                     !quartersError && (
-                    <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm">
-                      <div className="flex items-start gap-4 px-5 py-5">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
-                          <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[14px] font-bold text-amber-800">
-                            Your eligible quarter type is not open for applications currently
-                          </p>
-                          <p className="mt-1 text-[12.5px] leading-relaxed text-amber-700">
-                            The current circular has opened applications only for:{" "}
-                            <span className="font-semibold">{publishedTypes.join(", ")}</span>.
-                            Your grade is not eligible for these types. Please wait for the next circular.
-                          </p>
+                      <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm">
+                        <div className="flex items-start gap-4 px-5 py-5">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                            <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            </svg>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[14px] font-bold text-amber-800">
+                              Your eligible quarter type is not open for applications currently
+                            </p>
+                            <p className="mt-1 text-[12.5px] leading-relaxed text-amber-700">
+                              The current circular has opened applications only for:{" "}
+                              <span className="font-semibold">{publishedTypes.join(", ")}</span>.
+                              Your grade is not eligible for these types. Please wait for the next circular.
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   <div className="lms-quarter-grid bg-white pb-5 px-5 lg:pb-7 lg:px-7">
                     <AgGridTable
