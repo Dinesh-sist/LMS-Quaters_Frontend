@@ -372,60 +372,8 @@ function ReviewModal({ app, onClose, onAction }) {
               cursor: submitting ? "not-allowed" : "pointer",
             }}
           >
-            Cancel
+            Close
           </button>
-
-          {/* Only show Approve/Reject if application is pending */}
-          {isPending ? (
-            <>
-              <button
-                type="button"
-                onClick={() => submit("rejected")}
-                disabled={submitting}
-                style={{
-                  padding: "8px 18px", borderRadius: "8px",
-                  border: "1.5px solid #fecdd3", background: "#fff1f2",
-                  color: "#be123c", fontSize: "13px", fontWeight: 700,
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  opacity: submitting ? 0.6 : 1,
-                  display: "inline-flex", alignItems: "center", gap: "6px",
-                }}
-              >
-                {/* X icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-                {submitting ? "Saving…" : "Reject"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => submit("approved")}
-                disabled={submitting}
-                style={{
-                  padding: "8px 20px", borderRadius: "8px",
-                  border: "none", background: "linear-gradient(135deg, #10b981, #059669)",
-                  color: "#fff", fontSize: "13px", fontWeight: 700,
-                  cursor: submitting ? "not-allowed" : "pointer",
-                  opacity: submitting ? 0.6 : 1,
-                  display: "inline-flex", alignItems: "center", gap: "6px",
-                  boxShadow: "0 2px 8px rgba(16,185,129,0.3)",
-                }}
-              >
-                {/* Check icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                {submitting ? "Saving…" : "Approve"}
-              </button>
-            </>
-          ) : (
-            <span style={{ fontSize: "12px", color: "#94a3b8", alignSelf: "center" }}>
-              This application has already been <strong>{app.Status?.toLowerCase()}</strong>.
-            </span>
-          )}
         </div>
       </div>
     </div>
