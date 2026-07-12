@@ -175,7 +175,7 @@ export default function AdminDashboard() {
       label: "Employees",
       data: [],
       backgroundColor: "#378ADD",
-      borderRadius: 4,
+      borderRadius: 0,
       borderSkipped: false,
       categoryPercentage: 0.7,  // leaves breathing room between bars
       barPercentage: 0.8,
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
       label: "Employees",
       data: [],
       backgroundColor: ["#7F77DD", "#534AB7", "#1D9E75", "#EF9F27", "#D85A30"],
-      borderRadius: 4,
+      borderRadius: 0,
       borderSkipped: false,
       barThickness: 32,
     }],
@@ -278,10 +278,9 @@ export default function AdminDashboard() {
             style={{ animationDelay: `${i * 80}ms` }}
             className={`
               lms-card-land group relative overflow-hidden rounded-2xl border
-              p-3 xl:p-4
-              shadow-[0_8px_24px_rgba(15,23,42,0.10)]
+              p-4 xl:p-5
               transition-all duration-300 ease-out
-              hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.18)]
+              hover:-translate-y-0.5
               ${card.cardBg}
             `}
           >

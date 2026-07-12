@@ -23,27 +23,31 @@ function getInitials(name = "") {
 }
 
 
-function FontSizeControls({ onDecrease, onIncrease }) {
+function FontSizeControls({ onDecrease, onIncrease, onReset }) {
   return (
-    <div
-      className="inline-flex items-center gap-1"
-      role="group"
-      aria-label="Font size controls"
-    >
+    <div className="flex items-center gap-1.5">
       <button
         type="button"
         onClick={onDecrease}
-        className="rounded-lg border border-white/85 px-3 py-1.5 text-[8px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[11px]"
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
         aria-label="Decrease font size"
         title="Decrease font size"
       >
         A-
       </button>
-    
+      <button
+        type="button"
+        onClick={onReset}
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
+        aria-label="Reset font size"
+        title="Reset font size"
+      >
+        A
+      </button>
       <button
         type="button"
         onClick={onIncrease}
-        className="rounded-lg border border-white/85 px-3 py-1.5 text-[8px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c] lg:text-[11px]"
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
         aria-label="Increase font size"
         title="Increase font size"
       >
@@ -68,13 +72,17 @@ export default function TopHeader({
   const displayName = welcomeName || description || getRoleLabel(roleKey);
   const initials = initial || getInitials(displayName);
 
-  const [fontSize, setFontSize] = useState(16);
+  const [fontSize, setFontSize] = useState(() => {
+    return parseInt(localStorage.getItem("fontSize") || "16");
+  });
 
   const increase = () => setFontSize((prev) => Math.min(prev + 2, 28));
   const decrease = () => setFontSize((prev) => Math.max(prev - 2, 12));
+  const reset = () => setFontSize(16);
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}px`;
+    localStorage.setItem("fontSize", fontSize);
   }, [fontSize]);
 
   return (
@@ -102,7 +110,7 @@ export default function TopHeader({
         </div>
 
         <div className="flex flex-nowrap items-center justify-end gap-2 sm:gap-3 lg:shrink-0">
-          <FontSizeControls onDecrease={decrease} onIncrease={increase} />
+          <FontSizeControls onDecrease={decrease} onIncrease={increase} onReset={reset} />
           <TranslateButton />
           <span className="hidden min-w-0 text-sm text-white sm:block">
             Welcome{" "}
