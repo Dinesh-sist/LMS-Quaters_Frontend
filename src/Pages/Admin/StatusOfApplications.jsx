@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-import { request, API_BASE, getLatestPublication } from "../../api";
+import { request, getLatestPublication } from "../../api";
 import Logo from "../../assets/Logo.png";
 
 const statusStyles = {
@@ -38,96 +38,41 @@ function toDateKey(value) {
 //   { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
 //   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
 const getColumns = (onDebarClick) => [
-  { key: "priorityNo", header: "PRIORITY NO", minWidth: 120 },
-  { key: "appNo", header: "APP NO", minWidth: 130 },
+  // EMP ID
   { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
+  // EMP NAME
   { key: "empName", header: "EMP NAME", minWidth: 220 },
-  { key: "dept", header: "DEPARTMENT", minWidth: 150 },
+  // CLASS
   { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
-  { key: "basic", header: "BASIC", renderer: "basic", minWidth: 110 },
+  // GRAD DATE
   { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
-  { key: "dob", header: "DATE OF BIRTH", minWidth: 180 },
+  // DEPARTMENT
+  { key: "dept", header: "DEPARTMENT", minWidth: 150 },
+  // CASTE ID
   { key: "casteId", header: "CASTE ID", minWidth: 120 },
-  { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
-  { key: "reqQtr", header: "REQUESTED QTR", minWidth: 145 },
-  { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 240 },
-  { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 280 },
-  { key: "exchange", header: "EXCHANGE", minWidth: 140 },
+  // CURRENT QTR — combined area_type / quarter_no
   {
-    key: "proofFile",
-    header: "PROOF FILE",
+    key: "currentQtr",
+    header: "CURRENT QTR",
     minWidth: 160,
-    render: (value) => {
-      if (!value) return <span className="text-slate-400 text-xs">—</span>;
-
-      const normalised = value.replace(/\\/g, "/").replace(/^.*uploads\//, "");
-      const fileUrl = `${API_BASE}/uploads/${normalised}`;
-      const fileName = normalised.split("/").pop();
-
-      const handleDownload = async (e) => {
-        e.preventDefault();
-        try {
-          const res = await fetch(fileUrl);
-          if (!res.ok) throw new Error("File not found");
-          const blob = await res.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = objectUrl;
-          link.download = fileName;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          URL.revokeObjectURL(objectUrl);
-        } catch {
-          alert("Could not download the file. Please try again.");
-        }
-      };
-
-      return (
-        <button
-          type="button"
-          onClick={handleDownload}
-          title={`Download ${fileName}`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            padding: "4px 10px",
-            borderRadius: "6px",
-            background: "#E6F1FB",
-            color: "#185FA5",
-            fontWeight: 600,
-            fontSize: "11px",
-            border: "1px solid #b3d0ef",
-            cursor: "pointer",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#c7dff5")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "#E6F1FB")}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Download
-        </button>
-      );
-    },
+    render: (_, row) =>
+      row?.currentAreaType && row?.currentQuarterNo
+        ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
+        : "—",
   },
-  { key: "reqDate", header: "REQUEST DATE", minWidth: 240 },
+  // CURRENT QTR TYPE
+  { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
+  // REQUEST QUARTER NUMBER
+  { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
+  // REQUEST QUARTER LOCATION (Area Type)
+  { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
+  // REQUEST QUARTER TYPE
+  { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200 },
+  // EXCHANGE
+  { key: "exchange", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
+  // ROSTER NO
   { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
-
+  // STATUS
   {
     key: "result",
     header: "STATUS",
@@ -145,6 +90,7 @@ const getColumns = (onDebarClick) => [
       );
     },
   },
+  // DEBARRED
   {
     key: "debarred",
     header: "DEBARRED",
@@ -180,7 +126,7 @@ function DetailRow({ label, value }) {
 /* ── Option 2: Title row with inline metric badges ── */
 function PageSummaryBar({ rows }) {
 
-  const shortlisted = rows.filter((d) => d.result === "Shortlisted").length;
+  const approvedCount = rows.filter((d) => (d.result || "").toLowerCase() === "approved").length;
 
   const downloadApprovedPDF = () => {
     const approvedRows = rows.filter((d) => String(d.result).toLowerCase() === "approved");
@@ -312,7 +258,7 @@ function PageSummaryBar({ rows }) {
 
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-          {shortlisted} Shortlisted
+          {approvedCount} Approved
         </span>
 
       </div>
@@ -414,21 +360,27 @@ export default function StatusOfApplications() {
     to: toDateKey(currentPublication?.To_Date),
   };
 
-  const currentApplicationRows = rows.filter((row) => {
-    if (!currentWindowKey.from || !currentWindowKey.to) return false;
-    return (
-      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-      toDateKey(row?.publishedDateTo) === currentWindowKey.to
-    );
-  });
+  const isPublicationActive = currentPublication?.Current_State === "Published";
 
-  const historyApplicationRows = rows.filter((row) => {
-    if (!currentWindowKey.from || !currentWindowKey.to) return true;
-    return !(
-      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-      toDateKey(row?.publishedDateTo) === currentWindowKey.to
-    );
-  });
+  const currentApplicationRows = isPublicationActive
+    ? rows.filter((row) => {
+        if (!currentWindowKey.from || !currentWindowKey.to) return true;
+        return (
+          toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+          toDateKey(row?.publishedDateTo) === currentWindowKey.to
+        );
+      })
+    : [];
+
+  const historyApplicationRows = isPublicationActive
+    ? rows.filter((row) => {
+        if (!currentWindowKey.from || !currentWindowKey.to) return true;
+        return !(
+          toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+          toDateKey(row?.publishedDateTo) === currentWindowKey.to
+        );
+      })
+    : rows;
 
   const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
 

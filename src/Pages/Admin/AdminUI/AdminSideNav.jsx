@@ -10,6 +10,7 @@ import {
   CalendarClock,
   UserCog,
   HousePlus,
+  UserPlus,
 } from "lucide-react";
 
 const sidebarNav = [
@@ -71,6 +72,12 @@ const sidebarNav = [
     label: "Update Status of Quarters",
     to: "/admin/quartersupdation",
     icon: <HousePlus size={17} strokeWidth={1.8} />,
+  },
+  {
+    key: "EmployeeRegistration",
+    label: "Employee Registration",
+    to: "/admin/employeeregistration",
+    icon: <UserPlus size={17} strokeWidth={1.8} />,
   }
 ];
 
