@@ -128,10 +128,9 @@ function PageSummaryBar({ rows }) {
 
   const approvedCount = rows.filter((d) => (d.result || "").toLowerCase() === "approved").length;
 
-  const downloadApprovedPDF = () => {
-    const approvedRows = rows.filter((d) => String(d.result).toLowerCase() === "approved");
-    if (approvedRows.length === 0) {
-      alert("No approved applications to download.");
+  const downloadPDF = () => {
+    if (rows.length === 0) {
+      alert("No applications to download.");
       return;
     }
 
@@ -141,29 +140,29 @@ function PageSummaryBar({ rows }) {
       day: "2-digit", month: "short", year: "numeric",
     });
 
-
     const generatePDF = () => {
-      // Top Header (Centered)
+      // Top Header (Left-aligned)
       doc.setFontSize(22);
       doc.setFont(undefined, "bold");
       doc.setTextColor(24, 95, 165); // Theme Color
-      doc.text("PARADIP PORT AUTHORITY", pageWidth / 2, 22, { align: "center" });
+      doc.text("PARADIP PORT AUTHORITY", 14, 22);
 
       doc.setFontSize(14);
       doc.setFont(undefined, "normal");
       doc.setTextColor(100);
-      doc.text("Land Data Management System", pageWidth / 2, 30, { align: "center" });
+      doc.text("Land Data Management System", 14, 30);
 
       // Separator Line
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.5);
       doc.line(14, 36, pageWidth - 14, 36);
 
+    
       // Sub Header
       doc.setFontSize(16);
       doc.setTextColor(0);
       doc.setFont(undefined, "bold");
-      doc.text("Approved Quarter Applications", 14, 46);
+      doc.text("Quarter Applications Status List", 14, 46);
 
       doc.setFontSize(10);
       doc.setFont(undefined, "normal");
@@ -173,30 +172,43 @@ function PageSummaryBar({ rows }) {
       const tableColumn = [
         "S.NO",
         "EMP ID",
+        "EMP NAME",
         "CLASS",
         "GRAD DATE",
         "DEPARTMENT",
         "CASTE ID",
-        "CURRENT QUARTER TYPE",
-        "REQUESTED QTR",
+        "CURRENT QTR",
+        "CURRENT QTR TYPE",
+        "REQUEST QTR NO",
+        "REQUEST LOCATION",
+        "REQUEST TYPE",
         "EXCHANGE",
         "ROSTER NO",
         "STATUS"
       ];
 
-      const tableRows = approvedRows.map((row, index) => {
-        const statusLabel = row.result ? (row.result.charAt(0).toUpperCase() + row.result.slice(1).toLowerCase()) : "-";
+      const tableRows = rows.map((row, index) => {
+        const statusLabel = row.result ? String(row.result).trim().charAt(0).toUpperCase() + String(row.result).trim().slice(1).toLowerCase() : "-";
+        const currentQtr = row.currentAreaType && row.currentQuarterNo
+          ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
+          : "-";
+        const gradStr = row.gradDate ? toDateKey(row.gradDate) : "-";
+
         return [
           index + 1,
-          row.empId || "-",
-          row.class || "-",
-          row.gradDate || "-",
-          row.dept || "-",
-          row.casteId || "-",
-          row.currentQtyType || "-",
-          row.reqQtr || "-",
-          row.exchange || "-",
-          row.rosterNo || "-",
+          row.empId ? String(row.empId).trim() : "-",
+          row.empName ? String(row.empName).trim() : "-",
+          row.class ? String(row.class).trim() : "-",
+          gradStr,
+          row.dept ? String(row.dept).trim() : "-",
+          row.casteId ? String(row.casteId).trim() : "-",
+          currentQtr,
+          row.currentQtyType ? String(row.currentQtyType).trim() : "-",
+          row.reqQtr ? String(row.reqQtr).trim() : "-",
+          row.reqQtrLocation ? String(row.reqQtrLocation).trim() : "-",
+          row.reqQtrType ? String(row.reqQtrType).trim() : "-",
+          row.exchange ? String(row.exchange).trim() : "-",
+          row.rosterNo ? String(row.rosterNo).trim() : "-",
           statusLabel
         ];
       });
@@ -205,25 +217,42 @@ function PageSummaryBar({ rows }) {
         head: [tableColumn],
         body: tableRows,
         startY: 58,
-        theme: "grid", // Adds column and row lines
+        theme: "grid",
+        margin: { left: 8, right: 8 },
         styles: {
-          fontSize: 8,
-          cellPadding: 3,
+          fontSize: 6,
+          cellPadding: 1.5,
           lineColor: [220, 220, 220],
           lineWidth: 0.1,
-          textColor: [40, 40, 40]
+          textColor: [40, 40, 40],
+          overflow: "linebreak"
         },
         headStyles: {
           fillColor: [24, 95, 165],
           textColor: 255,
-          halign: "center",
           fontStyle: "bold"
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        bodyStyles: { halign: "center" }
+        columnStyles: {
+          0: { halign: "center" }, // S.NO
+          1: { halign: "center" }, // EMP ID
+          2: { halign: "left" },   // EMP NAME
+          3: { halign: "center" }, // CLASS
+          4: { halign: "center" }, // GRAD DATE
+          5: { halign: "left" },   // DEPARTMENT
+          6: { halign: "center" }, // CASTE ID
+          7: { halign: "center" }, // CURRENT QTR
+          8: { halign: "center" }, // CURRENT QTR TYPE
+          9: { halign: "center" }, // REQUEST QTR NO
+          10: { halign: "center" }, // REQUEST LOCATION
+          11: { halign: "center" }, // REQUEST TYPE
+          12: { halign: "center" }, // EXCHANGE
+          13: { halign: "center" }, // ROSTER NO
+          14: { halign: "center" }  // STATUS
+        }
       });
 
-      doc.save(`Approved_Applications_${dateStr.replace(/ /g, "_")}.pdf`);
+      doc.save(`Quarter_Applications_Status_${dateStr.replace(/ /g, "_")}.pdf`);
     };
 
     const img = new Image();
@@ -247,13 +276,13 @@ function PageSummaryBar({ rows }) {
 
         <button
           type="button"
-          onClick={downloadApprovedPDF}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#185FA5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0f477f] shadow-sm"
+          onClick={downloadPDF}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#185FA5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0f477f] shadow-sm cursor-pointer"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
           </svg>
-          Download Approved List (PDF)
+          Download Applications List (PDF)
         </button>
 
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">

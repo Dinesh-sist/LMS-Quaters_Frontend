@@ -268,6 +268,7 @@ function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
             )}
           </div>
 
+
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 rounded-b-3xl border-t border-slate-100 bg-slate-50 px-6 py-4">
             <button type="button" onClick={onClose} disabled={submitting}
@@ -357,17 +358,20 @@ export default function EmployeeClassUpdation() {
 
   const columns = [
     {
-      key: "empId", header: "Employee ID", field: "empId",
+      key: "empId", header: "Employee ID", field: "empId", minWidth: 140,
       render: (value) => (
         <span style={{ padding: "2px 8px", background: "#ede9fe", color: "#6d28d9", borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>
           {value}
         </span>
       ),
     },
-    { key: "empName", header: "Employee Name", field: "empName" },
-    { key: "department", header: "Department", field: "department" },
+    { key: "empName", header: "Employee Name", field: "empName", minWidth: 180 },
+    { key: "department", header: "Department", field: "department", minWidth: 160 },
+    { key: "category", header: "Quarter Type", field: "category", minWidth: 150 },
+    { key: "areaType", header: "Area Type", field: "areaType", minWidth: 160 },
+    { key: "quarterNo", header: "Quarter No", field: "quarterNo", minWidth: 140 },
     {
-      key: "currentClass", header: "Current Class", field: "currentClass",
+      key: "currentClass", header: "Current Class", field: "currentClass", minWidth: 150,
       render: (value) => <ClassBadgeRenderer value={value} />,
     },
     {
