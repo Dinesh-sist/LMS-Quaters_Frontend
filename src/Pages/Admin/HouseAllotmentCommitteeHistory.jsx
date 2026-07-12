@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Info } from "lucide-react";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-import { API_BASE, getHouseAllotmentCommitteeHistory, saveHouseAllotmentCommitteeHistory } from "../../api";
+import { API_BASE, getHouseAllotmentCommitteeHistory, saveHouseAllotmentCommitteeHistory, deleteHouseAllotmentCommitteeHistory } from "../../api";
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";
@@ -320,7 +320,7 @@ function downloadFile(fileName) {
     });
 }
 
-const columns = [
+const makeColumns = (onDelete) => [
   {
     key: "committeeHeld",
     header: "COMMITTEE HELD DATE",
@@ -370,6 +370,23 @@ const columns = [
         <span className="text-sm text-slate-400">-</span>
       ),
   },
+  {
+    key: "actions",
+    header: "ACTION",
+    minWidth: 120,
+    render: (_, row) => (
+      <button
+        type="button"
+        onClick={() => onDelete(row)}
+        className="inline-flex items-center gap-1.5 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 transition hover:bg-rose-100 hover:text-rose-700"
+      >
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Delete
+      </button>
+    ),
+  }
 ];
 
 function PageSummaryBar({ rows }) {
@@ -406,6 +423,21 @@ export default function HistoryOfHouseAllotmentCommittee() {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  const handleDelete = async (row) => {
+    if (!window.confirm("Are you sure you want to delete this committee record?")) {
+      return;
+    }
+    try {
+      await deleteHouseAllotmentCommitteeHistory(row.Id);
+      const data = await getHouseAllotmentCommitteeHistory();
+      setRows(Array.isArray(data?.items) ? data.items : []);
+    } catch (err) {
+      alert(err.message || "Failed to delete record.");
+    }
+  };
+
+  const columns = makeColumns(handleDelete);
 
   useEffect(() => {
     let isActive = true;
@@ -483,7 +515,7 @@ export default function HistoryOfHouseAllotmentCommittee() {
           </button>
 
           {uploadOpen ? (
-            <form className="mt-4 grid gap-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 md:grid-cols-[3fr_6fr_1fr]" onSubmit={handleUpload}>
+            <form className="mt-4 grid gap-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 md:grid-cols-[3fr_5fr_auto]" onSubmit={handleUpload}>
               <div className="flex flex-col gap-1">
                 <DatePickerCard
                   label="Committee Held Date"
@@ -504,12 +536,25 @@ export default function HistoryOfHouseAllotmentCommittee() {
                 />
                 <p className="text-xs text-slate-500">Only PDF, DOC, and DOCX files are allowed.</p>
               </div>
-
-              <div className="flex items-center">
+   
+              <div className="flex items-end gap-2 pb-[2px]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadOpen(false);
+                    setCommitteeHeld("");
+                    setFile(null);
+                    setUploadError("");
+                  }}
+                  disabled={uploading}
+                  className="w-full min-w-[80px] inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className={`w-full inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white transition ${
+                  className={`w-full min-w-[80px] inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold text-white transition ${
                     uploading ? "cursor-not-allowed bg-slate-400" : "bg-[#185FA5] hover:bg-[#0f477f]"
                   }`}
                 >

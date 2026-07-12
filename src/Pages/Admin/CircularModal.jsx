@@ -354,6 +354,8 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
                   placeholder="Select Area Types"
                 />
 
+                <pre>{JSON.stringify(areaTypes, null, 2)}</pre>
+
                 {/* 3. Quarter Numbers */}
                 <MultiSelectDropdown
                   label="Quarter Numbers *"
