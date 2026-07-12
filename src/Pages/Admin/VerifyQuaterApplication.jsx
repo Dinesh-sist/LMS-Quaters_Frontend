@@ -1,7 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-import { request, API_BASE } from "../../api";
+import { request, API_BASE, getLatestPublication } from "../../api";
+
+function toDateKey(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 
 /* ─── Status badge styles ─────────────────────────────────────── */
 const statusStyles = {
@@ -99,6 +110,7 @@ const makeColumns = (onReview) => [
     }
   },
   { key: "ReqDate", header: "REQ_Date", minWidth: 160 },
+
 ];
 
 /* ─── Summary bar ─────────────────────────────────────────────── */
@@ -386,6 +398,8 @@ export default function VerifyQuarterApplications() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null); // row being reviewed
+  const [viewMode, setViewMode] = useState("current");
+  const [currentPublication, setCurrentPublication] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -398,6 +412,20 @@ export default function VerifyQuarterApplications() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    let isActive = true;
+    getLatestPublication()
+      .then((data) => {
+        if (isActive) setCurrentPublication(data || null);
+      })
+      .catch(() => {
+        if (isActive) setCurrentPublication(null);
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   // After approve/reject: update the row in-place instantly
   const handleAction = (id, newStatus, notes) => {
     setRows((prev) =>
@@ -409,13 +437,66 @@ export default function VerifyQuarterApplications() {
 
   const columns = makeColumns((row) => setSelected(row));
 
+  const currentWindowKey = {
+    from: toDateKey(currentPublication?.From_Date),
+    to: toDateKey(currentPublication?.To_Date),
+  };
+
+  const isPublicationActive = currentPublication?.Current_State === "Published";
+
+  const currentApplicationRows = isPublicationActive
+    ? rows.filter((row) => {
+      if (!currentWindowKey.from || !currentWindowKey.to) return true;
+      return (
+        toDateKey(row?.PublishedDateFrom) === currentWindowKey.from &&
+        toDateKey(row?.PublishedDateTo) === currentWindowKey.to
+      );
+    })
+    : [];
+
+  const historyApplicationRows = isPublicationActive
+    ? rows.filter((row) => {
+      if (!currentWindowKey.from || !currentWindowKey.to) return true;
+      return !(
+        toDateKey(row?.PublishedDateFrom) === currentWindowKey.from &&
+        toDateKey(row?.PublishedDateTo) === currentWindowKey.to
+      );
+    })
+    : rows;
+
+  const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
+
   return (
     <AdminLayout
       title="Verify Quarter Applications"
       subtitle="Land Data Management System - Staff Review"
+      headerRight={
+        <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setViewMode("current")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "current"
+              ? "bg-[#1b2d69] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-100"
+              }`}
+          >
+            Current Applications
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("history")}
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "history"
+              ? "bg-[#1b2d69] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-100"
+              }`}
+          >
+            History of Applications
+          </button>
+        </div>
+      }
     >
       <div className="lms-data-transition space-y-6">
-        <PageSummaryBar rows={rows} />
+        <PageSummaryBar rows={visibleRows} />
 
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 flex items-center justify-between">
@@ -432,7 +513,7 @@ export default function VerifyQuarterApplications() {
         <div className="w-full overflow-x-auto rounded-xl">
           <AgGridTable
             columns={columns}
-            rows={rows}
+            rows={visibleRows}
             searchable
             pageSize={8}
             showExport

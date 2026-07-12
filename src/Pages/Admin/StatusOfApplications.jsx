@@ -360,23 +360,27 @@ export default function StatusOfApplications() {
     to: toDateKey(currentPublication?.To_Date),
   };
 
-  const currentApplicationRows = rows.filter((row) => {
-    // If there is no active publication window, show ALL rows
-    // (we cannot distinguish "current" vs "history" without published dates)
-    if (!currentWindowKey.from || !currentWindowKey.to) return true;
-    return (
-      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-      toDateKey(row?.publishedDateTo) === currentWindowKey.to
-    );
-  });
+  const isPublicationActive = currentPublication?.Current_State === "Published";
 
-  const historyApplicationRows = rows.filter((row) => {
-    if (!currentWindowKey.from || !currentWindowKey.to) return true;
-    return !(
-      toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-      toDateKey(row?.publishedDateTo) === currentWindowKey.to
-    );
-  });
+  const currentApplicationRows = isPublicationActive
+    ? rows.filter((row) => {
+        if (!currentWindowKey.from || !currentWindowKey.to) return true;
+        return (
+          toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+          toDateKey(row?.publishedDateTo) === currentWindowKey.to
+        );
+      })
+    : [];
+
+  const historyApplicationRows = isPublicationActive
+    ? rows.filter((row) => {
+        if (!currentWindowKey.from || !currentWindowKey.to) return true;
+        return !(
+          toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+          toDateKey(row?.publishedDateTo) === currentWindowKey.to
+        );
+      })
+    : rows;
 
   const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
 
