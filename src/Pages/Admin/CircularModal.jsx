@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { X, FileText, ChevronDown, Check, CalendarDays, Info } from "lucide-react";
-import { getQuarterTypes } from "../../api";
+import { X, FileText, ChevronDown, Check, Info } from "lucide-react";
+import { 
+  getQuarterTypes, 
+  getAreaTypesByQuarterType, 
+  getQuarterNumbersByQuarterTypeAndArea 
+} from "../../api";
 
 const inputCls =
   "block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[14px] text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-[3px] focus:ring-blue-500/15 transition-all shadow-sm";
@@ -17,64 +21,6 @@ function FormField({ label, icon: Icon, children }) {
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5">
             <Icon size={18} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
           </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MultiSelectDropdown({ options, selected, onChange }) {
-  const [open, setOpen] = useState(false);
-
-  const safeSelected = Array.isArray(selected) ? selected : [];
-
-  const toggle = (opt) => {
-    if (safeSelected.includes(opt)) onChange(safeSelected.filter((s) => s !== opt));
-    else onChange([...safeSelected, opt]);
-  };
-
-  return (
-    <div className="w-full">
-      <label className="mb-1.5 block text-[13px] font-semibold text-slate-700">
-        Quarter Types
-      </label>
-      <div className="relative group">
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className={`w-full rounded-xl border bg-white px-4 py-2.5 text-[14px] text-left transition-all shadow-sm flex items-center justify-between ${open ? "border-blue-500 ring-[3px] ring-blue-500/15" : "border-slate-200 hover:border-slate-300"}`}
-        >
-          <span className={`truncate ${safeSelected.length === 0 ? "text-slate-400" : "text-slate-800 font-medium"}`}>
-            {safeSelected.length === 0 ? "Select Quarter Types" : safeSelected.join(", ")}
-          </span>
-          <ChevronDown size={18} className={`shrink-0 ml-2 text-slate-400 transition-transform duration-300 ${open ? "rotate-180 text-blue-500" : "group-hover:text-slate-500"}`} />
-        </button>
-
-        {open && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-            <div className="absolute left-0 top-full z-50 mt-2 w-full rounded-2xl border border-slate-100 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.12)] max-h-56 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in zoom-in-95 duration-200">
-              {options.length === 0 && (
-                <p className="px-4 py-3 text-sm text-slate-400 text-center">No types available</p>
-              )}
-              {options.map((opt) => {
-                const active = safeSelected.includes(opt);
-                return (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => toggle(opt)}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${active ? "bg-blue-50 text-blue-700" : "text-slate-700 hover:bg-slate-50"}`}
-                  >
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-[6px] border ${active ? "border-blue-500 bg-blue-500" : "border-slate-300"}`}>
-                      {active && <Check size={12} className="text-white" strokeWidth={3} />}
-                    </span>
-                    <span className="font-medium">{opt}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </>
         )}
       </div>
     </div>
@@ -103,12 +49,93 @@ function Section({ title, children, color = "blue" }) {
   );
 }
 
+
+// Premium custom multi-select dropdown with scrolling, checkmarks & selection badges
+function MultiSelectDropdown({ label, options, selected, onChange, disabled, placeholder }) {
+  const [open, setOpen] = useState(false);
+  const safeSelected = Array.isArray(selected) ? selected : [];
+
+  const handleToggle = (opt) => {
+    if (safeSelected.includes(opt)) {
+      onChange(safeSelected.filter((s) => s !== opt));
+    } else {
+      onChange([...safeSelected, opt]);
+    }
+  };
+
+  return (
+    <div className="w-full">
+      <label className="mb-1.5 block text-[13px] font-semibold text-slate-700">
+        {label}
+      </label>
+      <div className="relative group">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((v) => !v)}
+          className={`w-full rounded-xl border bg-white px-4 py-2.5 text-[14px] text-left transition-all shadow-sm flex items-center justify-between cursor-pointer disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed ${
+            open ? "border-blue-500 ring-[3px] ring-blue-500/15" : "border-slate-200 hover:border-slate-350"
+          }`}
+        >
+          <span className={`truncate ${safeSelected.length === 0 ? "text-slate-400" : "text-slate-800 font-semibold"}`}>
+            {safeSelected.length === 0 ? placeholder : safeSelected.join(", ")}
+          </span>
+          <ChevronDown 
+            size={18} 
+            className={`shrink-0 ml-2 text-slate-400 transition-transform duration-300 ${
+              open ? "rotate-180 text-blue-500" : "group-hover:text-slate-500"
+            }`} 
+          />
+        </button>
+
+        {open && !disabled && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+            <div className="absolute left-0 top-full z-50 mt-2 w-full rounded-2xl border border-slate-100 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.12)] max-h-48 overflow-y-auto overflow-x-hidden p-1.5 animate-in fade-in zoom-in-95 duration-200 custom-scrollbar">
+              {options.length === 0 && (
+                <p className="px-4 py-3 text-xs text-slate-400 text-center">No options available</p>
+              )}
+              {options.map((opt) => {
+                const active = safeSelected.includes(opt);
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => handleToggle(opt)}
+                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-[13.5px] transition-colors cursor-pointer ${
+                      active 
+                        ? "bg-blue-50 text-blue-700 font-bold" 
+                        : "text-slate-700 hover:bg-slate-50 font-medium"
+                    }`}
+                  >
+                    <span className="truncate">{opt}</span>
+                    <span className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-[6px] border transition ${
+                      active ? "border-blue-500 bg-blue-500 text-white" : "border-slate-300 bg-white"
+                    }`}>
+                      {active && <Check size={11} strokeWidth={3} />}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function CircularModal({ open, onClose, onSave, initialData }) {
   const [qtypes, setQtypes] = useState([]);
+  const [areaTypes, setAreaTypes] = useState([]);
+  const [quarterNumbers, setQuarterNumbers] = useState([]);
+  
   const [form, setForm] = useState({
     circularNo: "",
     circularDate: "",
     quarterTypes: [],
+    areaTypes: [],
+    quarterNos: [],
     appFromDate: "",
     appToDate: "",
     openingTime: "",
@@ -121,12 +148,73 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
   });
   const [loading, setLoading] = useState(false);
 
+  // Lock background scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  
+
+  // Load cascading dropdown options if editing / initial data exists
   useEffect(() => {
     if (open && initialData) {
-      setForm(initialData);
+      const parsedData = { ...initialData };
+      if (!parsedData.quarterTypes && parsedData.quarterType) {
+        parsedData.quarterTypes = [parsedData.quarterType];
+      }
+      if (!parsedData.areaTypes && parsedData.areaType) {
+        parsedData.areaTypes = [parsedData.areaType];
+      }
+      if (!parsedData.quarterNos && parsedData.quarterNo) {
+        parsedData.quarterNos = [parsedData.quarterNo];
+      }
+      if (!parsedData.quarterTypes) parsedData.quarterTypes = [];
+      if (!parsedData.areaTypes) parsedData.areaTypes = [];
+      if (!parsedData.quarterNos) parsedData.quarterNos = [];
+
+      setForm(parsedData);
+
+      if (parsedData.quarterTypes.length > 0) {
+        getAreaTypesByQuarterType(parsedData.quarterTypes)
+          .then((data) => setAreaTypes(data.areas || []))
+          .catch(() => setAreaTypes([]));
+      }
+      
+      if (parsedData.quarterTypes.length > 0 && parsedData.areaTypes.length > 0) {
+        getQuarterNumbersByQuarterTypeAndArea(parsedData.quarterTypes, parsedData.areaTypes)
+          .then((data) => setQuarterNumbers(data.numbers || []))
+          .catch(() => setQuarterNumbers([]));
+      }
+    } else if (open) {
+      setForm({
+        circularNo: "",
+        circularDate: "",
+        quarterTypes: [],
+        areaTypes: [],
+        quarterNos: [],
+        appFromDate: "",
+        appToDate: "",
+        openingTime: "",
+        verifyFromDate: "",
+        verifyToDate: "",
+        contactName: "",
+        contactDesignation: "",
+        contactNumber: "",
+        contactArea: "",
+      });
+      setAreaTypes([]);
+      setQuarterNumbers([]);
     }
   }, [open, initialData]);
 
+  // Load top-level quarter types from Estate_Quarters on modal open
   useEffect(() => {
     if (!open) return;
     getQuarterTypes()
@@ -136,21 +224,78 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
 
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
-  const handleSave = () => {
-    const required = ["circularNo", "circularDate", "appFromDate", "appToDate", "openingTime", "verifyFromDate", "verifyToDate", "contactName", "contactDesignation", "contactNumber", "contactArea"];
-    for (const k of required) {
-      if (!form[k]) { alert(`Please fill: ${k}`); return; }
+  // Dropdown change handlers
+  const handleQuarterTypeChange = (vals) => {
+    setForm((f) => ({ ...f, quarterTypes: vals, areaTypes: [], quarterNos: [] }));
+    setAreaTypes([]);
+    setQuarterNumbers([]);
+    if (vals && vals.length > 0) {
+      getAreaTypesByQuarterType(vals)
+        .then((data) => setAreaTypes(data.areas || []))
+        .catch(() => setAreaTypes([]));
     }
-    if (form.quarterTypes.length === 0) { alert("Select at least one quarter type."); return; }
+  };
+
+  const handleAreaTypeChange = (vals) => {
+    setForm((f) => ({ ...f, areaTypes: vals, quarterNos: [] }));
+    setQuarterNumbers([]);
+    if (vals && vals.length > 0 && form.quarterTypes.length > 0) {
+      getQuarterNumbersByQuarterTypeAndArea(form.quarterTypes, vals)
+        .then((data) => setQuarterNumbers(data.numbers || []))
+        .catch(() => setQuarterNumbers([]));
+    }
+  };
+
+  const handleSave = () => {
+    const required = [
+      "circularNo", 
+      "circularDate", 
+      "appFromDate", 
+      "appToDate", 
+      "openingTime", 
+      "verifyFromDate", 
+      "verifyToDate", 
+      "contactName", 
+      "contactDesignation", 
+      "contactNumber", 
+      "contactArea"
+    ];
+    
+    for (const k of required) {
+      if (!form[k]) { 
+        alert(`Please select or fill required field: ${k.replace(/([A-Z])/g, ' $1')}`); 
+        return; 
+      }
+    }
+
+    if (!form.quarterTypes || form.quarterTypes.length === 0) {
+      alert("Please select at least one Quarter Type.");
+      return;
+    }
+    if (!form.areaTypes || form.areaTypes.length === 0) {
+      alert("Please select at least one Area Type.");
+      return;
+    }
+    if (!form.quarterNos || form.quarterNos.length === 0) {
+      alert("Please select at least one Quarter Number.");
+      return;
+    }
+    
     setLoading(true);
-    onSave(form);
+    // Maintain backward compatibility for individual fields
+    onSave({
+      ...form,
+      quarterType: form.quarterTypes[0] || "",
+      areaType: form.areaTypes[0] || "",
+      quarterNo: form.quarterNos[0] || ""
+    });
     setLoading(false);
   };
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(6px)" }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-fade-in" style={{ background: "rgba(15,23,42,0.6)", backdropFilter: "blur(6px)" }}>
       <div
         className="relative w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden rounded-[24px] bg-white shadow-[0_24px_60px_-12px_rgba(15,23,42,0.3)] animate-in fade-in zoom-in-[0.98] duration-300"
       >
@@ -167,7 +312,7 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
           </div>
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
@@ -188,12 +333,36 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
               </div>
             </Section>
 
-            <Section title="Quarter Assignment" color="blue">
-              <div className="space-y-5 h-full">
-                <MultiSelectDropdown options={qtypes || []} selected={form?.quarterTypes || []} onChange={(v) => setForm((f) => ({ ...f, quarterTypes: v }))} />
-                <p className="text-xs text-slate-500 leading-relaxed pl-1 pt-2">
-                  Select all quarter types that apply to this specific circular publication. Options are loaded dynamically from the database.
-                </p>
+            <Section title="Quarter Assignment (Cascading Selection)" color="blue">
+              <div className="space-y-4">
+                {/* 1. Quarter Types */}
+                <MultiSelectDropdown
+                  label="Quarter Types *"
+                  options={qtypes}
+                  selected={form.quarterTypes}
+                  onChange={handleQuarterTypeChange}
+                  placeholder="Select Quarter Types"
+                />
+
+                {/* 2. Area Types */}
+                <MultiSelectDropdown
+                  label="Area Types *"
+                  options={areaTypes}
+                  selected={form.areaTypes}
+                  onChange={handleAreaTypeChange}
+                  disabled={form.quarterTypes.length === 0}
+                  placeholder="Select Area Types"
+                />
+
+                {/* 3. Quarter Numbers */}
+                <MultiSelectDropdown
+                  label="Quarter Numbers *"
+                  options={quarterNumbers}
+                  selected={form.quarterNos}
+                  onChange={(val) => setForm(f => ({ ...f, quarterNos: val }))}
+                  disabled={form.areaTypes.length === 0}
+                  placeholder="Select Quarter Numbers"
+                />
               </div>
             </Section>
           </div>
@@ -253,14 +422,14 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
         <div className="z-10 flex items-center justify-end gap-3 border-t border-slate-100 bg-white/80 backdrop-blur-xl px-6 py-5 sm:px-8">
           <button
             onClick={onClose}
-            className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-[14px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 focus:ring-4 focus:ring-slate-100 transition-all"
+            className="rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-[14px] font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 focus:ring-4 focus:ring-slate-100 transition-all cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={loading}
-            className="flex items-center gap-2 rounded-xl bg-blue-600 px-7 py-2.5 text-[14px] font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:shadow-blue-600/30 focus:ring-4 focus:ring-blue-600/20 transition-all disabled:opacity-70 disabled:pointer-events-none"
+            className="flex items-center gap-2 rounded-xl bg-blue-600 px-7 py-2.5 text-[14px] font-bold text-white shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:shadow-blue-600/30 focus:ring-4 focus:ring-blue-600/20 transition-all disabled:opacity-70 disabled:pointer-events-none cursor-pointer"
           >
             {loading ? (
               <>
