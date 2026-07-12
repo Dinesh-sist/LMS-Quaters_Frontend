@@ -110,7 +110,25 @@ const makeColumns = (onReview) => [
     }
   },
   { key: "ReqDate", header: "REQ_Date", minWidth: 160 },
-
+  {
+    key: "TentativeStatus",
+    header: "Allotment Status",
+    minWidth: 160,
+    render: (val, row) => (
+      <div className="flex flex-col gap-1 items-start">
+        {row.TentativeStatus === "Winner" ? (
+          <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-700 uppercase">
+            Tentative Winner
+          </span>
+        ) : (
+          <StatusBadge value={row.Status} />
+        )}
+        {row.RosterNo && (
+          <span className="text-[10px] font-bold text-blue-600">Roster Pt: {row.RosterNo}</span>
+        )}
+      </div>
+    )
+  }
 ];
 
 /* ─── Summary bar ─────────────────────────────────────────────── */
@@ -404,8 +422,22 @@ export default function VerifyQuarterApplications() {
   const load = () => {
     setLoading(true);
     setError("");
-    request("/api/admin/verify-quarter-applications", { auth: true })
-      .then((data) => setRows(Array.isArray(data?.items) ? data.items : []))
+    Promise.all([
+      request("/api/admin/verify-quarter-applications", { auth: true }),
+      request("/api/admin/dynamic-allotments", { auth: true }).catch(() => ({ winners: [], losers: [] }))
+    ])
+      .then(([appData, dynamicData]) => {
+        const apps = Array.isArray(appData?.items) ? appData.items : [];
+        const winners = dynamicData?.winners || [];
+        const updatedApps = apps.map(app => {
+          const isWinner = winners.find(w => w.Id === app.Id);
+          if (isWinner) {
+            return { ...app, RosterNo: isWinner.RosterNo, TentativeStatus: "Winner" };
+          }
+          return app;
+        });
+        setRows(updatedApps);
+      })
       .catch((err) => setError(err?.message || "Failed to load applications."))
       .finally(() => setLoading(false));
   };
