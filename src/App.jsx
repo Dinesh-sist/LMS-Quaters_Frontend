@@ -18,7 +18,7 @@ import ProtectedRoute from './Pages/ProtectedRoute'
 import SetDateForApplication from './Pages/Admin/SetDateForApplication'
 import AdminMappage from './Pages/Admin/AdminMappage'
 import EmployeeClassUpdation from './Pages/Admin/EmployeeClassUpdation'
-import UpdateStatusOfQuarters from './Pages/Admin/UpdateStatusOfQuarters'
+import UpdateStatusOfQuarters from './Pages/Admin/UpdateStatusofQuarters'
 import { consumeAuthRecovery, getToken, getUser, setAuth } from './auth'
 
 function TranslateRecovery() {

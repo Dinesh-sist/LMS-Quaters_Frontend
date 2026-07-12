@@ -598,7 +598,9 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   <div className="relative">
                     <input
                       type="text"
-                      autoComplete="username"
+                      autoComplete="off"
+                      name="employee_username"
+                      id="employee_username"
                       className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
@@ -628,7 +630,9 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   <div className="relative">
                     <input
                       type={showPass ? "text" : "password"}
-                      autoComplete="current-password"
+                      autoComplete="new-password"
+                      name="employee_password"
+                      id="employee_password"
                       className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}

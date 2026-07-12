@@ -37,51 +37,50 @@ export default function Home() {
         @keyframes heroBgFadeIn {
           0% {
             opacity: 0;
-            transform: scale(1.035);
+            transform: scale(1.05) translateZ(0);
           }
           100% {
             opacity: 1;
-            transform: scale(1);
+            transform: scale(1) translateZ(0);
           }
         }
         @keyframes heroHeadingSlideIn {
           0% {
             opacity: 0;
-            transform: translateX(-32px);
+            transform: translateX(-32px) translateZ(0);
           }
           100% {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateX(0) translateZ(0);
           }
         }
         @keyframes navbarDropIn {
           0% {
             opacity: 0;
-            transform: translateY(-36px);
+            transform: translateY(-36px) translateZ(0);
           }
           100% {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) translateZ(0);
           }
         }
         
         .hero-bg-image {
           opacity: 0;
-          transform: scale(1.035);
-          transition: opacity 0.45s ease-out, transform 0.8s ease-out;
+          transform: scale(1.05);
           will-change: opacity, transform;
         }
         .hero-bg-image.is-ready {
-          animation: heroBgFadeIn 0.75s ease-out forwards;
+          animation: heroBgFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .hero-heading {
           opacity: 0;
-          animation: heroHeadingSlideIn 0.95s ease-out 0.28s forwards;
+          animation: heroHeadingSlideIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
           will-change: opacity, transform;
         }
         .hero-navbar {
           opacity: 0;
-          animation: navbarDropIn 0.82s ease-out 0.14s forwards;
+          animation: navbarDropIn 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
           will-change: opacity, transform;
         }
         @media (prefers-reduced-motion: reduce) {
@@ -111,7 +110,7 @@ export default function Home() {
           fetchPriority="high"
           decoding="sync"
           onLoad={() => setHeroImageReady(true)}
-          className={`hero-bg-image absolute inset-0 h-full w-full object-cover object-center brightness-100 saturate-[1.2] ${
+          className={`hero-bg-image absolute inset-0 h-full w-full object-cover object-center ${
             heroImageReady ? "is-ready" : ""
           }`}
         />

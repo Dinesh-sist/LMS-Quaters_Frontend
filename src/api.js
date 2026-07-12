@@ -1,4 +1,4 @@
-import { getToken } from "./auth";
+import { getToken, clearAuth } from "./auth";
 
 const API_BASE = (import.meta.env?.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
@@ -28,6 +28,10 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401) {
+      clearAuth();
+      window.location.href = "/";
+    }
     const message = data?.error || `Request failed (${res.status})`;
     const err = new Error(message);
     err.status = res.status;
@@ -120,8 +124,18 @@ export function getDashboardStats() {
   });
 }
 
-export function getQuarterAreas() {
-  return request("/api/estate-quarters/areas", {
+export function getQuarterCategories() {
+  return request("/api/estate-quarters/categories", {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function getQuarterAreas(category = "") {
+  const url = category 
+    ? `/api/estate-quarters/areas?category=${encodeURIComponent(category)}`
+    : "/api/estate-quarters/areas";
+  return request(url, {
     method: "GET",
     auth: true,
   });
@@ -129,6 +143,13 @@ export function getQuarterAreas() {
 
 export function getQuarterNumbers(areaType) {
   return request(`/api/estate-quarters/numbers?areaType=${encodeURIComponent(areaType)}`, {
+    method: "GET",
+    auth: true,
+  });
+}
+
+export function lookupQuarterEmployee(employeeId) {
+  return request(`/api/estate-quarters/employee-lookup/${encodeURIComponent(employeeId)}`, {
     method: "GET",
     auth: true,
   });

@@ -33,23 +33,31 @@ const TERMS_AND_CONDITIONS = [
   "Prior permission is required before hyperlinks are directed from any website to this website. Permission for the same, stating the nature of the content on the pages from where the link has to be given and the exact language of the hyperlink should be obtained by sending a request at dmmsppt@paradipport.gov.in.",
 ];
 
-function FontSizeControls({ onDecrease, onIncrease }) {
+function FontSizeControls({ onDecrease, onIncrease, onReset }) {
   return (
-    <div className="inline-flex items-center gap-1" role="group" aria-label="Font size controls">
+    <div className="flex items-center gap-1.5">
       <button
         type="button"
         onClick={onDecrease}
-        className="rounded-lg border border-white/85 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c]"
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
         aria-label="Decrease font size"
         title="Decrease font size"
       >
         A-
       </button>
-
+      <button
+        type="button"
+        onClick={onReset}
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
+        aria-label="Reset font size"
+        title="Reset font size"
+      >
+        A
+      </button>
       <button
         type="button"
         onClick={onIncrease}
-        className="rounded-lg border border-white/85 px-2.5 py-1 text-[11px] font-semibold text-white transition-colors hover:border-orange-300 hover:text-[#fb923c]"
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
         aria-label="Increase font size"
         title="Increase font size"
       >
@@ -73,7 +81,9 @@ export default function TopNavbar({
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [hasReadAll, setHasReadAll] = useState(false);
-  const [fontSize, setFontSize] = useState(16);
+  const [fontSize, setFontSize] = useState(() => {
+    return parseInt(localStorage.getItem("fontSize") || "16");
+  });
 
   const scrollRef = useRef(null);
   const isDarkText = navTextColor === "dark";
@@ -83,6 +93,7 @@ export default function TopNavbar({
 
   const increaseFontSize = () => setFontSize((prev) => Math.min(prev + 2, 28));
   const decreaseFontSize = () => setFontSize((prev) => Math.max(prev - 2, 12));
+  const resetFontSize = () => setFontSize(16);
 
   const closeAllMenus = () => {
     setDropdownOpen(false);
@@ -118,6 +129,7 @@ export default function TopNavbar({
 
   useEffect(() => {
     document.documentElement.style.fontSize = `${fontSize}px`;
+    localStorage.setItem("fontSize", fontSize);
   }, [fontSize]);
 
   useEffect(() => {
@@ -355,7 +367,7 @@ export default function TopNavbar({
             rgba(255, 255, 255, 0.05) 56%,
             transparent 65%
           );
-          animation: brandShimmerSweep 3.8s linear infinite;
+          animation: brandShimmerSweep 3s linear infinite;
           pointer-events: none;
           z-index: 2;
         }
@@ -367,19 +379,21 @@ export default function TopNavbar({
       `}</style>
 
       <header
-        className={`w-full px-4 py-3 lg:px-8 ${transparent ? "border-0 bg-transparent" : "border-b border-white/10 bg-[#0b1f44]"
+        className={`relative w-full px-4 py-3 lg:px-8 ${transparent ? "border-0 bg-transparent" : "border-b border-white/10 bg-[#0b1f44]"
           }`}
       >
         {/* Maximum width container to unify sizes across 1024px up to 1440px+ */}
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2">
 
           {/* Brand/Logo Section */}
-          <div className="brand-shimmer flex min-w-0 shrink-0 items-center gap-2 rounded-2xl p-1">
-            <img src={Logo} alt="Logo" className="w-10 rounded-2xl sm:w-11 lg:w-12" />
+          <div className="flex min-w-0 shrink-0 items-center gap-3">
+            <div className="brand-shimmer flex items-center">
+              <img src={Logo} alt="Logo" className="w-10 rounded-lg sm:w-15 lg:w-17" />
+            </div>
             <div className="min-w-0 leading-tight">
-              <span className={`block text-sm font-bold tracking-tight sm:text-base lg:text-lg ${titleColor}`}>                PARADIP PORT AUTHORITY
+              <span className={`block text-sm font-bold  sm:text-base  lg:text-3xl ${titleColor}`}>                PARADIP PORT AUTHORITY
               </span>
-              <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-[0.12em] text-white sm:text-[10px] lg:text-[11px]">                Land Management System
+              <span className="mt-0.5 block text-[8px] font-semibold uppercase tracking-[0.12em] text-white sm:text-[11px] lg:text-[15px]">                Land Management System
               </span>
             </div>
           </div>
@@ -388,7 +402,7 @@ export default function TopNavbar({
           <button
             type="button"
             onClick={() => (mobileMenuOpen ? closeAllMenus() : setMobileMenuOpen(true))}
-            className={`flex h-10 w-10 items-center justify-center rounded-xl border bg-transparent transition lg:hidden ${isDarkText ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/20 text-white hover:bg-white/10"
+            className={`flex h-10 w-10 items-center justify-center rounded-xl border bg-transparent transition xl:hidden ${isDarkText ? "border-slate-300 text-slate-700 hover:bg-slate-100" : "border-white/20 text-white hover:bg-white/10"
               }`}
             aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
             aria-expanded={mobileMenuOpen}
@@ -407,9 +421,9 @@ export default function TopNavbar({
           </button>
 
           {/* Desktop Controls & Navigation (Remains consistent from 1024px through 1440px) */}
-          <div className="hidden lg:flex items-center gap-2 xl:gap-4">
-            <div className="flex items-center gap-1.5 rounded-xl bg-white/10 p-1 backdrop-blur-sm shrink-0">
-              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} />
+          <div className="hidden xl:flex items-center gap-2 xl:gap-4">
+            <div className="flex items-center gap-1.5  shrink-0">
+              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} onReset={resetFontSize} />
               <TranslateButton showPopup={!hideTranslatePopup} />
             </div>
 
@@ -482,11 +496,8 @@ export default function TopNavbar({
 
         {/* Mobile Navigation Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="mt-3 ml-auto w-full max-w-[240px] rounded-[24px] border border-slate-200 bg-white p-2.5 shadow-lg sm:max-w-[260px] lg:hidden">
-            <div className="mb-2 flex flex-col gap-2 rounded-[18px] bg-[#0b1f44] p-2">
-              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} />
-              <TranslateButton showPopup={!hideTranslatePopup} />
-            </div>
+          <div className="absolute right-4 lg:right-8 top-full mt-2 w-full max-w-[240px] rounded-[24px] border border-slate-200 bg-white p-2.5 shadow-2xl sm:max-w-[260px] lg:max-w-[300px] xl:hidden z-50">
+
 
             <nav className="flex flex-col gap-1">
               {NAV_ITEMS.map(({ label, to, dropdown }) => {
@@ -496,7 +507,7 @@ export default function TopNavbar({
                       <button
                         type="button"
                         onClick={() => setDropdownOpen((p) => !p)}
-                        className={`flex min-h-[38px] w-full items-center justify-between rounded-[18px] px-3 py-2 text-left text-xs font-semibold transition-all ${isDropdownActive || dropdownOpen ? "bg-orange-400 text-white" : "bg-slate-50 text-slate-700 hover:bg-orange-100"
+                        className={`flex min-h-[38px] w-full items-center justify-between rounded-[18px] px-3 py-2 text-left text-xs lg:text-sm font-semibold transition-all ${isDropdownActive || dropdownOpen ? "bg-orange-400 text-white" : "bg-slate-50 text-slate-700 hover:bg-orange-100"
                           }`}
                       >
                         <span>{label}</span>
@@ -518,12 +529,12 @@ export default function TopNavbar({
                                 key={dl}
                                 to={dt}
                                 onClick={dl === "Quarters" ? handleQuartersClick : closeAllMenus}
-                                className="block rounded-xl px-3 py-2 text-xs font-semibold text-white no-underline transition-colors hover:bg-white/10"
+                                className="block rounded-xl px-3 py-2 text-xs lg:text-sm font-semibold text-white no-underline transition-colors hover:bg-white/10"
                               >
                                 {dl}
                               </Link>
                             ) : (
-                              <span key={dl} className="block cursor-not-allowed rounded-xl px-3 py-2 text-xs italic text-slate-400">
+                              <span key={dl} className="block cursor-not-allowed rounded-xl px-3 py-2 text-xs lg:text-sm italic text-slate-400">
                                 {dl}
                               </span>
                             )
@@ -539,7 +550,7 @@ export default function TopNavbar({
                     key={label}
                     to={to}
                     onClick={closeAllMenus}
-                    className={`flex min-h-[38px] items-center rounded-[18px] px-3 py-2 text-xs font-semibold no-underline transition-all ${isActive ? "bg-orange-400 text-white" : "bg-slate-50 text-slate-700 hover:bg-orange-100"
+                    className={`flex min-h-[38px] items-center rounded-[18px] px-3 py-2 text-xs lg:text-sm font-semibold no-underline transition-all ${isActive ? "bg-orange-400 text-white" : "bg-slate-50 text-slate-700 hover:bg-orange-100"
                       }`}
                   >
                     {label}
@@ -547,6 +558,13 @@ export default function TopNavbar({
                 );
               })}
             </nav>
+
+            <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 px-1">
+              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} onReset={resetFontSize} />
+              <div className="flex shrink-0">
+                <TranslateButton showPopup={!hideTranslatePopup} />
+              </div>
+            </div>
           </div>
         )}
       </header>
