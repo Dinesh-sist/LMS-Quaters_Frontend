@@ -150,10 +150,18 @@ export function updateQuarterStatus(payload) {
 }
 
 export function getQuarterTypes() {
-  return request("/api/admin/quarter-types", {
-    method: "GET",
-    auth: true,
-  });
+  return request("/api/admin/quarter-types", { method: "GET", auth: true });
+}
+
+export function getAreaTypesByQuarterType(quarterTypes) {
+  const typesParam = Array.isArray(quarterTypes) ? quarterTypes.join(",") : quarterTypes;
+  return request(`/api/admin/area-types?quarterTypes=${encodeURIComponent(typesParam)}`, { method: "GET", auth: true });
+}
+
+export function getQuarterNumbersByQuarterTypeAndArea(quarterTypes, areaTypes) {
+  const typesParam = Array.isArray(quarterTypes) ? quarterTypes.join(",") : quarterTypes;
+  const areasParam = Array.isArray(areaTypes) ? areaTypes.join(",") : areaTypes;
+  return request(`/api/admin/quarter-numbers?quarterTypes=${encodeURIComponent(typesParam)}&areaTypes=${encodeURIComponent(areasParam)}`, { method: "GET", auth: true });
 }
 
 export function generateCircular(payload) {
