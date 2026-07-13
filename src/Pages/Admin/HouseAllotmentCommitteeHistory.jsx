@@ -499,77 +499,23 @@ export default function HistoryOfHouseAllotmentCommittee() {
     <AdminLayout
       title="History Of House Allotment Committee"
       subtitle="Land Data Management System - Committee Records"
+      headerRight={
+        <button
+          type="button"
+          onClick={() => setUploadOpen(true)}
+          className="inline-flex items-center gap-2 rounded-xl bg-[#185FA5] px-4 py-2.5 text-sm font-bold text-white shadow-[0_4px_12px_rgba(24,95,165,0.2)] transition-all hover:bg-[#0f477f] hover:shadow-[0_6px_16px_rgba(24,95,165,0.3)] active:scale-95"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+          Upload Record
+        </button>
+      }
     >
 
         <PageSummaryBar rows={rows} />
 
         <div className="lms-data-transition space-y-6">
-        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
-          <button
-            type="button"
-            onClick={() => setUploadOpen((v) => !v)}
-            className="w-full flex justify-between gap-2 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 px-5 py-4 transition delay-150 duration-300 ease-in-out text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 active:scale-95"
-          >
-            <p>Upload the Application</p>
-            <span className="text-lg leading-none">+</span>
-          </button>
-
-          {uploadOpen ? (
-            <form className="mt-4 grid gap-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 md:grid-cols-[3fr_5fr_auto]" onSubmit={handleUpload}>
-              <div className="flex flex-col gap-1">
-                <DatePickerCard
-                  label="Committee Held Date"
-                  selectedDate={selectedCommitteeDate}
-                  onSelect={(date) => setCommitteeHeld(date.toISOString().slice(0, 10))}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
-                  Upload Document
-                </label>
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 file:mr-4 file:rounded-lg file:border-0 file:bg-[#E6F1FB] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#185FA5] hover:file:bg-[#dcecfb]"
-                />
-                <p className="text-xs text-slate-500">Only PDF, DOC, and DOCX files are allowed.</p>
-              </div>
-   
-              <div className="flex items-end gap-2 pb-[2px]">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUploadOpen(false);
-                    setCommitteeHeld("");
-                    setFile(null);
-                    setUploadError("");
-                  }}
-                  disabled={uploading}
-                  className="w-full min-w-[80px] inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={uploading}
-                  className={`w-full min-w-[80px] inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold text-white transition ${
-                    uploading ? "cursor-not-allowed bg-slate-400" : "bg-[#185FA5] hover:bg-[#0f477f]"
-                  }`}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
-                </button>
-              </div>
-
-              {uploadError ? (
-                <div className="md:col-span-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-                  {uploadError}
-                </div>
-              ) : null}
-            </form>
-          ) : null}
-        </div>
 
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
@@ -592,6 +538,168 @@ export default function HistoryOfHouseAllotmentCommittee() {
           />
         </div>
       </div>
+
+      {/* Upload Modal */}
+      {uploadOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            backdropFilter: "blur(3px)",
+            zIndex: 1000,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "480px",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "visible",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "20px 24px",
+              borderBottom: "1px solid #f1f5f9",
+            }}>
+              <div>
+                <p style={{ fontSize: "18px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
+                  Upload Committee Record
+                </p>
+                <p style={{ fontSize: "13px", color: "#64748b", margin: "4px 0 0", fontWeight: 500 }}>
+                  Add a new document to the allotment history.
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                    setUploadOpen(false);
+                    setCommitteeHeld("");
+                    setFile(null);
+                    setUploadError("");
+                }}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "#94a3b8", fontSize: "20px", lineHeight: 1, padding: "4px",
+                  borderRadius: "8px", transition: "all 0.2s"
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <form onSubmit={handleUpload}>
+              <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
+                
+                {/* Date Picker */}
+                <div style={{ zIndex: 10 }}>
+                  <DatePickerCard
+                    label="Committee Held Date"
+                    selectedDate={selectedCommitteeDate}
+                    onSelect={(date) => setCommitteeHeld(date.toISOString().slice(0, 10))}
+                  />
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-slate-900">Upload Document</p>
+                    <Info size={15} className="text-slate-400" />
+                  </div>
+                  <label
+                    htmlFor="file-upload"
+                    className={`relative flex h-14 w-full cursor-pointer items-center justify-between rounded-2xl border ${
+                      file ? 'border-[#185FA5] bg-[#EAF2FB]' : 'border-dashed border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-slate-100'
+                    } px-4 transition-all`}
+                  >
+                    <div className="flex items-center gap-3 overflow-hidden">
+                       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${file ? 'bg-[#185FA5] text-white' : 'bg-white text-slate-400 shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-slate-200'}`}>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                          </svg>
+                       </div>
+                       <span className="truncate text-sm font-medium text-slate-700">
+                         {file ? file.name : "Choose a file or drag it here"}
+                       </span>
+                    </div>
+                    {file && (
+                       <span className="text-xs font-bold text-[#185FA5] ml-3 shrink-0">Change</span>
+                    )}
+                    <input
+                      id="file-upload"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => setFile(e.target.files?.[0] || null)}
+                      className="sr-only"
+                    />
+                  </label>
+                  <p className="mt-2 text-[11px] font-medium text-slate-500 uppercase tracking-wide">
+                    Supported formats: PDF, DOC, DOCX
+                  </p>
+                </div>
+
+                {uploadError && (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+                    {uploadError}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div style={{
+                display: "flex", justifyContent: "flex-end", gap: "10px",
+                padding: "16px 24px",
+                borderTop: "1px solid #f1f5f9",
+                background: "#f8fafc",
+                borderBottomLeftRadius: "16px",
+                borderBottomRightRadius: "16px",
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUploadOpen(false);
+                    setCommitteeHeld("");
+                    setFile(null);
+                    setUploadError("");
+                  }}
+                  disabled={uploading}
+                  style={{
+                    padding: "10px 20px", borderRadius: "10px",
+                    border: "1.5px solid #e2e8f0", background: "#fff",
+                    color: "#475569", fontSize: "13px", fontWeight: 600,
+                    cursor: uploading ? "not-allowed" : "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  style={{
+                    padding: "10px 24px", borderRadius: "10px",
+                    border: "none", background: uploading ? "#94a3b8" : "#185FA5",
+                    color: "#fff", fontSize: "13px", fontWeight: 700,
+                    cursor: uploading ? "not-allowed" : "pointer",
+                    boxShadow: "0 4px 12px rgba(24, 95, 165, 0.2)",
+                  }}
+                >
+                  {uploading ? "Uploading..." : "Save Record"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }

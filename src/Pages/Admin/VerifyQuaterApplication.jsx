@@ -286,6 +286,8 @@ function PageSummaryBar({ rows }) {
           Download Applications List (PDF)
         </button>
 
+
+
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F1FB] px-3 py-1 text-xs font-semibold text-[#0C447C]">
           <span className="h-1.5 w-1.5 rounded-full bg-[#185FA5]" />
           {total} Total

@@ -220,8 +220,10 @@ function PageSummaryBar({ rows }) {
         theme: "grid",
         margin: { left: 8, right: 8 },
         styles: {
-          fontSize: 6,
-          cellPadding: 1.5,
+          fontSize: 7,
+          cellPadding: 3,
+          minCellHeight: 12,
+          valign: "middle",
           lineColor: [220, 220, 220],
           lineWidth: 0.1,
           textColor: [40, 40, 40],
