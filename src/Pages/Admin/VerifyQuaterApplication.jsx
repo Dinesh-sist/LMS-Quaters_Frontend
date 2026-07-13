@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
 import { request, API_BASE, getLatestPublication } from "../../api";
+import Logo from "../../assets/Logo.png";
 
 function toDateKey(value) {
   if (!value) return "";
@@ -138,12 +141,171 @@ function PageSummaryBar({ rows }) {
   const approved = rows.filter((r) => r.Status?.toLowerCase() === "approved").length;
   const rejected = rows.filter((r) => r.Status?.toLowerCase() === "rejected").length;
 
+  const downloadPDF = () => {
+    if (rows.length === 0) {
+      alert("No applications to download.");
+      return;
+    }
+
+    const doc = new jsPDF("landscape");
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const dateStr = new Date().toLocaleDateString("en-IN", {
+      day: "2-digit", month: "short", year: "numeric",
+    });
+
+    const generatePDF = () => {
+      // Top Header (Left-aligned)
+      doc.setFontSize(22);
+      doc.setFont(undefined, "bold");
+      doc.setTextColor(24, 95, 165); // Theme Color
+      doc.text("PARADIP PORT AUTHORITY", 14, 22);
+
+      doc.setFontSize(14);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(100);
+      doc.text("Land Data Management System", 14, 30);
+
+      // Separator Line
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(14, 36, pageWidth - 14, 36);
+
+      // Sub Header
+      doc.setFontSize(16);
+      doc.setTextColor(0);
+      doc.setFont(undefined, "bold");
+      doc.text("Quarter Applications Verification List", 14, 46);
+
+      doc.setFontSize(10);
+      doc.setFont(undefined, "normal");
+      doc.setTextColor(150);
+      doc.text(`Generated on: ${dateStr}`, 14, 52);
+
+      const tableColumn = [
+        "S.NO",
+        "EMP ID",
+        "EMP NAME",
+        "CLASS",
+        "GRAD DATE",
+        "DATE OF JOINING",
+        "BASIC",
+        "DATE OF BIRTH",
+        "DEPARTMENT",
+        "CASTE",
+        "CURRENT QTR",
+        "CURRENT TYPE",
+        "REQ QTR",
+        "REQ LOCATION",
+        "REQ TYPE",
+        "EXCHANGE",
+        "REQ DATE"
+      ];
+
+      const tableRows = rows.map((row, index) => {
+        const dobStr = row.DateOfBirth ? toDateKey(row.DateOfBirth) : "-";
+        const dojStr = row.DateOfJoining ? toDateKey(row.DateOfJoining) : "-";
+        const gradStr = row.GradDate ? toDateKey(row.GradDate) : "-";
+        const reqDateStr = row.ReqDate ? String(row.ReqDate).trim() : "-";
+        
+        const currentQtr = row.CurrentAreaType && row.CurrentQuarterNo
+          ? `${String(row.CurrentAreaType).trim()}/${String(row.CurrentQuarterNo).trim()}`
+          : "-";
+        
+        return [
+          index + 1,
+          row.EmpId ? String(row.EmpId).trim() : "-",
+          row.EmpName ? String(row.EmpName).trim() : "-",
+          row.Class ? String(row.Class).trim() : "-",
+          gradStr,
+          dojStr,
+          row.Basic !== undefined && row.Basic !== null ? String(row.Basic).trim() : "-",
+          dobStr,
+          row.Department ? String(row.Department).trim() : "-",
+          row.Caste ? String(row.Caste).trim() : "-",
+          currentQtr,
+          row.CurrentQuarterType ? String(row.CurrentQuarterType).trim() : "-",
+          row.QtrRequested ? String(row.QtrRequested).trim() : "-",
+          row.QtrLocation ? String(row.QtrLocation).trim() : "-",
+          row.QtrType ? String(row.QtrType).trim() : "-",
+          row.ExchangeReason ? String(row.ExchangeReason).trim() : "-",
+          reqDateStr
+        ];
+      });
+
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 58,
+        theme: "grid",
+        margin: { left: 8, right: 8 },
+        styles: {
+          fontSize: 6,
+          cellPadding: 1.5,
+          lineColor: [220, 220, 220],
+          lineWidth: 0.1,
+          textColor: [40, 40, 40],
+          overflow: "linebreak"
+        },
+        headStyles: {
+          fillColor: [24, 95, 165],
+          textColor: 255,
+          fontStyle: "bold"
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { halign: "center" }, // S.NO
+          1: { halign: "center" }, // EMP ID
+          2: { halign: "left" },   // EMP NAME
+          3: { halign: "center" }, // CLASS
+          4: { halign: "center" }, // GRAD DATE
+          5: { halign: "center" }, // DATE OF JOINING
+          6: { halign: "center" }, // BASIC
+          7: { halign: "center" }, // DATE OF BIRTH
+          8: { halign: "left" },   // DEPARTMENT
+          9: { halign: "center" }, // CASTE
+          10: { halign: "center" }, // CURRENT QTR
+          11: { halign: "center" }, // CURRENT TYPE
+          12: { halign: "center" }, // REQ QTR
+          13: { halign: "center" }, // REQ LOCATION
+          14: { halign: "center" }, // REQ TYPE
+          15: { halign: "center" }, // EXCHANGE
+          16: { halign: "center" }  // REQ DATE
+        }
+      });
+
+      doc.save(`Quarter_Applications_Verification_${dateStr.replace(/ /g, "_")}.pdf`);
+    };
+
+    const img = new Image();
+    img.src = Logo;
+    img.onload = () => {
+      doc.addImage(img, "PNG", pageWidth - 38, 10, 24, 24);
+      generatePDF();
+    };
+    img.onerror = () => {
+      generatePDF();
+    };
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
       <span className="flex-1 min-w-[160px] text-sm font-semibold text-slate-700">
         Verify Quarter Applications
       </span>
       <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={downloadPDF}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#185FA5] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#0f477f] shadow-sm cursor-pointer"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download Applications List (PDF)
+        </button>
+
+
+
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F1FB] px-3 py-1 text-xs font-semibold text-[#0C447C]">
           <span className="h-1.5 w-1.5 rounded-full bg-[#185FA5]" />
           {total} Total

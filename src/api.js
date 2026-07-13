@@ -117,6 +117,13 @@ export function saveHouseAllotmentCommitteeHistory(payload) {
   });
 }
 
+export function deleteHouseAllotmentCommitteeHistory(id) {
+  return request(`/api/admin/house-allotment-committee-history/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
 export function getDashboardStats() {
   return request("/api/estate-quarters/employees-by-type", {
     method: "GET",
@@ -208,6 +215,14 @@ export async function previewCircular(payload) {
     throw new Error(data.error || "Failed to generate preview");
   }
   return await res.blob();
+}
+
+export function registerEmployeeAdmin(payload) {
+  return request("/api/admin/register-employee-admin", {
+    method: "POST",
+    body: payload,
+    auth: true,
+  });
 }
 
 export { API_BASE, request };
