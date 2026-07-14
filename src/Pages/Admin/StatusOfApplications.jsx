@@ -50,6 +50,8 @@ const getColumns = (onDebarClick) => [
   { key: "dept", header: "DEPARTMENT", minWidth: 150 },
   // CASTE ID
   { key: "casteId", header: "CASTE ID", minWidth: 120 },
+  // CURRENT QTR TYPE
+  { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
   // CURRENT QTR — combined area_type / quarter_no
   {
     key: "currentQtr",
@@ -60,14 +62,12 @@ const getColumns = (onDebarClick) => [
         ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
         : "—",
   },
-  // CURRENT QTR TYPE
-  { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
-  // REQUEST QUARTER NUMBER
-  { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
-  // REQUEST QUARTER LOCATION (Area Type)
-  { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
   // REQUEST QUARTER TYPE
   { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200 },
+  // REQUEST QUARTER LOCATION (Area Type)
+  { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
+  // REQUEST QUARTER NUMBER
+  { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
   // EXCHANGE
   { key: "exchange", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
   // ROSTER NO
@@ -96,7 +96,8 @@ const getColumns = (onDebarClick) => [
     header: "DEBARRED",
     minWidth: 130,
     render: (_, row) => {
-      if ((row.result || "").toLowerCase() === "approved") {
+      const resultLower = (row.result || "").toLowerCase();
+      if (resultLower === "approved" || resultLower === "allotted") {
         return (
           <button
             onClick={() => onDebarClick(row)}
@@ -177,11 +178,11 @@ function PageSummaryBar({ rows }) {
         "GRAD DATE",
         "DEPARTMENT",
         "CASTE ID",
-        "CURRENT QTR",
         "CURRENT QTR TYPE",
-        "REQUEST QTR NO",
-        "REQUEST LOCATION",
+        "CURRENT QTR",
         "REQUEST TYPE",
+        "REQUEST LOCATION",
+        "REQUEST QTR NO",
         "EXCHANGE",
         "ROSTER NO",
         "STATUS"
@@ -202,11 +203,11 @@ function PageSummaryBar({ rows }) {
           gradStr,
           row.dept ? String(row.dept).trim() : "-",
           row.casteId ? String(row.casteId).trim() : "-",
-          currentQtr,
           row.currentQtyType ? String(row.currentQtyType).trim() : "-",
-          row.reqQtr ? String(row.reqQtr).trim() : "-",
-          row.reqQtrLocation ? String(row.reqQtrLocation).trim() : "-",
+          currentQtr,
           row.reqQtrType ? String(row.reqQtrType).trim() : "-",
+          row.reqQtrLocation ? String(row.reqQtrLocation).trim() : "-",
+          row.reqQtr ? String(row.reqQtr).trim() : "-",
           row.exchange ? String(row.exchange).trim() : "-",
           row.rosterNo ? String(row.rosterNo).trim() : "-",
           statusLabel
@@ -243,11 +244,11 @@ function PageSummaryBar({ rows }) {
           4: { halign: "center" }, // GRAD DATE
           5: { halign: "left" },   // DEPARTMENT
           6: { halign: "center" }, // CASTE ID
-          7: { halign: "center" }, // CURRENT QTR
-          8: { halign: "center" }, // CURRENT QTR TYPE
-          9: { halign: "center" }, // REQUEST QTR NO
+          7: { halign: "center" }, // CURRENT QTR TYPE
+          8: { halign: "center" }, // CURRENT QTR
+          9: { halign: "center" }, // REQUEST TYPE
           10: { halign: "center" }, // REQUEST LOCATION
-          11: { halign: "center" }, // REQUEST TYPE
+          11: { halign: "center" }, // REQUEST QTR NO
           12: { halign: "center" }, // EXCHANGE
           13: { halign: "center" }, // ROSTER NO
           14: { halign: "center" }  // STATUS

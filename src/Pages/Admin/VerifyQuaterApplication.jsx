@@ -49,6 +49,7 @@ const makeColumns = (onReview) => [
   { key: "DateOfBirth", header: "DATA_OF_BIRTH", minWidth: 150 },
   { key: "Department", header: "DEPT", minWidth: 150 },
   { key: "Caste", header: "CASTE_ID", minWidth: 120 },
+  { key: "CurrentQuarterType", header: "CURRENT QTY_Type", minWidth: 180 },
   {
     key: "CurrentQtr",
     header: "CURRENT QTR",
@@ -58,10 +59,9 @@ const makeColumns = (onReview) => [
         ? `${String(row.CurrentAreaType).trim()}/${String(row.CurrentQuarterNo).trim()}`
         : "—",
   },
-  { key: "CurrentQuarterType", header: "CURRENT QTY_Type", minWidth: 180 },
-  { key: "QtrRequested", header: "REQ_QTR", minWidth: 120 },
-  { key: "QtrLocation", header: "REQ_QTR_Location", minWidth: 160 },
   { key: "QtrType", header: "REQ_QTR_Type", minWidth: 180 },
+  { key: "QtrLocation", header: "REQ_QTR_Location", minWidth: 160 },
+  { key: "QtrRequested", header: "REQ_QTR", minWidth: 120 },
   { key: "ExchangeReason", header: "Exchange", minWidth: 140, render: (val) => val || "—" },
   {
     key: "AttachmentPath",
@@ -192,11 +192,11 @@ function PageSummaryBar({ rows }) {
         "DATE OF BIRTH",
         "DEPARTMENT",
         "CASTE",
-        "CURRENT QTR",
         "CURRENT TYPE",
-        "REQ QTR",
-        "REQ LOCATION",
+        "CURRENT QTR",
         "REQ TYPE",
+        "REQ LOCATION",
+        "REQ QTR",
         "EXCHANGE",
         "REQ DATE"
       ];
@@ -222,11 +222,11 @@ function PageSummaryBar({ rows }) {
           dobStr,
           row.Department ? String(row.Department).trim() : "-",
           row.Caste ? String(row.Caste).trim() : "-",
-          currentQtr,
           row.CurrentQuarterType ? String(row.CurrentQuarterType).trim() : "-",
-          row.QtrRequested ? String(row.QtrRequested).trim() : "-",
-          row.QtrLocation ? String(row.QtrLocation).trim() : "-",
+          currentQtr,
           row.QtrType ? String(row.QtrType).trim() : "-",
+          row.QtrLocation ? String(row.QtrLocation).trim() : "-",
+          row.QtrRequested ? String(row.QtrRequested).trim() : "-",
           row.ExchangeReason ? String(row.ExchangeReason).trim() : "-",
           reqDateStr
         ];
@@ -263,11 +263,11 @@ function PageSummaryBar({ rows }) {
           7: { halign: "center" }, // DATE OF BIRTH
           8: { halign: "left" },   // DEPARTMENT
           9: { halign: "center" }, // CASTE
-          10: { halign: "center" }, // CURRENT QTR
-          11: { halign: "center" }, // CURRENT TYPE
-          12: { halign: "center" }, // REQ QTR
+          10: { halign: "center" }, // CURRENT TYPE
+          11: { halign: "center" }, // CURRENT QTR
+          12: { halign: "center" }, // REQ TYPE
           13: { halign: "center" }, // REQ LOCATION
-          14: { halign: "center" }, // REQ TYPE
+          14: { halign: "center" }, // REQ QTR
           15: { halign: "center" }, // EXCHANGE
           16: { halign: "center" }  // REQ DATE
         }
