@@ -707,10 +707,10 @@ export default function ApplyForQuartersEmployees() {
                   </div>
                   <h2 className="mb-2 text-2xl font-bold text-slate-800">Account Restricted</h2>
                   <p className="text-slate-600 text-sm">
-                    You are currently banned from accessing this portal.
+                    You are currently debarred from accessing this portal.
                   </p>
                   <div className="mt-4 inline-flex flex-col rounded-lg bg-red-50 px-6 py-3 border border-red-100">
-                    <span className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Ban Period</span>
+                    <span className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-1">Debarment Period</span>
                     <span className="font-semibold text-red-700">
                       {formatPreviewDate(new Date(emp.debarredFromDate))} — {formatPreviewDate(new Date(emp.debarredToDate))}
                     </span>

@@ -2,12 +2,12 @@ import { getToken, clearAuth } from "./auth";
 
 const API_BASE = (import.meta.env?.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
 
-async function request(path, { method = "GET", body, auth = false } = {}) {
+async function request(path, { method = "GET", body, auth = false, redirectOnUnauthorized } = {}) {
   const isFormData = body instanceof FormData || (body && typeof body.append === 'function') || (body && body.toString() === '[object FormData]');
   console.log("API request:", path, "isFormData:", isFormData, "body:", body);
   const headers = isFormData ? {} : { "Content-Type": "application/json" };
+  const token = auth ? getToken() : "";
   if (auth) {
-    const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
@@ -29,8 +29,11 @@ async function request(path, { method = "GET", body, auth = false } = {}) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status === 401) {
-      clearAuth();
-      window.location.href = "/";
+      const shouldRedirect = redirectOnUnauthorized ?? Boolean(auth && token);
+      if (shouldRedirect) {
+        clearAuth();
+        window.location.href = "/";
+      }
     }
     const message = data?.error || `Request failed (${res.status})`;
     const err = new Error(message);

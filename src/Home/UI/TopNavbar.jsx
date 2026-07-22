@@ -9,8 +9,11 @@ const NAV_ITEMS = [
   { label: "About", to: "/about", dropdown: false },
   { label: "Apply Online", to: null, dropdown: true },
   { label: "Staff Login", to: "/StaffLogin", dropdown: false },
-];
+  { label: "Outsiders", to: "/OutsidersLogin", dropdown: false },
+  { label: "REMS", to: "/REMSLogin", dropdown: false },
 
+];
+  
 const DROPDOWN_ITEMS = [
   { label: "Quarters", to: "/QuartersApplyLogin", active: true },
   { label: "Market", to: null, active: false },
