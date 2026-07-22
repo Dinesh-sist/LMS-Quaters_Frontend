@@ -69,7 +69,7 @@ const getColumns = (onDebarClick) => [
   // REQUEST QUARTER NUMBER
   { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
   // EXCHANGE
-  { key: "exchange", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
+  { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
   // ROSTER NO
   { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
   // STATUS
@@ -208,7 +208,7 @@ function PageSummaryBar({ rows }) {
           row.reqQtrType ? String(row.reqQtrType).trim() : "-",
           row.reqQtrLocation ? String(row.reqQtrLocation).trim() : "-",
           row.reqQtr ? String(row.reqQtr).trim() : "-",
-          row.exchange ? String(row.exchange).trim() : "-",
+          row.exchangeReason ? String(row.exchangeReason).trim() : "-",
           row.rosterNo ? String(row.rosterNo).trim() : "-",
           statusLabel
         ];

@@ -18,32 +18,22 @@ import { getEmployeeClasses, updateEmployeeClass } from "../../api";
 const CLASS_OPTIONS = ["Sr.Class 1", "Jr.Class 1", "Class 2", "Class 3", "Class 4"];
 const CLASS_RANK = { "Sr.Class 1": 1, "Jr.Class 1": 2, "Class 2": 3, "Class 3": 4, "Class 4": 5 };
 
-// Dashboard-style gradient cards — one distinct palette per class
+// Class stat cards — one distinct palette per class
 const CLASS_CARD = {
   "Sr.Class 1": {
     cardBg: "border-violet-300/70 bg-gradient-to-br from-violet-700 via-purple-500 to-fuchsia-400",
-    hoverBg: "bg-gradient-to-br from-violet-800 via-purple-600 to-fuchsia-300",
-    dotColor: "#a78bfa",
   },
   "Jr.Class 1": {
     cardBg: "border-indigo-300/70 bg-gradient-to-br from-indigo-700 via-blue-500 to-sky-400",
-    hoverBg: "bg-gradient-to-br from-indigo-800 via-blue-600 to-sky-300",
-    dotColor: "#818cf8",
   },
   "Class 2": {
     cardBg: "border-sky-300/70 bg-gradient-to-br from-blue-700 via-sky-500 to-cyan-400",
-    hoverBg: "bg-gradient-to-br from-blue-800 via-sky-600 to-cyan-200",
-    dotColor: "#38bdf8",
   },
   "Class 3": {
     cardBg: "border-amber-300/70 bg-gradient-to-br from-amber-600 via-orange-400 to-amber-400",
-    hoverBg: "bg-gradient-to-br from-amber-700 via-orange-500 to-yellow-300",
-    dotColor: "#fbbf24",
   },
   "Class 4": {
     cardBg: "border-rose-300/70 bg-gradient-to-br from-red-700 via-rose-500 to-pink-400",
-    hoverBg: "bg-gradient-to-br from-red-800 via-rose-600 to-pink-200",
-    dotColor: "#fb7185",
   },
 };
 
@@ -401,8 +391,8 @@ export default function EmployeeClassUpdation() {
         </div>
       )}
 
-      {/* ══ Class stat cards — same style as AdminDashboard ══ */}
-      <div className="grid w-full grid-cols-2 gap-3 overflow-hidden lg:grid-cols-5">
+      {/* ══ Class stat cards ══ */}
+      <div className="grid w-full grid-cols-2 gap-3 lg:grid-cols-5">
         {classStats.map(({ label, count }, i) => {
           const card = CLASS_CARD[label];
           const isActive = selectedClass === label;
@@ -413,24 +403,15 @@ export default function EmployeeClassUpdation() {
               onClick={() => setSelectedClass(label === selectedClass ? "" : label)}
               style={{ animationDelay: `${i * 80}ms` }}
               className={`
-                lms-card-land group relative overflow-hidden rounded-2xl border
+                lms-card-land relative overflow-hidden rounded-2xl border
                 p-3 xl:p-4 cursor-pointer select-none
                 shadow-[0_8px_24px_rgba(15,23,42,0.10)]
                 transition-all duration-300 ease-out
-                hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(15,23,42,0.18)]
+                hover:-translate-y-0.5 hover:brightness-105 hover:shadow-[0_16px_36px_rgba(15,23,42,0.18)]
                 ${card.cardBg}
                 ${isActive ? "ring-2 ring-white/60 ring-offset-1" : ""}
               `}
             >
-              {/* Hover colour sweep — same as dashboard */}
-              <div className={`pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 ${card.hoverBg}`} />
-              {/* Top-right shine */}
-              <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.35),transparent_40%)]" />
-              {/* Active extra glow */}
-              {isActive && (
-                <div className="pointer-events-none absolute inset-0 bg-white/10 rounded-2xl" />
-              )}
-
               <div className="relative flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   {/* Class label */}
