@@ -4,7 +4,15 @@ import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
 import Image from "../assets/Image13.png";
 import Logo from "../assets/Logo.png";
-import { getEmployeeClasses, login, lookupEmployee, registerEmployee } from "../api";
+import {
+  getEmployeeClasses,
+  login,
+  lookupEmployee,
+  registerEmployee,
+  requestPasswordResetOtp,
+  resetEmployeePassword,
+  verifyPasswordResetOtp,
+} from "../api";
 import { setAuth } from "../auth";
 
 export default function QuartersApplyLogin({ initialMode = "login" }) {
@@ -33,6 +41,13 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const [successOpen, setSuccessOpen] = useState(false);
 
   const [classOptions, setClassOptions] = useState([]);
+  const [forgotStep, setForgotStep] = useState("request");
+  const [forgotIdentifier, setForgotIdentifier] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotResetToken, setForgotResetToken] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [forgotMessage, setForgotMessage] = useState("");
 
   const normalizedClassOptions = useMemo(() => {
     const items = Array.isArray(classOptions) ? classOptions : [];
@@ -85,6 +100,16 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     }
   }, []);
 
+  const resetForgotState = () => {
+    setForgotStep("request");
+    setForgotIdentifier("");
+    setForgotOtp("");
+    setForgotResetToken("");
+    setForgotNewPassword("");
+    setForgotConfirmPassword("");
+    setForgotMessage("");
+  };
+
   useEffect(() => {
     if (initialMode === "register") {
       setMode("register");
@@ -108,6 +133,80 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       navigate("/Quarters/ApplyEmployees", { replace: true });
     } catch (e2) {
       setError(e2?.message || "Login failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRequestOtp = async (e) => {
+    e?.preventDefault();
+    setError("");
+    setForgotMessage("");
+
+    if (!forgotIdentifier.trim()) {
+      setError("Enter your Employee ID or registered email.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await requestPasswordResetOtp(forgotIdentifier.trim());
+      setForgotStep("verify");
+      setForgotMessage("OTP sent to your registered email.");
+    } catch (e2) {
+      setError(e2?.message || "Could not send OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e?.preventDefault();
+    setError("");
+    setForgotMessage("");
+
+    if (!forgotOtp.trim()) {
+      setError("Enter the 6-digit OTP.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const data = await verifyPasswordResetOtp(forgotIdentifier.trim(), forgotOtp.trim());
+      setForgotResetToken(data?.resetToken || "");
+      setForgotStep("reset");
+      setForgotMessage("OTP verified. Create your new password.");
+    } catch (e2) {
+      setError(e2?.message || "Invalid OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e?.preventDefault();
+    setError("");
+    setForgotMessage("");
+
+    if (!forgotNewPassword) {
+      setError("Enter a new password.");
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await resetEmployeePassword(forgotResetToken, forgotNewPassword);
+      setForgotMessage("Password changed successfully. Please login with your new password.");
+      window.setTimeout(() => {
+        resetForgotState();
+        setMode("login");
+      }, 1200);
+    } catch (e2) {
+      setError(e2?.message || "Could not reset password.");
     } finally {
       setIsLoading(false);
     }
@@ -486,6 +585,160 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     );
   }
 
+  if (mode === "forgot") {
+    return (
+      <div className="relative h-screen w-full overflow-hidden">
+        <style>{`
+          .employee-gradient-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #e87722, #1a2e5a);
+            background-size: 300% 300%;
+          }
+          .employee-input:focus {
+            border-color: #1e3a8a !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30,58,138,.12);
+          }
+        `}</style>
+        <div className="employee-gradient-bg" />
+
+        <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-[#fcfefd] shadow-2xl">
+          <TopNavbar navTextColor="light" />
+
+          <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2">
+            <form
+              className="flex w-full max-w-[520px] flex-col gap-4 rounded-[24px] border border-blue-950/40 bg-white px-5 py-6 shadow-[0_4px_24px_rgba(30,58,138,0.25)] md:px-7"
+              onSubmit={
+                forgotStep === "request"
+                  ? handleRequestOtp
+                  : forgotStep === "verify"
+                    ? handleVerifyOtp
+                    : handleResetPassword
+              }
+            >
+              <div>
+                <h1
+                  className="m-0 text-[24px] font-bold text-slate-900"
+                  style={{ fontFamily: "Georgia, serif" }}
+                >
+                  Forgot Password
+                </h1>
+                <p className="mt-2 text-[13px] leading-5 text-slate-500">
+                  Reset your employee login password using an OTP sent to your registered email.
+                </p>
+              </div>
+
+              {forgotStep === "request" ? (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                    Employee ID or Email
+                  </label>
+                  <input
+                    type="text"
+                    className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    value={forgotIdentifier}
+                    onChange={(e) => setForgotIdentifier(e.target.value)}
+                    placeholder="Employee ID or registered email"
+                  />
+                </div>
+              ) : null}
+
+              {forgotStep === "verify" ? (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                    OTP
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[18px] font-bold tracking-[0.25em] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    value={forgotOtp}
+                    onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="000000"
+                  />
+                </div>
+              ) : null}
+
+              {forgotStep === "reset" ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      value={forgotNewPassword}
+                      onChange={(e) => setForgotNewPassword(e.target.value)}
+                      placeholder="New password"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      value={forgotConfirmPassword}
+                      onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                      placeholder="Confirm password"
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {forgotMessage ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                  {forgotMessage}
+                </div>
+              ) : null}
+
+              {error ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {error}
+                </div>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3 text-[14px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoading
+                  ? "Please wait..."
+                  : forgotStep === "request"
+                    ? "Send OTP"
+                    : forgotStep === "verify"
+                      ? "Verify OTP"
+                      : "Change Password"}
+              </button>
+
+              <button
+                type="button"
+                className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                onClick={() => {
+                  setError("");
+                  resetForgotState();
+                  setMode("login");
+                }}
+              >
+                Back to Login
+              </button>
+            </form>
+          </div>
+
+          <Footer sticky={false} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-screen w-full overflow-hidden">
       <style>{`
@@ -670,6 +923,18 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : "Login as Employee"}
+                </button>
+
+                <button
+                  type="button"
+                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  onClick={() => {
+                    setError("");
+                    resetForgotState();
+                    setMode("forgot");
+                  }}
+                >
+                  Forgot Password?
                 </button>
 
                 <button

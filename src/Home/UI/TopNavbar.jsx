@@ -149,7 +149,7 @@ export default function TopNavbar({
     if (!showTermsModal) return undefined;
 
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = "hidden"; 
 
     return () => {
       document.body.style.overflow = previousOverflow;
@@ -219,7 +219,6 @@ export default function TopNavbar({
                 </p>
               </div>
             )}
-
             <div className={`scroll-fade-wrap ${hasReadAll ? "read" : ""}`}>
               <div
                 ref={scrollRef}
@@ -252,7 +251,7 @@ export default function TopNavbar({
                 </table>
               </div>
             </div>
-
+         
             <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
               <label
                 className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-all ${!hasReadAll

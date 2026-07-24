@@ -55,6 +55,27 @@ export function lookupEmployee(employeeId, dateOfBirth) {
   return request("/api/employee/lookup", { method: "POST", body: { employeeId, dateOfBirth } });
 }
 
+export function requestPasswordResetOtp(identifier) {
+  return request("/api/auth/forgot-password/request-otp", {
+    method: "POST",
+    body: { identifier },
+  });
+}
+
+export function verifyPasswordResetOtp(identifier, otp) {
+  return request("/api/auth/forgot-password/verify-otp", {
+    method: "POST",
+    body: { identifier, otp },
+  });
+}
+
+export function resetEmployeePassword(resetToken, newPassword) {
+  return request("/api/auth/forgot-password/reset", {
+    method: "POST",
+    body: { resetToken, newPassword },
+  });
+}
+
 export function getEmployeeClasses() {
   return request("/api/employeeupdation/employee/classes", { method: "GET", auth: true });
 }
