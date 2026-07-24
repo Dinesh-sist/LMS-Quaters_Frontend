@@ -68,11 +68,18 @@ const getColumns = (onDebarClick) => [
   { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
   // REQUEST QUARTER NUMBER
   { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
+
   // EXCHANGE
+
+
   { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
+
   // ROSTER NO
+
   { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
+
   // STATUS
+
   {
     key: "result",
     header: "STATUS",
@@ -158,7 +165,7 @@ function PageSummaryBar({ rows }) {
       doc.setLineWidth(0.5);
       doc.line(14, 36, pageWidth - 14, 36);
 
-    
+
       // Sub Header
       doc.setFontSize(16);
       doc.setTextColor(0);
@@ -396,22 +403,22 @@ export default function StatusOfApplications() {
 
   const currentApplicationRows = isPublicationActive
     ? rows.filter((row) => {
-        if (!currentWindowKey.from || !currentWindowKey.to) return true;
-        return (
-          toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-          toDateKey(row?.publishedDateTo) === currentWindowKey.to
-        );
-      })
+      if (!currentWindowKey.from || !currentWindowKey.to) return true;
+      return (
+        toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+        toDateKey(row?.publishedDateTo) === currentWindowKey.to
+      );
+    })
     : [];
 
   const historyApplicationRows = isPublicationActive
     ? rows.filter((row) => {
-        if (!currentWindowKey.from || !currentWindowKey.to) return true;
-        return !(
-          toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-          toDateKey(row?.publishedDateTo) === currentWindowKey.to
-        );
-      })
+      if (!currentWindowKey.from || !currentWindowKey.to) return true;
+      return !(
+        toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
+        toDateKey(row?.publishedDateTo) === currentWindowKey.to
+      );
+    })
     : rows;
 
   const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
@@ -426,8 +433,8 @@ export default function StatusOfApplications() {
             type="button"
             onClick={() => setViewMode("current")}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "current"
-                ? "bg-[#1b2d69] text-white shadow-sm"
-                : "text-slate-600 hover:bg-slate-100"
+              ? "bg-[#1b2d69] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-100"
               }`}
           >
             Current Applications
@@ -436,8 +443,8 @@ export default function StatusOfApplications() {
             type="button"
             onClick={() => setViewMode("history")}
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "history"
-                ? "bg-[#1b2d69] text-white shadow-sm"
-                : "text-slate-600 hover:bg-slate-100"
+              ? "bg-[#1b2d69] text-white shadow-sm"
+              : "text-slate-600 hover:bg-slate-100"
               }`}
           >
             History of Applications
