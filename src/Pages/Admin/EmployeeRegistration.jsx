@@ -23,6 +23,16 @@ const CASTE_OPTIONS = [
   { value: "ST", label: "ST" },
 ];
 
+const CATEGORY_OPTIONS = [
+  { value: "", label: "-- No Quarter --" },
+  { value: "A TYPE", label: "A TYPE" },
+  { value: "B TYPE", label: "B TYPE" },
+  { value: "B TYPE IIIR", label: "B TYPE IIIR" },
+  { value: "C TYPE", label: "C TYPE" },
+  { value: "C TYPE (MODIFIED)", label: "C TYPE (MODIFIED)" },
+  { value: "D TYPE", label: "D TYPE" },
+];
+
 
 const DEPARTMENTS = [
   "Marine",
@@ -45,6 +55,7 @@ const EMPTY_FORM = {
   classOfEmployee: "CLASS-III",
   casteOfEmployee: "GENERAL",
   department: "Administration & HR",
+  category: "",
   mobile: "",
   email: "",
 };
@@ -106,6 +117,7 @@ export default function EmployeeRegistration() {
           classOfEmployee: normalizeClass(res.empClass),
           casteOfEmployee: normalizeCaste(res.caste),
           department: normalizeDepartment(res.department),
+          category: res.category || "",
           mobile: res.mobile || "",
           email: res.email || "",
         }));
@@ -147,7 +159,8 @@ export default function EmployeeRegistration() {
       gradDate,
       classOfEmployee,
       casteOfEmployee,
-      department
+      department,
+      category
     } = formData;
 
     // Validation for all fields
@@ -337,7 +350,7 @@ export default function EmployeeRegistration() {
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    Caste of Employee *
+                    Caste *
                   </label>
                   <select
                     value={formData.casteOfEmployee}
@@ -345,8 +358,28 @@ export default function EmployeeRegistration() {
                     disabled={isLoading}
                     className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
                   >
-                    {CASTE_OPTIONS.map(opt => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    {CASTE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
+                    Current Quarter Category
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => handleInputChange("category", e.target.value)}
+                    disabled={isLoading}
+                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                  >
+                    {CATEGORY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
                     ))}
                   </select>
                 </div>

@@ -118,6 +118,12 @@ export function stopPublication() {
     auth: true,
   });
 }
+export function generateApprovalMails() {
+  return request("/api/admin/generate-approval-mails", {
+    method: "POST",
+    auth: true,
+  });
+}
 export function updatePublication(payload) {
   return request("/api/admin/publication/update", {
     method: "PUT",

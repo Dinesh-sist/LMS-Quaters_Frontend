@@ -396,35 +396,13 @@ function AttachmentButton({ path }) {
 }
 
 /* ─── Review Modal ───────────────────────────────────────────── */
-function ReviewModal({ app, onClose, onAction }) {
-  const [submitting, setSubmitting] = useState(false);
-  const [actionError, setActionError] = useState("");
+function ReviewModal({ app, onClose }) {
   const overlayRef = useRef(null);
 
   // Close on backdrop click
   const handleOverlayClick = (e) => {
     if (e.target === overlayRef.current) onClose();
   };
-
-  const submit = async (newStatus) => {
-    setSubmitting(true);
-    setActionError("");
-    try {
-      await request(`/api/admin/applications/${app.Id}`, {
-        method: "PATCH",
-        body: { status: newStatus },
-        auth: true,
-      });
-      onAction(app.Id, newStatus);
-      onClose();
-    } catch (err) {
-      setActionError(err?.message || "Action failed. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const isPending = app.Status?.toLowerCase() === "pending";
 
   return (
     <div
@@ -531,23 +509,9 @@ function ReviewModal({ app, onClose, onAction }) {
           <div style={{ marginBottom: "20px" }}>
             <AttachmentButton path={app.AttachmentPath} />
           </div>
-
-          <hr style={{ border: "none", borderTop: "1px solid #f1f5f9", margin: "4px 0 16px" }} />
-
-          {/* Error */}
-          {actionError && (
-            <div style={{
-              marginTop: "10px",
-              background: "#fff1f2", border: "1px solid #fecdd3",
-              borderRadius: "8px", padding: "8px 12px",
-              color: "#be123c", fontSize: "12px", fontWeight: 600,
-            }}>
-              {actionError}
-            </div>
-          )}
         </div>
 
-        {/* Footer actions */}
+        {/* Footer */}
         <div style={{
           display: "flex", justifyContent: "flex-end", gap: "10px",
           padding: "14px 24px 18px",
@@ -556,12 +520,11 @@ function ReviewModal({ app, onClose, onAction }) {
           <button
             type="button"
             onClick={onClose}
-            disabled={submitting}
             style={{
               padding: "8px 18px", borderRadius: "8px",
               border: "1.5px solid #e2e8f0", background: "#fff",
               color: "#475569", fontSize: "13px", fontWeight: 600,
-              cursor: submitting ? "not-allowed" : "pointer",
+              cursor: "pointer",
             }}
           >
             Close
@@ -620,14 +583,6 @@ export default function VerifyQuarterApplications() {
     };
   }, []);
 
-  // After approve/reject: update the row in-place instantly
-  const handleAction = (id, newStatus, notes) => {
-    setRows((prev) =>
-      prev.map((r) =>
-        r.Id === id ? { ...r, Status: newStatus, Notes: notes } : r
-      )
-    );
-  };
 
   const columns = makeColumns((row) => setSelected(row));
 

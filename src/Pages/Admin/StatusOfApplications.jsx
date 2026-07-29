@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
-import { request, getLatestPublication } from "../../api";
+import { request, getLatestPublication, generateApprovalMails } from "../../api";
 import Logo from "../../assets/Logo.png";
 
 const statusStyles = {
@@ -37,7 +37,7 @@ function toDateKey(value) {
 //   { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
 //   { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
 //   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
-const getColumns = (onDebarClick) => [
+const getColumns = (onDebarClick, onDeleteClick) => [
   // EMP ID
   { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
   // EMP NAME
@@ -70,7 +70,6 @@ const getColumns = (onDebarClick) => [
   { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
 
   // EXCHANGE
-
 
   { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
 
@@ -117,6 +116,23 @@ const getColumns = (onDebarClick) => [
       return <span className="text-slate-400 text-xs font-semibold">—</span>;
     },
   },
+  // DELETE
+  {
+    key: "delete",
+    header: "DELETE",
+    minWidth: 140,
+    render: (_, row) => (
+      <button
+        onClick={() => onDeleteClick(row)}
+        className="inline-flex items-center gap-1 rounded-md bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
+      >
+        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Delete
+      </button>
+    ),
+  },
 ];
 
 /* ─── Detail row inside modal ────────────────────────────────── */
@@ -128,6 +144,8 @@ function DetailRow({ label, value }) {
     </div>
   );
 }
+
+
 
 
 
@@ -320,6 +338,15 @@ export default function StatusOfApplications() {
   const [debarToDate, setDebarToDate] = useState("");
   const [isDebarring, setIsDebarring] = useState(false);
 
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedUserToDelete, setSelectedUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Mail Modal State
+  const [mailModalOpen, setMailModalOpen] = useState(false);
+  const [isMailing, setIsMailing] = useState(false);
+
   const fetchApplications = () => {
     setLoading(true);
     request("/api/admin/status-of-applications", { auth: true })
@@ -392,7 +419,44 @@ export default function StatusOfApplications() {
     }
   };
 
-  const columns = getColumns(handleDebarClick);
+  const handleDeleteClick = (row) => {
+    setSelectedUserToDelete(row);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedUserToDelete) return;
+    setIsDeleting(true);
+    try {
+      await request(`/api/admin/applications/${selectedUserToDelete.id}`, {
+        method: "DELETE",
+        auth: true,
+      });
+      setDeleteModalOpen(false);
+      setSelectedUserToDelete(null);
+      fetchApplications();
+    } catch (err) {
+      alert(err?.message || "Failed to delete application.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleGenerateMailConfirm = async () => {
+    setIsMailing(true);
+    try {
+      const res = await generateApprovalMails();
+      alert(res.message || "Mail generation started.");
+      setMailModalOpen(false);
+      fetchApplications();
+    } catch (err) {
+      alert(err?.message || "Failed to generate mails.");
+    } finally {
+      setIsMailing(false);
+    }
+  };
+
+  const columns = getColumns(handleDebarClick, handleDeleteClick);
 
   const currentWindowKey = {
     from: toDateKey(currentPublication?.From_Date),
@@ -428,26 +492,37 @@ export default function StatusOfApplications() {
       title="Status of Applications"
       subtitle="Land Data Management System - Application Tracker"
       headerRight={
-        <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setViewMode("current")}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "current"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+                }`}
+            >
+              Current Applications
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("history")}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "history"
+                ? "bg-[#1b2d69] text-white shadow-sm"
+                : "text-slate-600 hover:bg-slate-100"
+                }`}
+            >
+              History of Applications
+            </button>
+          </div>
           <button
-            type="button"
-            onClick={() => setViewMode("current")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "current"
-              ? "bg-[#1b2d69] text-white shadow-sm"
-              : "text-slate-600 hover:bg-slate-100"
-              }`}
+            onClick={() => setMailModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
           >
-            Current Applications
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("history")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "history"
-              ? "bg-[#1b2d69] text-white shadow-sm"
-              : "text-slate-600 hover:bg-slate-100"
-              }`}
-          >
-            History of Applications
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Generate Mail
           </button>
         </div>
       }
@@ -639,9 +714,238 @@ export default function StatusOfApplications() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && selectedUserToDelete && (
+        <div
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            backdropFilter: "blur(3px)",
+            zIndex: 1000,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "460px",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "18px 24px 14px",
+              borderBottom: "1px solid #f1f5f9",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{
+                  width: "36px", height: "36px", borderRadius: "10px",
+                  background: "linear-gradient(135deg, #fef2f2, #fee2e2)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="18" height="18" fill="none" stroke="#dc2626" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
+                  Delete Application
+                </p>
+              </div>
+              <button
+                onClick={() => { setDeleteModalOpen(false); setSelectedUserToDelete(null); }}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "#94a3b8", fontSize: "20px", lineHeight: 1, padding: "2px 6px",
+                }}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: "20px 24px" }}>
+              <div style={{
+                padding: "14px 16px", borderRadius: "10px",
+                background: "#fef2f2", border: "1px solid #fecdd3",
+                marginBottom: "18px",
+              }}>
+                <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#991b1b", lineHeight: 1.5 }}>
+                  Are you sure you want to delete this application? This action cannot be undone.
+                </p>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 20px" }}>
+                <DetailRow label="Emp ID" value={selectedUserToDelete.empId} />
+                <DetailRow label="Emp Name" value={selectedUserToDelete.empName} />
+                <DetailRow label="App No" value={selectedUserToDelete.appNo} />
+                <DetailRow label="Status" value={selectedUserToDelete.result} />
+                <DetailRow label="Requested Qtr" value={selectedUserToDelete.reqQtr} />
+                <DetailRow label="Qtr Type" value={selectedUserToDelete.reqQtrType} />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              display: "flex", justifyContent: "flex-end", gap: "10px",
+              padding: "14px 24px 18px",
+              borderTop: "1px solid #f1f5f9",
+            }}>
+              <button
+                type="button"
+                onClick={() => { setDeleteModalOpen(false); setSelectedUserToDelete(null); }}
+                disabled={isDeleting}
+                style={{
+                  padding: "8px 18px", borderRadius: "8px",
+                  border: "1.5px solid #e2e8f0", background: "#fff",
+                  color: "#475569", fontSize: "13px", fontWeight: 600,
+                  cursor: isDeleting ? "not-allowed" : "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+                style={{
+                  padding: "8px 20px", borderRadius: "8px",
+                  border: "none", background: "linear-gradient(135deg, #dc2626, #b91c1c)",
+                  color: "#fff", fontSize: "13px", fontWeight: 700,
+                  cursor: isDeleting ? "not-allowed" : "pointer",
+                  opacity: isDeleting ? 0.6 : 1,
+                  display: "inline-flex", alignItems: "center", gap: "6px",
+                  boxShadow: "0 2px 8px rgba(220,38,38,0.3)",
+                }}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Generate Mail Confirmation Modal */}
+      {mailModalOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(15,23,42,0.55)",
+            backdropFilter: "blur(3px)",
+            zIndex: 1000,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "16px",
+              width: "100%",
+              maxWidth: "460px",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "18px 24px 14px",
+              borderBottom: "1px solid #f1f5f9",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{
+                  width: "36px", height: "36px", borderRadius: "10px",
+                  background: "linear-gradient(135deg, #eff6ff, #dbeafe)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <svg width="18" height="18" fill="none" stroke="#2563eb" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
+                  Generate Approval Mails
+                </p>
+              </div>
+              <button
+                onClick={() => setMailModalOpen(false)}
+                style={{
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "#94a3b8", fontSize: "20px", lineHeight: 1, padding: "2px 6px",
+                }}
+              >✕</button>
+            </div>
+
+            <div style={{ padding: "24px" }}>
+              <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: 1.6 }}>
+                Are you sure you want to lock in the allotted winners, mark them as <strong>Approved</strong>, and email them their allotment order PDFs?
+              </p>
+              <p style={{ margin: "12px 0 0 0", fontSize: "13px", color: "#64748b" }}>
+                This process runs in the background and may take a few minutes if there are many winners.
+              </p>
+            </div>
+
+            <div style={{
+              display: "flex", justifyContent: "flex-end", gap: "10px",
+              padding: "14px 24px 18px",
+              borderTop: "1px solid #f1f5f9",
+            }}>
+              <button
+                type="button"
+                onClick={() => setMailModalOpen(false)}
+                disabled={isMailing}
+                style={{
+                  padding: "8px 18px", borderRadius: "8px",
+                  border: "1.5px solid #e2e8f0", background: "#fff",
+                  color: "#475569", fontSize: "13px", fontWeight: 600,
+                  cursor: isMailing ? "not-allowed" : "pointer",
+                }}
+              >Cancel</button>
+              <button
+                type="button"
+                onClick={handleGenerateMailConfirm}
+                disabled={isMailing}
+                style={{
+                  padding: "8px 20px", borderRadius: "8px",
+                  border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                  color: "#fff", fontSize: "13px", fontWeight: 700,
+                  cursor: isMailing ? "not-allowed" : "pointer",
+                  opacity: isMailing ? 0.6 : 1,
+                  display: "inline-flex", alignItems: "center", gap: "6px",
+                  boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
+                }}
+              >
+
+                {isMailing ? "Generating..." : "Generate & Send Mails"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 }
+
+
+
+
+
+
+
+
+
 
 
 
