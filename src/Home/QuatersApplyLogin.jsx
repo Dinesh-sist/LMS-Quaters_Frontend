@@ -624,7 +624,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   style={{ fontFamily: "Georgia, serif" }}
                 >
                   Forgot Password
-                </h1>
+                </h1> 
                 <p className="mt-2 text-[13px] leading-5 text-slate-500">
                   Reset your employee login password using an OTP sent to your registered email.
                 </p>
@@ -740,7 +740,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div className="relative min-h-screen w-full overflow-x-hidden">
       <style>{`
         @keyframes gradientMove {
           0% { background-position: 0% 50%; }
@@ -769,8 +769,14 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
           animation: loginCardEnter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
           will-change: transform, opacity;
         }
+        .employee-login-stage {
+          min-height: clamp(520px, calc(100vh - 170px), 760px);
+        }
         .employee-login-shell {
           width: 100%;
+        }
+        .employee-login-form {
+          gap: 16px;
         }
         .employee-login-copy {
           line-height: 1.5;
@@ -804,6 +810,39 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
             margin-inline: auto;
           }
         }
+        @media (max-width: 1279px) {
+          .employee-login-stage {
+            min-height: auto;
+          }
+          .employee-login-shell {
+            justify-content: center;
+          }
+          .employee-login-card {
+            margin-inline: auto;
+          }
+        }
+        @media (max-height: 760px) and (min-width: 1280px) {
+          .employee-login-stage {
+            align-items: flex-start;
+            min-height: auto;
+          }
+          .employee-login-card {
+            gap: 10px;
+            padding-block: 18px;
+          }
+          .employee-login-heading {
+            margin-bottom: 8px;
+          }
+          .employee-login-title {
+            font-size: 24px;
+          }
+          .employee-login-form {
+            gap: 12px;
+          }
+          .employee-login-back {
+            padding-top: 2px;
+          }
+        }
         @media (prefers-reduced-motion: reduce) {
           .employee-gradient-bg,
           .employee-login-card {
@@ -813,21 +852,21 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       `}</style>
       <div className="employee-gradient-bg" />
 
-      <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-[#fcfefd] shadow-2xl">
+      <div className="relative z-10 flex min-h-screen w-full flex-col bg-[#fcfefd] shadow-2xl">
         <TopNavbar navTextColor="light" />
 
-        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 ">
-          <div className="hidden items-center justify-center lg:flex lg:self-stretch">
+        <div className="employee-login-stage flex flex-1 items-center px-4 py-5 sm:px-6 sm:py-6 xl:grid xl:grid-cols-[minmax(0,1.45fr)_minmax(380px,520px)] xl:gap-8 xl:px-8 xl:py-6 2xl:grid-cols-[minmax(0,1.7fr)_minmax(400px,540px)]">
+          <div className="hidden items-center justify-center xl:flex xl:self-stretch">
             <img
               src={Image}
               alt="Paradip Port Authority building"
-              className="h-auto max-h-[calc(100vh-100px)] w-full max-w-[min(70vw,880px)] lg:max-w-[720px] object-contain" />
+              className="h-auto max-h-[calc(100vh-190px)] w-full max-w-[min(58vw,760px)] object-contain" />
           </div>
 
-          <div className="employee-login-shell flex items-center justify-center lg:justify-start">
-            <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7">
+          <div className="employee-login-shell flex items-center justify-center xl:justify-start">
+            <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 xl:px-7">
               <div>
-                <div className="mb-4 flex items-center gap-4">
+                <div className="employee-login-heading mb-4 flex items-center gap-4">
 
                   <div>
 
@@ -845,7 +884,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                 </p>
               </div>
 
-              <form className="flex flex-1 flex-col gap-4" onSubmit={handleLogin}>
+              <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleLogin}>
                 <div className="flex flex-col gap-1.5">
                   <label className="employee-login-label text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Username</label>
                   <div className="relative">
@@ -854,7 +893,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       autoComplete="off"
                       name="employee_username"
                       id="employee_username"
-                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -886,7 +925,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       autoComplete="new-password"
                       name="employee_password"
                       id="employee_password"
-                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
@@ -919,7 +958,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <button
                   type="submit"
-                  className="employee-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="employee-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px]"
                   disabled={isLoading}
                 >
                   {isLoading ? "Logging in..." : "Login as Employee"}
@@ -927,7 +966,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <button
                   type="button"
-                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px]"
                   onClick={() => {
                     setError("");
                     resetForgotState();
@@ -939,7 +978,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <button
                   type="button"
-                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px]"
                   onClick={async () => {
                     setError("");
                     navigate("/EmployeeRegister");
@@ -948,7 +987,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   New Register
                 </button>
 
-                <div className="mt-auto pt-3 text-center text-[12px] text-slate-400">
+                <div className="employee-login-back mt-auto pt-3 text-center text-[12px] text-slate-400">
                   <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
                     &larr; Back to Home
                   </Link>
