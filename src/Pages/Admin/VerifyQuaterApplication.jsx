@@ -121,25 +121,14 @@ function renderClassBadge(val) {
 const makeColumns = (onReview) => [
   { key: "EmpId", header: "EmpID", renderer: "empId", pinned: "left", width: 75, minWidth: 75 },
   { key: "EmpName", header: "Emp_Name", minWidth: 200 },
-<<<<<<< HEAD
-  { key: "Class", header: "CLASS", minWidth: 140 },
-  { key: "GradDate", header: "GRAD Date", minWidth: 140 },
-  { key: "DateOfJoining", header: "Date of Join", minWidth: 155 },
-=======
   { key: "Class", header: "CLASS", render: renderClassBadge, minWidth: 140 },
   { key: "GradDate", header: "GRAD_Date", minWidth: 140 },
   { key: "DateOfJoining", header: "Date_of_Join", minWidth: 155 },
->>>>>>> dc1692aae44e3c297f6e25b15b5edc7e9b3b0050
   { key: "Basic", header: "Basic", renderer: "basic", minWidth: 110 },
   { key: "DateOfBirth", header: "DATE OF BIRTH", minWidth: 150 },
   { key: "Department", header: "DEPT", minWidth: 150 },
-<<<<<<< HEAD
-  { key: "Caste", header: "CASTE ID", minWidth: 120 },
-  { key: "CurrentQuarterType", header: "CURRENT QTY Type", minWidth: 180 },
-=======
   { key: "Caste", header: "CASTE_ID", render: renderCasteBadge, minWidth: 120 },
   { key: "CurrentQuarterType", header: "CURRENT QTY_Type", minWidth: 180 },
->>>>>>> dc1692aae44e3c297f6e25b15b5edc7e9b3b0050
   {
     key: "CurrentQtr",
     header: "CURRENT QTR",

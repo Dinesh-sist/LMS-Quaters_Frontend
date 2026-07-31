@@ -23,9 +23,17 @@ const STATUS_OPTIONS = [
   { value: "BEYOND REPAIR", dot: "bg-red-500" },
 ];
 
-function SelectField({ label, icon, placeholder, value, onChange, options, renderOption, highlightValue }) {
+function SelectField({ label, icon, placeholder, value, onChange, options, renderOption, highlightValue, colorTheme = "orange" }) {
   const [isOpen, setIsOpen] = useState(false);
   const fieldRef = useRef(null);
+
+
+
+  const isBlue = colorTheme === "blue";
+  const borderClass = isBlue
+    ? "border-blue-200 shadow-[0_0_0_3px_rgba(59,130,246,0.08)] hover:border-blue-500 hover:shadow-[0_0_0_4px_rgba(59,130,246,0.12)]"
+    : "border-orange-200 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)]";
+  const selectedBg = isBlue ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-[#e87722]";
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -44,7 +52,7 @@ function SelectField({ label, icon, placeholder, value, onChange, options, rende
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="flex h-14 w-full items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-white px-4 text-left shadow-[0_0_0_3px_rgba(232,119,34,0.08)] transition-colors hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)]"
+        className={`flex h-14 w-full items-center justify-between gap-3 rounded-2xl border bg-white px-4 text-left transition-colors ${borderClass}`}
         aria-expanded={isOpen}
       >
         <span className="flex min-w-0 items-center gap-3">
@@ -78,10 +86,9 @@ function SelectField({ label, icon, placeholder, value, onChange, options, rende
                   onChange(optionValue);
                   setIsOpen(false);
                 }}
-                className={`flex w-full items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
-                  isSelected
-                    ? "bg-orange-50 text-[#e87722]"
-                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                className={`flex w-full items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${isSelected
+                  ? selectedBg
+                  : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                   }`}
               >
                 <span className="flex items-center gap-2.5">
@@ -101,11 +108,16 @@ function SelectField({ label, icon, placeholder, value, onChange, options, rende
   );
 }
 
-function InputField({ label, icon, placeholder, value, onChange, onBlur, type = "text", disabled = false }) {
+function InputField({ label, icon, placeholder, value, onChange, onBlur, type = "text", disabled = false, colorTheme = "blue" }) {
+  const isBlue = colorTheme === "blue";
+  const activeClasses = isBlue
+    ? "border-blue-200 shadow-[0_0_0_3px_rgba(59,130,246,0.08)] focus-within:border-blue-500 focus-within:shadow-[0_0_0_4px_rgba(59,130,246,0.12)] hover:border-blue-500 hover:shadow-[0_0_0_4px_rgba(59,130,246,0.12)]"
+    : "border-orange-200 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] focus-within:border-[#e87722] focus-within:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)]";
+
   return (
     <div className={`relative min-w-0 ${disabled ? "opacity-75" : ""}`}>
       <p className="mb-2 text-sm font-semibold text-slate-900">{label}</p>
-      <div className={`flex h-14 w-full items-center gap-3 rounded-2xl border bg-white px-4 transition-colors ${disabled ? "border-slate-200 cursor-not-allowed" : "border-orange-200 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] focus-within:border-[#e87722] focus-within:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)]"}`}>
+      <div className={`flex h-14 w-full items-center gap-3 rounded-2xl border bg-white px-4 transition-colors ${disabled ? "border-slate-200 cursor-not-allowed" : activeClasses}`}>
         <span className={`shrink-0 ${disabled ? "text-slate-400" : "text-slate-500"}`}>{icon}</span>
         <input
           type={type}
@@ -218,7 +230,7 @@ export default function UpdateStatusofQuarters({
   const [status, setStatus] = useState("");
   const [dbStatus, setDbStatus] = useState(""); // the value currently stored in DB (disabled in dropdown)
   const [formError, setFormError] = useState("");
-  
+
   const [employeeId, setEmployeeId] = useState("");
   const [employeeName, setEmployeeName] = useState("");
   const [employeeClass, setEmployeeClass] = useState("");
@@ -297,8 +309,8 @@ export default function UpdateStatusofQuarters({
           (opt) => opt.value.toLowerCase() === rawStatus.toLowerCase()
         );
         const normalised = matched ? matched.value : rawStatus;
-        setStatus(normalised); 
-        setDbStatus(normalised); 
+        setStatus(normalised);
+        setDbStatus(normalised);
         setFetchState("found");
 
         if (normalised.toUpperCase() === "OCCUPIED") {
@@ -339,20 +351,20 @@ export default function UpdateStatusofQuarters({
         if (res.exists) {
           setEmployeeName(res.name || "");
           setEmployeeClass(res.empClass || "");
-          
+
           const uQtr = res.userDetailsQuarter;
           const eQtr = res.estateQuarter;
-          
+
           let mismatch = false;
           if (uQtr && eQtr) {
             const normalize = (s) => (s || "").toString().trim().toUpperCase();
             if (normalize(uQtr.category) !== normalize(eQtr.category) ||
-                normalize(uQtr.areaType) !== normalize(eQtr.areaType) ||
-                normalize(uQtr.quarterNo) !== normalize(eQtr.quarterNo)) {
+              normalize(uQtr.areaType) !== normalize(eQtr.areaType) ||
+              normalize(uQtr.quarterNo) !== normalize(eQtr.quarterNo)) {
               mismatch = true;
             }
           }
-          
+
           if (mismatch) {
             setPopup({
               open: true,
@@ -407,9 +419,9 @@ export default function UpdateStatusofQuarters({
     try {
       setIsSaving(true);
       setShowConfirmModal(false);
-      await updateQuarterStatus({ 
-        area, 
-        quarterNumber, 
+      await updateQuarterStatus({
+        area,
+        quarterNumber,
         status,
         employeeId,
         employeeName,
@@ -452,249 +464,250 @@ export default function UpdateStatusofQuarters({
 
   const mainContent = (
     <section className="grid gap-5">
-        {/* ── Card ── */}
-        <div className="lms-card-land w-full overflow-visible rounded-3xl border border-slate-200 bg-white/95 p-4 sm:p-6 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10">
-            {/* ── LEFT HALF: Quarter Details ── */}
-            <div>
-              <div className="mb-6 flex items-start gap-3 sm:gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-[#e87722] sm:h-12 sm:w-12">
-                  <Home size={21} strokeWidth={1.9} />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-slate-900 sm:text-lg">
-                    Quarter Details
-                  </h2>
-                  <p className="mt-1.5 text-xs leading-6 text-slate-500 sm:text-sm">
-                    Select the quarter and choose the status that reflects its current condition.
-                  </p>
-                </div>
+      {/* ── Card ── */}
+      <div className="lms-card-land w-full overflow-visible rounded-3xl border border-slate-200 bg-white/95 p-4 sm:p-6 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10">
+          {/* ── LEFT HALF: Quarter Details ── */}
+          <div>
+            <div className="mb-6 flex items-start gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-[#e87722] sm:h-12 sm:w-12">
+                <Home size={21} strokeWidth={1.9} />
               </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <ComboField
-                  label="Quarter Category"
-                  icon={<Home size={19} />}
-                  placeholder="Select Category"
-                  value={category}
-                  onChange={(val) => {
-                    setCategory(val);
-                    setArea("");
-                    setQuarterNumber("");
-                  }}
-                  options={categoryOptions}
-                />
-                <ComboField
-                  label="Quarter Area"
-                  icon={<Home size={19} />}
-                  placeholder="Select or type area"
-                  value={area}
-                  onChange={setArea}
-                  options={areaOptions}
-                />
-              </div>
-
-              <div className="mt-5 grid gap-5 md:grid-cols-2">
-                <ComboField
-                  label="Quarter Number"
-                  icon={<Hash size={19} />}
-                  placeholder="Select or type quarter number"
-                  value={quarterNumber}
-                  onChange={setQuarterNumber}
-                  options={quarterNumberOptions}
-                />
-                <div className="relative min-w-0">
-                  <p className="mb-2 text-sm font-semibold text-slate-900">Status</p>
-                  {/* Auto-fetch badge */}
-                  {fetchState === "loading" && (
-                    <div className="flex h-14 w-full items-center gap-3 rounded-2xl border border-orange-200 bg-white px-4 shadow-[0_0_0_3px_rgba(232,119,34,0.08)]">
-                      <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[#e87722] border-t-transparent" />
-                      <span className="text-sm font-medium text-slate-400">Fetching current status…</span>
-                    </div>
-                  )}
-                  {fetchState === "not-found" && (
-                    <div className="flex h-14 w-full items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4">
-                      <Info size={17} className="shrink-0 text-red-400" />
-                      <span className="text-sm font-medium text-red-500">Quarter not found in database</span>
-                    </div>
-                  )}
-                  {(fetchState === "idle" || fetchState === "found") && (
-                    <SelectField
-                      label=""
-                      icon={<Info size={19} />}
-                      placeholder={fetchState === "idle" ? "Fill area & number first" : "Select Status"}
-                      value={status}
-                      onChange={setStatus}
-                      options={STATUS_OPTIONS}
-                      highlightValue={dbStatus}
-                      renderOption={(option) => (
-                        <>
-                          <span className={`h-2 w-2 rounded-full ${option.dot}`} />
-                          {option.value}
-                        </>
-                      )}
-                    />
-                  )}
-                </div>
-              </div>
-
-              {formError && (
-                <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                  <Info size={15} className="shrink-0 text-red-500" />
-                  <p className="text-xs font-medium text-red-600">{formError}</p>
-                </div>
-              )}
-
-              {employeeCurrentQuarter && occupantType === "Employee" && (
-                <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
-                  <p className="mb-2 text-sm font-semibold text-blue-900">Current Allotment Details</p>
-                  <div className="grid grid-cols-3 gap-4 text-sm font-medium text-slate-700">
-                    <div>
-                      <span className="block text-xs text-slate-500">Category</span>
-                      {employeeCurrentQuarter.category || "N/A"}
-                    </div>
-                    <div>
-                      <span className="block text-xs text-slate-500">Area Type</span>
-                      {employeeCurrentQuarter.areaType || "N/A"}
-                    </div>
-                    <div>
-                      <span className="block text-xs text-slate-500">Quarter Number</span>
-                      {employeeCurrentQuarter.quarterNo || "N/A"}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ── RIGHT HALF: Occupant Details ── */}
-            <div className="flex flex-col gap-5 border-t border-slate-200 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
-              <div className="mb-1 flex items-start gap-3 sm:gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 sm:h-12 sm:w-12">
-                  <User size={21} strokeWidth={1.9} />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-slate-900 sm:text-lg">
-                    Occupant Details
-                  </h2>
-                  <p className="mt-1.5 text-xs leading-6 text-slate-500 sm:text-sm">
-                    Enter the details of the occupant to whom this quarter is allotted (if applicable).
-                  </p>
-                </div>
-              </div>
-
-              {showOccupantDetails ? (
-                <>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    {dbStatus.toUpperCase() === "OCCUPIED" ? (
-                      <InputField
-                        label="Occupant Type"
-                        icon={<User size={19} />}
-                        placeholder=""
-                        value={occupantType || "Unknown"}
-                        onChange={() => {}}
-                        disabled={true}
-                      />
-                    ) : (
-                      <SelectField
-                        label="Occupant Type"
-                        icon={<User size={19} />}
-                        placeholder="Select Occupant Type"
-                        value={occupantType}
-                        onChange={(val) => {
-                          setOccupantType(val);
-                          if (val === "Outsider") setEmployeeClass("");
-                        }}
-                        options={[
-                          { value: "Employee", label: "Employee" },
-                          { value: "Outsider", label: "Outsider" }
-                        ]}
-                        renderOption={(option) => option.label}
-                      />
-                    )}
-                    <InputField
-                      label={occupantType === "Employee" ? "Employee ID" : (occupantType === "Outsider" ? "Outsider ID" : "Occupant ID")}
-                      icon={<Hash size={19} />}
-                      placeholder={occupantType === "Employee" ? "Enter Employee ID" : (occupantType === "Outsider" ? "Enter Outsider ID" : "Enter Occupant ID")}
-                      value={employeeId}
-                      onChange={setEmployeeId}
-                      onBlur={handleEmployeeIdBlur}
-                      disabled={isNonEmployeeOccupant || (dbStatus.toUpperCase() === "OCCUPIED")}
-                    />
-                  </div>
-                  <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                    {occupantType !== "Outsider" && (
-                      <InputField
-                        label={occupantType === "Employee" ? "Employee Class" : "Occupant Class"}
-                        icon={<Info size={19} />}
-                        placeholder={occupantType === "Employee" ? "Enter Employee Class" : "Enter Occupant Class"}
-                        value={employeeClass}
-                        onChange={setEmployeeClass}
-                      />
-                    )}
-                  </div>
-                  <div className="mt-5">
-                    <InputField
-                      label={occupantType === "Employee" ? "Employee Name" : (occupantType === "Outsider" ? "Outsider Name" : "Occupant Name")}
-                      icon={<User size={19} />}
-                      placeholder={occupantType === "Employee" ? "Enter Employee Name" : (occupantType === "Outsider" ? "Enter Outsider Name" : "Enter Occupant Name")}
-                      value={employeeName}
-                      onChange={setEmployeeName}
-                    />
-                  </div>
-
-                  <div className="grid gap-5 sm:grid-cols-2 mt-5">
-                    <InputField
-                      label="Allotment ID (Order)"
-                      icon={<FileText size={19} />}
-                      placeholder="Enter Allotment ID"
-                      value={allotmentId}
-                      onChange={setAllotmentId}
-                    />
-                    <InputField
-                      label="Allotment Date"
-                      type="date"
-                      icon={<Calendar size={19} />}
-                      placeholder="Select Date"
-                      value={allotmentDate}
-                      onChange={setAllotmentDate}
-                    />
-                  </div>
-                </>
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-10 px-5 text-center">
-                  <div className="mb-3 rounded-full bg-slate-200 p-3 text-slate-400">
-                    <User size={24} />
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-700">No Occupant Details Required</h3>
-                  <p className="mt-1 max-w-[240px] text-xs text-slate-500">
-                    Occupant details and allotment information are only needed when a quarter is marked as OCCUPIED.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* ── Bottom Section ── */}
-          <div className="mt-6 border-t border-slate-100 pt-6">
-            <div className="rounded-2xl border border-orange-100 bg-orange-50 px-3 py-3 sm:px-4 sm:py-4">
-              <div className="flex items-start gap-3">
-                <Info size={17} className="mt-0.5 shrink-0 text-[#e87722]" />
-                <p className="text-xs leading-6 text-slate-600 sm:text-sm">
-                  Updating the status here changes what employees see when browsing available
-                  quarters. Double-check the quarter number before saving.
+              <div>
+                <h2 className="text-base font-semibold text-slate-900 sm:text-lg">
+                  Quarter Details
+                </h2>
+                <p className="mt-1.5 text-xs leading-6 text-slate-500 sm:text-sm">
+                  Select the quarter and choose the status that reflects its current condition.
                 </p>
               </div>
             </div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving || !isFormComplete}
-                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e87722] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(232,119,34,0.24)] transition hover:bg-[#d76516] disabled:cursor-not-allowed disabled:opacity-70 sm:h-11 sm:w-auto"
-              >
-                <Save size={17} />
-                {isSaving ? "Saving..." : "Save Status"}
-              </button>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              <ComboField
+                label="Quarter Category"
+                icon={<Home size={19} />}
+                placeholder="Select Category"
+                value={category}
+                onChange={(val) => {
+                  setCategory(val);
+                  setArea("");
+                  setQuarterNumber("");
+                }}
+                options={categoryOptions}
+              />
+              <ComboField
+                label="Quarter Area"
+                icon={<Home size={19} />}
+                placeholder="Select or type area"
+                value={area}
+                onChange={setArea}
+                options={areaOptions}
+              />
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <ComboField
+                label="Quarter Number"
+                icon={<Hash size={19} />}
+                placeholder="Select or type quarter number"
+                value={quarterNumber}
+                onChange={setQuarterNumber}
+                options={quarterNumberOptions}
+              />
+              <div className="relative min-w-0">
+                <p className="mb-2 text-sm font-semibold text-slate-900">Status</p>
+                {/* Auto-fetch badge */}
+                {fetchState === "loading" && (
+                  <div className="flex h-14 w-full items-center gap-3 rounded-2xl border border-orange-200 bg-white px-4 shadow-[0_0_0_3px_rgba(232,119,34,0.08)]">
+                    <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[#e87722] border-t-transparent" />
+                    <span className="text-sm font-medium text-slate-400">Fetching current status…</span>
+                  </div>
+                )}
+                {fetchState === "not-found" && (
+                  <div className="flex h-14 w-full items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4">
+                    <Info size={17} className="shrink-0 text-red-400" />
+                    <span className="text-sm font-medium text-red-500">Quarter not found in database</span>
+                  </div>
+                )}
+                {(fetchState === "idle" || fetchState === "found") && (
+                  <SelectField
+                    label=""
+                    icon={<Info size={19} />}
+                    placeholder={fetchState === "idle" ? "Fill area & number first" : "Select Status"}
+                    value={status}
+                    onChange={setStatus}
+                    options={STATUS_OPTIONS}
+                    highlightValue={dbStatus}
+                    renderOption={(option) => (
+                      <>
+                        <span className={`h-2 w-2 rounded-full ${option.dot}`} />
+                        {option.value}
+                      </>
+                    )}
+                  />
+                )}
+              </div>
+            </div>
+
+            {formError && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                <Info size={15} className="shrink-0 text-red-500" />
+                <p className="text-xs font-medium text-red-600">{formError}</p>
+              </div>
+            )}
+
+            {employeeCurrentQuarter && occupantType === "Employee" && (
+              <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
+                <p className="mb-2 text-sm font-semibold text-blue-900">Current Allotment Details</p>
+                <div className="grid grid-cols-3 gap-4 text-sm font-medium text-slate-700">
+                  <div>
+                    <span className="block text-xs text-slate-500">Category</span>
+                    {employeeCurrentQuarter.category || "N/A"}
+                  </div>
+                  <div>
+                    <span className="block text-xs text-slate-500">Area Type</span>
+                    {employeeCurrentQuarter.areaType || "N/A"}
+                  </div>
+                  <div>
+                    <span className="block text-xs text-slate-500">Quarter Number</span>
+                    {employeeCurrentQuarter.quarterNo || "N/A"}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── RIGHT HALF: Occupant Details ── */}
+          <div className="flex flex-col gap-5 border-t border-slate-200 pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+            <div className="mb-1 flex items-start gap-3 sm:gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 sm:h-12 sm:w-12">
+                <User size={21} strokeWidth={1.9} />
+              </div>
+              <div>
+                <h2 className="text-base font-semibold text-slate-900 sm:text-lg">
+                  Occupant Details
+                </h2>
+                <p className="mt-1.5 text-xs leading-6 text-slate-500 sm:text-sm">
+                  Enter the details of the occupant to whom this quarter is allotted (if applicable).
+                </p>
+              </div>
+            </div>
+
+            {showOccupantDetails ? (
+              <>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {dbStatus.toUpperCase() === "OCCUPIED" ? (
+                    <InputField
+                      label="Occupant Type"
+                      icon={<User size={19} />}
+                      placeholder=""
+                      value={occupantType || "Unknown"}
+                      onChange={() => { }}
+                      disabled={true}
+                    />
+                  ) : (
+                    <SelectField
+                      label="Occupant Type"
+                      icon={<User size={19} />}
+                      placeholder="Select Occupant Type"
+                      colorTheme="blue"
+                      value={occupantType}
+                      onChange={(val) => {
+                        setOccupantType(val);
+                        if (val === "Outsider") setEmployeeClass("");
+                      }}
+                      options={[
+                        { value: "Employee", label: "Employee" },
+                        { value: "Outsider", label: "Outsider" }
+                      ]}
+                      renderOption={(option) => option.label}
+                    />
+                  )}
+                  <InputField
+                    label={occupantType === "Employee" ? "Employee ID" : (occupantType === "Outsider" ? "Outsider ID" : "Occupant ID")}
+                    icon={<Hash size={19} />}
+                    placeholder={occupantType === "Employee" ? "Enter Employee ID" : (occupantType === "Outsider" ? "Enter Outsider ID" : "Enter Occupant ID")}
+                    value={employeeId}
+                    onChange={setEmployeeId}
+                    onBlur={handleEmployeeIdBlur}
+                    disabled={isNonEmployeeOccupant || (dbStatus.toUpperCase() === "OCCUPIED")}
+                  />
+                </div>
+                <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                  {occupantType !== "Outsider" && (
+                    <InputField
+                      label={occupantType === "Employee" ? "Employee Class" : "Occupant Class"}
+                      icon={<Info size={19} />}
+                      placeholder={occupantType === "Employee" ? "Enter Employee Class" : "Enter Occupant Class"}
+                      value={employeeClass}
+                      onChange={setEmployeeClass}
+                    />
+                  )}
+                </div>
+                <div className="mt-5">
+                  <InputField
+                    label={occupantType === "Employee" ? "Employee Name" : (occupantType === "Outsider" ? "Outsider Name" : "Occupant Name")}
+                    icon={<User size={19} />}
+                    placeholder={occupantType === "Employee" ? "Enter Employee Name" : (occupantType === "Outsider" ? "Enter Outsider Name" : "Enter Occupant Name")}
+                    value={employeeName}
+                    onChange={setEmployeeName}
+                  />
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2 mt-5">
+                  <InputField
+                    label="Allotment ID (Order)"
+                    icon={<FileText size={19} />}
+                    placeholder="Enter Allotment ID"
+                    value={allotmentId}
+                    onChange={setAllotmentId}
+                  />
+                  <InputField
+                    label="Allotment Date"
+                    type="date"
+                    icon={<Calendar size={19} />}
+                    placeholder="Select Date"
+                    value={allotmentDate}
+                    onChange={setAllotmentDate}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex h-full flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 py-10 px-5 text-center">
+                <div className="mb-3 rounded-full bg-slate-200 p-3 text-slate-400">
+                  <User size={24} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-700">No Occupant Details Required</h3>
+                <p className="mt-1 max-w-[240px] text-xs text-slate-500">
+                  Occupant details and allotment information are only needed when a quarter is marked as OCCUPIED.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Bottom Section ── */}
+        <div className="mt-6 border-t border-slate-100 pt-6">
+          <div className="rounded-2xl border border-orange-100 bg-orange-50 px-3 py-3 sm:px-4 sm:py-4">
+            <div className="flex items-start gap-3">
+              <Info size={17} className="mt-0.5 shrink-0 text-[#e87722]" />
+              <p className="text-xs leading-6 text-slate-600 sm:text-sm">
+                Updating the status here changes what employees see when browsing available
+                quarters. Double-check the quarter number before saving.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving || !isFormComplete}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#e87722] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(232,119,34,0.24)] transition hover:bg-[#d76516] disabled:cursor-not-allowed disabled:opacity-70 sm:h-11 sm:w-auto"
+            >
+              <Save size={17} />
+              {isSaving ? "Saving..." : "Save Status"}
+            </button>
           </div>
         </div>
       </div>
