@@ -9,6 +9,8 @@ import {
   User,
   FileText,
   Calendar,
+  ChevronLeft,
+  X,
 } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import Popup from "../../Components/Popup";
@@ -195,11 +197,24 @@ function ComboField({ label, icon, placeholder, value, onChange, options }) {
   );
 }
 
-export default function UpdateStatusofQuarters() {
-  const [category, setCategory] = useState("");
+export default function UpdateStatusofQuarters({
+  isModal = false,
+  onClose = null,
+  onStatusUpdated = null,
+  initialCategory = "",
+  initialArea = "",
+  initialQuarterNo = "",
+}) {
+  const [category, setCategory] = useState(initialCategory || "");
   const [categoryOptions, setCategoryOptions] = useState([]);
-  const [area, setArea] = useState("");
-  const [quarterNumber, setQuarterNumber] = useState("");
+  const [area, setArea] = useState(initialArea || "");
+  const [quarterNumber, setQuarterNumber] = useState(initialQuarterNo || "");
+
+  useEffect(() => {
+    if (initialCategory) setCategory(initialCategory);
+    if (initialArea) setArea(initialArea);
+    if (initialQuarterNo) setQuarterNumber(initialQuarterNo);
+  }, [initialCategory, initialArea, initialQuarterNo]);
   const [status, setStatus] = useState("");
   const [dbStatus, setDbStatus] = useState(""); // the value currently stored in DB (disabled in dropdown)
   const [formError, setFormError] = useState("");
@@ -410,6 +425,10 @@ export default function UpdateStatusofQuarters() {
         variant: "success",
       });
 
+      if (typeof onStatusUpdated === "function") {
+        onStatusUpdated({ category, area, quarterNumber, newStatus: status });
+      }
+
       setArea("");
       setQuarterNumber("");
       setStatus("");
@@ -431,12 +450,8 @@ export default function UpdateStatusofQuarters() {
     }
   };
 
-  return (
-    <AdminLayout
-      title="Update Status of Quarters"
-      subtitle="Mark a quarter as vacant, occupied, under maintenance, or beyond repair."
-    >
-      <section className="grid gap-5">
+  const mainContent = (
+    <section className="grid gap-5">
         {/* ── Card ── */}
         <div className="lms-card-land w-full overflow-visible rounded-3xl border border-slate-200 bg-white/95 p-4 sm:p-6 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10">
@@ -680,52 +695,110 @@ export default function UpdateStatusofQuarters() {
                 <Save size={17} />
                 {isSaving ? "Saving..." : "Save Status"}
               </button>
-            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
+  );
 
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md scale-100 overflow-hidden rounded-[24px] bg-white p-6 shadow-2xl opacity-100 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
-                <AlertTriangle size={24} />
+  const confirmModalJSX = showConfirmModal && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-md scale-100 overflow-hidden rounded-[24px] bg-white p-6 shadow-2xl opacity-100 transition-all">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+            <AlertTriangle size={24} />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-slate-900">Clear Occupant Data?</h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Changing the status from <strong>OCCUPIED</strong> to <strong>{status}</strong> will permanently clear the current occupant's details from this quarter.
+            </p>
+          </div>
+        </div>
+        <div className="mt-8 flex gap-3 sm:justify-end">
+          <button
+            type="button"
+            onClick={() => setShowConfirmModal(false)}
+            className="w-full rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:w-auto"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={executeSave}
+            className="w-full rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 sm:w-auto"
+          >
+            Yes, clear data
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const popupJSX = (
+    <Popup
+      open={popup.open}
+      title={popup.title}
+      message={popup.message}
+      variant={popup.variant}
+      onClose={() => setPopup((prev) => ({ ...prev, open: false }))}
+    />
+  );
+
+  if (isModal) {
+    return (
+      <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-slate-900/65 backdrop-blur-md animate-in fade-in duration-200">
+        <div className="relative w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden rounded-[24px] bg-white shadow-2xl animate-in zoom-in-[0.98] duration-300 border border-slate-200">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center text-[#e87722]">
+                <Home size={20} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Clear Occupant Data?</h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Changing the status from <strong>OCCUPIED</strong> to <strong>{status}</strong> will permanently clear the current occupant's details from this quarter.
-                </p>
+                <h3 className="text-lg font-bold text-slate-900">Update Status of Quarters</h3>
+                <p className="text-xs text-slate-500">Edit status of quarters to vacant, occupied, or maintenance.</p>
               </div>
             </div>
-            <div className="mt-8 flex gap-3 sm:justify-end">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setShowConfirmModal(false)}
-                className="w-full rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:w-auto"
+                onClick={onClose}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
               >
-                Cancel
+                <ChevronLeft size={16} />
+                Back to Manage Assignments
               </button>
               <button
                 type="button"
-                onClick={executeSave}
-                className="w-full rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 sm:w-auto"
+                onClick={onClose}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
-                Yes, clear data
+                <X size={18} strokeWidth={2.5} />
               </button>
             </div>
           </div>
-        </div>
-      )}
 
-      <Popup
-        open={popup.open}
-        title={popup.title}
-        message={popup.message}
-        variant={popup.variant}
-        onClose={() => setPopup((prev) => ({ ...prev, open: false }))}
-      />
+          {/* Modal Body */}
+          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-slate-50/40">
+            {mainContent}
+          </div>
+        </div>
+
+        {confirmModalJSX}
+        {popupJSX}
+      </div>
+    );
+  }
+
+  return (
+    <AdminLayout
+      title="Update Status of Quarters"
+      subtitle="Mark a quarter as vacant, occupied, under maintenance, or beyond repair."
+    >
+      {mainContent}
+      {confirmModalJSX}
+      {popupJSX}
     </AdminLayout>
   );
 }
