@@ -3,6 +3,7 @@ import AdminLayout from "./AdminUI/AdminLayout";
 import { Files, HouseHeart, HousePlus, Users } from "lucide-react";
 import { request } from "../../api";
 
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,6 +17,7 @@ import {
 import { Bar, Pie } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+
 
 const STAT_CARDS = [
   {
@@ -58,6 +60,7 @@ const TOOLTIP = {
   boxWidth: 10,
   boxHeight: 10,
 };
+
 
 // ── Quarter Type chart: horizontal bars, 1 row per type ──
 // BAR_HEIGHT_PX = pixels allocated per row (label + bar + gap)
@@ -193,6 +196,7 @@ export default function AdminDashboard() {
       barThickness: 32,
     }],
   });
+
 
   const [pieChart, setPieChart] = useState({
     labels: ["Pending", "Approved", "Rejected"],
@@ -341,4 +345,6 @@ export default function AdminDashboard() {
     </AdminLayout>
   );
 }
+
+
 
