@@ -34,12 +34,15 @@ body.translated-rtl {
   top: 0 !important;
 }
 
+@theme {
+  --font-sans: "Inter", sans-serif;
+}
+
 * {
- 
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-sans);
   font-optical-sizing: auto;
   font-style: normal;
-};
+}
 
 
 
