@@ -64,24 +64,35 @@ function BadgeCellRenderer({ value }) {
 }
 
 function EmpIdCellRenderer({ value }) {
+  if (!value) return <span className="text-slate-400 text-xs font-semibold">—</span>;
   return (
-    <span style={{
-      padding: "2px 8px", background: "#ede9fe", color: "#6d28d9",
-      borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
-    }}>
+    <span className="inline-flex items-center rounded-md bg-purple-100 text-purple-800 border border-purple-200 px-2.5 py-0.5 text-[11px] font-bold tracking-wide">
       {value}
     </span>
   );
 }
 
 function ClassCellRenderer({ value }) {
-  const isSr1 = value === "SR-CLASS-I";
+  if (!value) return <span>—</span>;
+  const normalized = String(value).trim().toUpperCase().replace(/\s+/g, "");
+  let bg = "#f1f5f9", color = "#334155", borderColor = "#cbd5e1";
+  if (normalized.includes("SR-CLASS-I") || normalized.includes("SRCLASS-I") || normalized.includes("SRCLASS1")) {
+    bg = "#dbeafe"; color = "#1e40af"; borderColor = "#bfdbfe"; // Blue for SR-CLASS-I
+  } else if (normalized.includes("JR-CLASS-I") || normalized.includes("JRCLASS-I") || normalized.includes("JRCLASS1")) {
+    bg = "#e0e7ff"; color = "#3730a3"; borderColor = "#c7d2fe"; // Indigo for JR-CLASS-I
+  } else if (normalized.includes("CLASS-III") || normalized.includes("CLASS3")) {
+    bg = "#fef3c7"; color = "#92400e"; borderColor = "#fde68a"; // Amber for CLASS-III
+  } else if (normalized.includes("JR-CLASS-II") || normalized.includes("JRCLASS-II") || normalized.includes("CLASS-II") || normalized.includes("CLASS2")) {
+    bg = "#ccfbf1"; color = "#115e59"; borderColor = "#99f6e4"; // Teal for JR-CLASS-II
+  } else if (normalized.includes("CLASS-IV") || normalized.includes("CLASS-VI") || normalized.includes("CLASS4") || normalized.includes("CLASS6")) {
+    bg = "#f3e8ff"; color = "#6b21a8"; borderColor = "#e9d5ff"; // Purple for CLASS-VI
+  }
+
   return (
     <span style={{
-      padding: "2px 8px",
-      background: isSr1 ? "#dbeafe" : "#ffedd5",
-      color: isSr1 ? "#1d4ed8" : "#c2410c",
-      borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap",
+      padding: "2px 10px", background: bg, color: color, border: `1px solid ${borderColor}`,
+      borderRadius: 9999, fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
+      textTransform: "uppercase", letterSpacing: "0.025em"
     }}>
       {value}
     </span>
@@ -346,9 +357,11 @@ export default function AgGridTable({
       ...normalizedColumns.map((col) => {
         const isAction = col.__fieldKey === "action" || col.renderer === "action";
         const actionWidth = col.width || 220;
-        const computedWidth = isAction
+        const computedWidth = col.width
+          ? col.width
+          : isAction
           ? actionWidth
-          : Math.max(col.minWidth || 140, computedColumnWidths[col.__colId] || col.width || 140);
+          : Math.max(col.minWidth || 100, computedColumnWidths[col.__colId] || 140);
 
         const def = {
           colId: col.__colId,

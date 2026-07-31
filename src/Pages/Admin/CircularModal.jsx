@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { X, FileText, ChevronDown, Check, Info, Plus, Trash2 } from "lucide-react";
+import { X, FileText, ChevronDown, Check, Info, Plus, Trash2, Edit } from "lucide-react";
+import UpdateStatusofQuarters from "./UpdateStatusofQuarters";
 import { 
   getQuarterTypes, 
   getAreaTypesByQuarterType, 
@@ -246,6 +247,35 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
   });
   const [loading, setLoading] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
+  const [prefillQuarter, setPrefillQuarter] = useState(null);
+
+  const refreshAllAssignmentStatuses = async () => {
+    if (!form.assignments || form.assignments.length === 0) return;
+    try {
+      const updatedAssignments = await Promise.all(
+        form.assignments.map(async (a) => {
+          try {
+            const data = await getQuarterNumbersByQuarterTypeAndArea([a.category], [a.area]);
+            const statusMap = data.statusMap || {};
+            const newQuarterStatuses = (a.quarterNos || []).reduce((acc, q) => {
+              return { ...acc, [q]: statusMap[q] || a.quarterStatuses?.[q] || "UNKNOWN" };
+            }, {});
+            return { ...a, quarterStatuses: newQuarterStatuses };
+          } catch (err) {
+            console.error("Failed to refresh status for assignment", a, err);
+            return a;
+          }
+        })
+      );
+      setForm((f) => ({
+        ...f,
+        assignments: updatedAssignments,
+      }));
+    } catch (err) {
+      console.error("Error refreshing assignment statuses", err);
+    }
+  };
 
   const [draftCategory, setDraftCategory] = useState("");
   const [draftArea, setDraftArea] = useState("");
@@ -430,6 +460,29 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
       ...f,
       assignments: (f.assignments || []).filter(a => a.id !== id)
     }));
+  };
+
+  const handleRemoveSingleQuarter = (assignmentId, quarterNo) => {
+    setForm((f) => {
+      const updatedAssignments = (f.assignments || [])
+        .map((a) => {
+          if (a.id !== assignmentId) return a;
+          const newNos = (a.quarterNos || []).filter((q) => q !== quarterNo);
+          const newStatuses = { ...(a.quarterStatuses || {}) };
+          delete newStatuses[quarterNo];
+          return {
+            ...a,
+            quarterNos: newNos,
+            quarterStatuses: newStatuses,
+          };
+        })
+        .filter((a) => a.quarterNos && a.quarterNos.length > 0);
+
+      return {
+        ...f,
+        assignments: updatedAssignments,
+      };
+    });
   };
 
   const handleSave = () => {
@@ -645,7 +698,7 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
               <button
                 type="button"
                 onClick={() => setShowAssignmentModal(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X size={18} strokeWidth={2.5} />
               </button>
@@ -692,7 +745,7 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
                     type="button"
                     onClick={handleAddAssignment}
                     disabled={!draftCategory || !draftArea || draftQuarterNos.length === 0}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-blue-200"
+                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-blue-200 cursor-pointer"
                   >
                     <Plus size={18} />
                     Add Assignment
@@ -722,19 +775,40 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
                             <td className="px-4 py-3 font-medium text-slate-800">{a.category}</td>
                             <td className="px-4 py-3">{a.area}</td>
                             <td className="px-4 py-3">
-                              <div className="flex flex-wrap gap-1">
-                                {a.quarterNos.map(q => (
-                                  <span key={q} className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${(a.quarterStatuses && (a.quarterStatuses[q] === 'VACANT' || a.quarterStatuses[q] === 'VACANT ')) ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
-                                    {q}
-                                  </span>
-                                ))}
+                              <div className="flex flex-wrap gap-2.5 pt-1 pb-1">
+                                {a.quarterNos.map(q => {
+                                  const isVacant = a.quarterStatuses && (a.quarterStatuses[q] === 'VACANT' || a.quarterStatuses[q] === 'VACANT ');
+                                  return (
+                                    <span 
+                                      key={q} 
+                                      className={`relative inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-medium border ${
+                                        isVacant 
+                                          ? 'bg-blue-50 text-blue-700 border-blue-100' 
+                                          : 'bg-red-50 text-red-700 border-red-200 font-bold'
+                                      }`}
+                                    >
+                                      <button
+                                        type="button"
+                                        title={`Remove quarter ${q}`}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRemoveSingleQuarter(a.id, q);
+                                        }}
+                                        className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-slate-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer text-[9px] font-bold leading-none shadow-xs"
+                                      >
+                                        <X size={10} strokeWidth={3} />
+                                      </button>
+                                      {q}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             </td>
                             <td className="px-4 py-3 text-right">
                               <button
                                 type="button"
                                 onClick={() => handleRemoveAssignment(a.id)}
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -750,18 +824,31 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
             </div>
             
             {/* Nested Footer */}
-            <div className="border-t border-slate-100 bg-white px-6 py-4 flex items-center justify-between shrink-0">
+            <div className="border-t border-slate-100 bg-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
               {hasNonVaccantQuarters ? (
-                <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg text-[13px] font-medium border border-red-100">
-                  <Info size={16} className="shrink-0" />
-                  <span>The red quarters are not VACANT. Please check current status in 'Update Status of Quarters' page and generate the circular.</span>
+                <div className="flex items-center justify-between gap-3 text-red-600 bg-red-50 px-4 py-2.5 rounded-xl text-[13px] font-medium border border-red-100 w-full sm:w-auto flex-1">
+                  <div className="flex items-center gap-2">
+                    <Info size={16} className="shrink-0" />
+                    <span>The red quarters are not VACANT. Please update current status to proceed.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrefillQuarter(null);
+                      setShowUpdateStatusModal(true);
+                    }}
+                    className="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer shadow-xs"
+                  >
+                    <Edit size={13} />
+                    Edit Status
+                  </button>
                 </div>
               ) : <div />}
               <button
                 type="button"
                 disabled={hasNonVaccantQuarters}
                 onClick={() => setShowAssignmentModal(false)}
-                className="px-8 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all shadow-sm"
+                className="px-8 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-xl transition-all shadow-sm cursor-pointer shrink-0"
               >
                 Done
               </button>
@@ -769,6 +856,19 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
 
           </div>
         </div>
+      )}
+
+      {showUpdateStatusModal && (
+        <UpdateStatusofQuarters
+          isModal={true}
+          initialCategory={prefillQuarter?.category || ""}
+          initialArea={prefillQuarter?.area || ""}
+          initialQuarterNo={prefillQuarter?.quarterNo || ""}
+          onClose={() => setShowUpdateStatusModal(false)}
+          onStatusUpdated={async () => {
+            await refreshAllAssignmentStatuses();
+          }}
+        />
       )}
 
       </div>

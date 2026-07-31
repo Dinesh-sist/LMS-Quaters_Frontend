@@ -37,19 +37,109 @@ function StatusBadge({ value }) {
   );
 }
 
+function renderCasteBadge(val) {
+  if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
+  const normalized = String(val).trim().toUpperCase();
+
+  let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
+  if (normalized === "GENERAL" || normalized === "GEN") {
+    badgeStyle = "bg-blue-100 text-blue-700 border-blue-200";
+  } else if (normalized === "SC") {
+    badgeStyle = "bg-purple-100 text-purple-700 border-purple-200";
+  } else if (normalized === "ST") {
+    badgeStyle = "bg-amber-100 text-amber-700 border-amber-200";
+  } else if (normalized === "OBC") {
+    badgeStyle = "bg-emerald-100 text-emerald-700 border-emerald-200";
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}
+    >
+      {val}
+    </span>
+  );
+}
+
+function renderQuarterTypeBadge(val) {
+  if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
+  const normalized = String(val).trim().toUpperCase().replace(/\s+/g, " ");
+
+  let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
+
+  if (normalized.includes("A TYPE") || normalized === "A") {
+    badgeStyle = "bg-sky-100 text-sky-800 border-sky-200";
+  } else if (normalized.includes("B TYPE IIIR") || normalized.includes("B-IIIR") || normalized.includes("IIIR")) {
+    badgeStyle = "bg-teal-100 text-teal-800 border-teal-200";
+  } else if (normalized.includes("B TYPE") || normalized === "B") {
+    badgeStyle = "bg-emerald-100 text-emerald-800 border-emerald-200";
+  } else if (normalized.includes("C TYPE (MODIFIED)") || normalized.includes("MODIFIED") || normalized.includes("C-MODIFIED")) {
+    badgeStyle = "bg-purple-100 text-purple-800 border-purple-200";
+  } else if (normalized.includes("C TYPE") || normalized === "C") {
+    badgeStyle = "bg-indigo-100 text-indigo-800 border-indigo-200";
+  } else if (normalized.includes("D TYPE") || normalized === "D") {
+    badgeStyle = "bg-rose-100 text-rose-800 border-rose-200";
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border ${badgeStyle}`}
+    >
+      {val}
+    </span>
+  );
+}
+
+function renderClassBadge(val) {
+  if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
+  const normalized = String(val).trim().toUpperCase().replace(/\s+/g, "");
+
+  let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
+
+  if (normalized.includes("SR-CLASS-I") || normalized.includes("SRCLASS-I") || normalized.includes("SRCLASS1")) {
+    badgeStyle = "bg-blue-100 text-blue-800 border-blue-200";
+  } else if (normalized.includes("JR-CLASS-I") || normalized.includes("JRCLASS-I") || normalized.includes("JRCLASS1")) {
+    badgeStyle = "bg-indigo-100 text-indigo-800 border-indigo-200";
+  } else if (normalized.includes("CLASS-III") || normalized.includes("CLASS3")) {
+    badgeStyle = "bg-amber-100 text-amber-800 border-amber-200";
+  } else if (normalized.includes("JR-CLASS-II") || normalized.includes("JRCLASS-II") || normalized.includes("CLASS-II") || normalized.includes("CLASS2")) {
+    badgeStyle = "bg-teal-100 text-teal-800 border-teal-200";
+  } else if (normalized.includes("CLASS-IV") || normalized.includes("CLASS-VI") || normalized.includes("CLASS4") || normalized.includes("CLASS6")) {
+    badgeStyle = "bg-purple-100 text-purple-800 border-purple-200";
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border ${badgeStyle}`}
+    >
+      {val}
+    </span>
+  );
+}
+
 /* ─── Column definitions ──────────────────────────────────────── */
 const makeColumns = (onReview) => [
-  { key: "Id", header: "SNO", minWidth: 100 },
-  { key: "EmpId", header: "EmpID", minWidth: 130 },
+  { key: "EmpId", header: "EmpID", renderer: "empId", pinned: "left", width: 75, minWidth: 75 },
   { key: "EmpName", header: "Emp_Name", minWidth: 200 },
+<<<<<<< HEAD
   { key: "Class", header: "CLASS", minWidth: 140 },
   { key: "GradDate", header: "GRAD Date", minWidth: 140 },
   { key: "DateOfJoining", header: "Date of Join", minWidth: 155 },
+=======
+  { key: "Class", header: "CLASS", render: renderClassBadge, minWidth: 140 },
+  { key: "GradDate", header: "GRAD_Date", minWidth: 140 },
+  { key: "DateOfJoining", header: "Date_of_Join", minWidth: 155 },
+>>>>>>> dc1692aae44e3c297f6e25b15b5edc7e9b3b0050
   { key: "Basic", header: "Basic", renderer: "basic", minWidth: 110 },
   { key: "DateOfBirth", header: "DATE OF BIRTH", minWidth: 150 },
   { key: "Department", header: "DEPT", minWidth: 150 },
+<<<<<<< HEAD
   { key: "Caste", header: "CASTE ID", minWidth: 120 },
   { key: "CurrentQuarterType", header: "CURRENT QTY Type", minWidth: 180 },
+=======
+  { key: "Caste", header: "CASTE_ID", render: renderCasteBadge, minWidth: 120 },
+  { key: "CurrentQuarterType", header: "CURRENT QTY_Type", minWidth: 180 },
+>>>>>>> dc1692aae44e3c297f6e25b15b5edc7e9b3b0050
   {
     key: "CurrentQtr",
     header: "CURRENT QTR",
@@ -59,7 +149,7 @@ const makeColumns = (onReview) => [
         ? `${String(row.CurrentAreaType).trim()}/${String(row.CurrentQuarterNo).trim()}`
         : "—",
   },
-  { key: "QtrType", header: "REQ_QTR_Type", minWidth: 180 },
+  { key: "QtrType", header: "REQ_QTR_Type", render: renderQuarterTypeBadge, minWidth: 180 },
   { key: "QtrLocation", header: "REQ_QTR_Location", minWidth: 160 },
   { key: "QtrRequested", header: "REQ_QTR", minWidth: 120 },
   { key: "ExchangeReason", header: "Exchange", minWidth: 140, render: (val) => val || "—" },

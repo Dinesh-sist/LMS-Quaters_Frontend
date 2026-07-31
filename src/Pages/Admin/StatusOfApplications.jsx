@@ -37,19 +37,102 @@ function toDateKey(value) {
 //   { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
 //   { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
 //   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
+function renderQuarterTypeBadge(val) {
+  if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
+  const normalized = String(val).trim().toUpperCase().replace(/\s+/g, " ");
+
+  let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
+
+  if (normalized.includes("A TYPE") || normalized === "A") {
+    badgeStyle = "bg-sky-100 text-sky-800 border-sky-200";
+  } else if (normalized.includes("B TYPE IIIR") || normalized.includes("B-IIIR") || normalized.includes("IIIR")) {
+    badgeStyle = "bg-teal-100 text-teal-800 border-teal-200";
+  } else if (normalized.includes("B TYPE") || normalized === "B") {
+    badgeStyle = "bg-emerald-100 text-emerald-800 border-emerald-200";
+  } else if (normalized.includes("C TYPE (MODIFIED)") || normalized.includes("MODIFIED") || normalized.includes("C-MODIFIED")) {
+    badgeStyle = "bg-purple-100 text-purple-800 border-purple-200";
+  } else if (normalized.includes("C TYPE") || normalized === "C") {
+    badgeStyle = "bg-indigo-100 text-indigo-800 border-indigo-200";
+  } else if (normalized.includes("D TYPE") || normalized === "D") {
+    badgeStyle = "bg-rose-100 text-rose-800 border-rose-200";
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border ${badgeStyle}`}
+    >
+      {val}
+    </span>
+  );
+}
+
+function renderClassBadge(val) {
+  if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
+  const normalized = String(val).trim().toUpperCase().replace(/\s+/g, "");
+
+  let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
+
+  if (normalized.includes("SR-CLASS-I") || normalized.includes("SRCLASS-I") || normalized.includes("SRCLASS1")) {
+    badgeStyle = "bg-blue-100 text-blue-800 border-blue-200"; // Royal Blue for SR-CLASS-I
+  } else if (normalized.includes("JR-CLASS-I") || normalized.includes("JRCLASS-I") || normalized.includes("JRCLASS1")) {
+    badgeStyle = "bg-indigo-100 text-indigo-800 border-indigo-200"; // Indigo for JR-CLASS-I
+  } else if (normalized.includes("CLASS-III") || normalized.includes("CLASS3")) {
+    badgeStyle = "bg-amber-100 text-amber-800 border-amber-200"; // Amber for CLASS-III
+  } else if (normalized.includes("JR-CLASS-II") || normalized.includes("JRCLASS-II") || normalized.includes("CLASS-II") || normalized.includes("CLASS2")) {
+    badgeStyle = "bg-teal-100 text-teal-800 border-teal-200"; // Teal for JR-CLASS-II / CLASS-II
+  } else if (normalized.includes("CLASS-IV") || normalized.includes("CLASS-VI") || normalized.includes("CLASS4") || normalized.includes("CLASS6")) {
+    badgeStyle = "bg-purple-100 text-purple-800 border-purple-200"; // Purple for CLASS-IV / VI
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border ${badgeStyle}`}
+    >
+      {val}
+    </span>
+  );
+}
+
 const getColumns = (onDebarClick, onDeleteClick) => [
   // EMP ID
-  { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
+  { key: "empId", header: "EMP ID", renderer: "empId", pinned: "left", width: 75, minWidth: 75 },
   // EMP NAME
   { key: "empName", header: "EMP NAME", minWidth: 220 },
   // CLASS
-  { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
+  { key: "class", header: "CLASS", renderer: "class", render: renderClassBadge, minWidth: 155 },
   // GRAD DATE
   { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
   // DEPARTMENT
   { key: "dept", header: "DEPARTMENT", minWidth: 150 },
   // CASTE ID
-  { key: "casteId", header: "CASTE ID", minWidth: 120 },
+  {
+    key: "casteId",
+    header: "CASTE ID",
+    minWidth: 130,
+    render: (val) => {
+      if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
+      const normalized = String(val).trim().toUpperCase();
+
+      let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
+      if (normalized === "GENERAL" || normalized === "GEN") {
+        badgeStyle = "bg-blue-100 text-blue-700 border-blue-200";
+      } else if (normalized === "SC") {
+        badgeStyle = "bg-purple-100 text-purple-700 border-purple-200";
+      } else if (normalized === "ST") {
+        badgeStyle = "bg-amber-100 text-amber-700 border-amber-200";
+      } else if (normalized === "OBC") {
+        badgeStyle = "bg-emerald-100 text-emerald-700 border-emerald-200";
+      }
+
+      return (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}
+        >
+          {val}
+        </span>
+      );
+    },
+  },
   // CURRENT QTR TYPE
   { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
   // CURRENT QTR — combined area_type / quarter_no
@@ -63,7 +146,7 @@ const getColumns = (onDebarClick, onDeleteClick) => [
         : "—",
   },
   // REQUEST QUARTER TYPE
-  { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200 },
+  { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200, render: renderQuarterTypeBadge },
   // REQUEST QUARTER LOCATION (Area Type)
   { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
   // REQUEST QUARTER NUMBER
@@ -88,7 +171,7 @@ const getColumns = (onDebarClick, onDeleteClick) => [
       const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
       return (
         <span
-          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[normalized] || "bg-slate-100 text-slate-600"
+          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[normalized] || "bg-yellow-100 text-yellow-600"
             }`}
         >
           {label}
@@ -109,7 +192,7 @@ const getColumns = (onDebarClick, onDeleteClick) => [
             onClick={() => onDebarClick(row)}
             className="inline-flex rounded-md bg-rose-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 hover:bg-rose-200 transition-colors"
           >
-            Action
+            Debare
           </button>
         );
       }
