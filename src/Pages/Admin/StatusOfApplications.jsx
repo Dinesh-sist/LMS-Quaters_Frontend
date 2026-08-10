@@ -23,6 +23,18 @@ function toDateKey(value) {
   return `${year}-${month}-${day}`;
 }
 
+function getDefaultMailFileNo() {
+  return `AD/EST/GENL/QRS/VIII-2/${new Date().getFullYear()}(Pt.)/`;
+}
+
+function getTodayDateInputValue() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // const columns = [
 //   { key: "priorityNo", header: "PRIORITY NO",    minWidth: 120 },
 //   { key: "appNo",      header: "APP NO",         minWidth: 130 },
@@ -352,6 +364,8 @@ export default function StatusOfApplications() {
   // Mail Modal State
   const [mailModalOpen, setMailModalOpen] = useState(false);
   const [isMailing, setIsMailing] = useState(false);
+  const [mailFileNo, setMailFileNo] = useState(getDefaultMailFileNo());
+  const [mailIssueDate, setMailIssueDate] = useState(getTodayDateInputValue());
 
   const fetchApplications = () => {
     setLoading(true);
@@ -449,10 +463,30 @@ export default function StatusOfApplications() {
     }
   };
 
+  const openMailModal = () => {
+    setMailFileNo((value) => value || getDefaultMailFileNo());
+    setMailIssueDate((value) => value || getTodayDateInputValue());
+    setMailModalOpen(true);
+  };
+
+  const closeMailModal = () => {
+    if (isMailing) return;
+    setMailModalOpen(false);
+  };
+
   const handleGenerateMailConfirm = async () => {
+    const trimmedFileNo = mailFileNo.trim();
+    if (!trimmedFileNo || !mailIssueDate) {
+      alert("Please enter both File No. and Date.");
+      return;
+    }
+
     setIsMailing(true);
     try {
-      const res = await generateApprovalMails();
+      const res = await generateApprovalMails({
+        fileNo: trimmedFileNo,
+        issueDate: mailIssueDate,
+      });
       alert(res.message || "Mail generation started.");
       setMailModalOpen(false);
       fetchApplications();
@@ -523,7 +557,7 @@ export default function StatusOfApplications() {
             </button>
           </div>
           <button
-            onClick={() => setMailModalOpen(true)}
+            onClick={openMailModal}
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -887,7 +921,7 @@ export default function StatusOfApplications() {
                 </p>
               </div>
               <button
-                onClick={() => setMailModalOpen(false)}
+                onClick={closeMailModal}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   color: "#94a3b8", fontSize: "20px", lineHeight: 1, padding: "2px 6px",
@@ -897,10 +931,58 @@ export default function StatusOfApplications() {
 
             <div style={{ padding: "24px" }}>
               <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: 1.6 }}>
-                Are you sure you want to lock in the allotted winners, mark them as <strong>Approved</strong>, and email them their allotment order PDFs?
+                Enter the File No. and Date to print at the top of the allotment order PDFs before sending the approval mails.
               </p>
+              <div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    File No.
+                  </span>
+                  <input
+                    type="text"
+                    value={mailFileNo}
+                    onChange={(e) => setMailFileNo(e.target.value)}
+                    disabled={isMailing}
+                    placeholder="Enter file number"
+                    style={{
+                      width: "100%",
+                      border: "1.5px solid #cbd5e1",
+                      borderRadius: "10px",
+                      padding: "10px 12px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      outline: "none",
+                      background: isMailing ? "#f8fafc" : "#fff",
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Date
+                  </span>
+                  <input
+                    type="date"
+                    value={mailIssueDate}
+                    onChange={(e) => setMailIssueDate(e.target.value)}
+                    disabled={isMailing}
+                    style={{
+                      width: "100%",
+                      border: "1.5px solid #cbd5e1",
+                      borderRadius: "10px",
+                      padding: "10px 12px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      outline: "none",
+                      background: isMailing ? "#f8fafc" : "#fff",
+                    }}
+                  />
+                </label>
+              </div>
               <p style={{ margin: "12px 0 0 0", fontSize: "13px", color: "#64748b" }}>
-                This process runs in the background and may take a few minutes if there are many winners.
+                After confirmation, the selected winners will be marked as Approved and emailed with these PDF details.
               </p>
             </div>
 
@@ -911,7 +993,7 @@ export default function StatusOfApplications() {
             }}>
               <button
                 type="button"
-                onClick={() => setMailModalOpen(false)}
+                onClick={closeMailModal}
                 disabled={isMailing}
                 style={{
                   padding: "8px 18px", borderRadius: "8px",
@@ -923,13 +1005,13 @@ export default function StatusOfApplications() {
               <button
                 type="button"
                 onClick={handleGenerateMailConfirm}
-                disabled={isMailing}
+                disabled={isMailing || !mailFileNo.trim() || !mailIssueDate}
                 style={{
                   padding: "8px 20px", borderRadius: "8px",
                   border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
                   color: "#fff", fontSize: "13px", fontWeight: 700,
-                  cursor: isMailing ? "not-allowed" : "pointer",
-                  opacity: isMailing ? 0.6 : 1,
+                  cursor: isMailing || !mailFileNo.trim() || !mailIssueDate ? "not-allowed" : "pointer",
+                  opacity: isMailing || !mailFileNo.trim() || !mailIssueDate ? 0.6 : 1,
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
                 }}
