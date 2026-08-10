@@ -47,6 +47,8 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const [forgotResetToken, setForgotResetToken] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [showForgotNewPass, setShowForgotNewPass] = useState(false);
+  const [showForgotConfirmPass, setShowForgotConfirmPass] = useState(false);
   const [forgotMessage, setForgotMessage] = useState("");
 
   const normalizedClassOptions = useMemo(() => {
@@ -107,6 +109,8 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     setForgotResetToken("");
     setForgotNewPassword("");
     setForgotConfirmPassword("");
+    setShowForgotNewPass(false);
+    setShowForgotConfirmPass(false);
     setForgotMessage("");
   };
 
@@ -190,6 +194,10 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
     if (!forgotNewPassword) {
       setError("Enter a new password.");
+      return;
+    }
+    if (forgotNewPassword.length < 6) {
+      setError("Password must be at least 6 characters long.");
       return;
     }
     if (forgotNewPassword !== forgotConfirmPassword) {
@@ -668,27 +676,67 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
                       New Password
                     </label>
-                    <input
-                      type="password"
-                      autoComplete="new-password"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
-                      value={forgotNewPassword}
-                      onChange={(e) => setForgotNewPassword(e.target.value)}
-                      placeholder="New password"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showForgotNewPass ? "text" : "password"}
+                        autoComplete="new-password"
+                        className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        value={forgotNewPassword}
+                        onChange={(e) => setForgotNewPassword(e.target.value)}
+                        placeholder="New password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotNewPass((p) => !p)}
+                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600 cursor-pointer"
+                        aria-label={showForgotNewPass ? "Hide password" : "Show password"}
+                      >
+                        <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
+                          <path
+                            d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                          />
+                          <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+                          {!showForgotNewPass && (
+                            <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
                       Confirm Password
                     </label>
-                    <input
-                      type="password"
-                      autoComplete="new-password"
-                      className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
-                      value={forgotConfirmPassword}
-                      onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                      placeholder="Confirm password"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showForgotConfirmPass ? "text" : "password"}
+                        autoComplete="new-password"
+                        className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        value={forgotConfirmPassword}
+                        onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                        placeholder="Confirm password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotConfirmPass((p) => !p)}
+                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600 cursor-pointer"
+                        aria-label={showForgotConfirmPass ? "Hide password" : "Show password"}
+                      >
+                        <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
+                          <path
+                            d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                          />
+                          <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6" />
+                          {!showForgotConfirmPass && (
+                            <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                          )}
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : null}

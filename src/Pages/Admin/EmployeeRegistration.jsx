@@ -92,9 +92,13 @@ export default function EmployeeRegistration() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPopulated, setIsPopulated] = useState(false);
 
   // Form field changes helper
   const handleInputChange = (field, value) => {
+    if (field === "employeeId") {
+      setIsPopulated(false);
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -104,6 +108,7 @@ export default function EmployeeRegistration() {
       setFormData(EMPTY_FORM);
       setFormError("");
       setFormSuccess("");
+      setIsPopulated(false);
       return;
     }
 
@@ -126,13 +131,16 @@ export default function EmployeeRegistration() {
           mobile: res.mobile || "",
           email: res.email || "",
         }));
+        setIsPopulated(true);
         setFormSuccess(`Details populated for employee: ${res.name || empId}`);
       } else {
+        setIsPopulated(false);
         setFormError("Employee ID not found in database. Please enter details manually.");
         setFormData(prev => ({ ...EMPTY_FORM, employeeId: prev.employeeId }));
       }
     } catch (err) {
       console.error("Error looking up employee:", err);
+      setIsPopulated(false);
       setFormError("Failed to lookup employee ID. You can still enter details manually.");
       setFormData(prev => ({ ...EMPTY_FORM, employeeId: prev.employeeId }));
     } finally {
@@ -187,6 +195,7 @@ export default function EmployeeRegistration() {
       const res = await registerEmployeeAdmin(formData);
       setFormSuccess(res.message || `Employee "${employeeName}" registered/updated successfully.`);
       setFormData(EMPTY_FORM);
+      setIsPopulated(false);
     } catch (err) {
       console.error("Error registering employee:", err);
       setFormError(err.message || "Failed to register/update employee details in the database.");
@@ -412,7 +421,12 @@ export default function EmployeeRegistration() {
           <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => setFormData(EMPTY_FORM)}
+              onClick={() => {
+                setFormData(EMPTY_FORM);
+                setIsPopulated(false);
+                setFormError("");
+                setFormSuccess("");
+              }}
               disabled={isLoading}
               className="min-h-[38px] rounded-xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
             >
@@ -424,7 +438,7 @@ export default function EmployeeRegistration() {
               className="min-h-[38px] rounded-xl bg-orange-500 hover:bg-orange-600 px-6 text-[13px] font-bold text-white transition shadow-[0_2px_8px_rgba(249,115,22,0.25)] flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <UserPlus size={16} />
-              {isLoading ? "Saving..." : "Register Employee"}
+              {isLoading ? "Saving..." : isPopulated ? "Update Employee" : "Register Employee"}
             </button>
           </div>
 

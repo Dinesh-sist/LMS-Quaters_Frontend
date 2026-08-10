@@ -37,103 +37,109 @@ function toDateKey(value) {
 //   { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
 //   { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
 //   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
-const getColumns = (onDebarClick, onDeleteClick) => [
-  // EMP ID
-  { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
-  // EMP NAME
-  { key: "empName", header: "EMP NAME", minWidth: 220 },
-  // CLASS
-  { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
-  // GRAD DATE
-  { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
-  // DEPARTMENT
-  { key: "dept", header: "DEPARTMENT", minWidth: 150 },
-  // CASTE ID
-  { key: "casteId", header: "CASTE ID", minWidth: 120 },
-  // CURRENT QTR TYPE
-  { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
-  // CURRENT QTR — combined area_type / quarter_no
-  {
-    key: "currentQtr",
-    header: "CURRENT QTR",
-    minWidth: 160,
-    render: (_, row) =>
-      row?.currentAreaType && row?.currentQuarterNo
-        ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
-        : "—",
-  },
-  // REQUEST QUARTER TYPE
-  { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200 },
-  // REQUEST QUARTER LOCATION (Area Type)
-  { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
-  // REQUEST QUARTER NUMBER
-  { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
-
-  // EXCHANGE
-
-  { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
-
-  // ROSTER NO
-
-  { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
-
-  // STATUS
-
-  {
-    key: "result",
-    header: "STATUS",
-    minWidth: 150,
-    render: (value) => {
-      const normalized = (value || "").toLowerCase();
-      const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
-      return (
-        <span
-          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[normalized] || "bg-slate-100 text-slate-600"
-            }`}
-        >
-          {label}
-        </span>
-      );
+const getColumns = (onDebarClick, onDeleteClick, isHistory = false) => {
+  const cols = [
+    // EMP ID
+    { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
+    // EMP NAME
+    { key: "empName", header: "EMP NAME", minWidth: 220 },
+    // CLASS
+    { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
+    // GRAD DATE
+    { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
+    // DEPARTMENT
+    { key: "dept", header: "DEPARTMENT", minWidth: 150 },
+    // CASTE ID
+    { key: "casteId", header: "CASTE ID", minWidth: 120 },
+    // CURRENT QTR TYPE
+    { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
+    // CURRENT QTR — combined area_type / quarter_no
+    {
+      key: "currentQtr",
+      header: "CURRENT QTR",
+      minWidth: 160,
+      render: (_, row) =>
+        row?.currentAreaType && row?.currentQuarterNo
+          ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
+          : "—",
     },
-  },
-  // DEBARRED
-  {
-    key: "debarred",
-    header: "DEBARRED",
-    minWidth: 130,
-    render: (_, row) => {
-      const resultLower = (row.result || "").toLowerCase();
-      if (resultLower === "approved" || resultLower === "allotted") {
+    // REQUEST QUARTER TYPE
+    { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200 },
+    // REQUEST QUARTER LOCATION (Area Type)
+    { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
+    // REQUEST QUARTER NUMBER
+    { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
+
+    // EXCHANGE
+
+    { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
+
+    // ROSTER NO
+
+    { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
+
+    // STATUS
+
+    {
+      key: "result",
+      header: "STATUS",
+      minWidth: 150,
+      render: (value) => {
+        const normalized = (value || "").toLowerCase();
+        const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
         return (
-          <button
-            onClick={() => onDebarClick(row)}
-            className="inline-flex rounded-md bg-rose-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 hover:bg-rose-200 transition-colors"
+          <span
+            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[normalized] || "bg-slate-100 text-slate-600"
+              }`}
           >
-            Action
-          </button>
+            {label}
+          </span>
         );
-      }
-      return <span className="text-slate-400 text-xs font-semibold">—</span>;
+      },
     },
-  },
-  // DELETE
-  {
-    key: "delete",
-    header: "DELETE",
-    minWidth: 140,
-    render: (_, row) => (
-      <button
-        onClick={() => onDeleteClick(row)}
-        className="inline-flex items-center gap-1 rounded-md bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
-      >
-        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-        Delete
-      </button>
-    ),
-  },
-];
+    // DEBARRED
+    {
+      key: "debarred",
+      header: "DEBARRED",
+      minWidth: 130,
+      render: (_, row) => {
+        const resultLower = (row.result || "").toLowerCase();
+        if (resultLower === "approved" || resultLower === "allotted") {
+          return (
+            <button
+              onClick={() => onDebarClick(row)}
+              className="inline-flex rounded-md bg-rose-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 hover:bg-rose-200 transition-colors"
+            >
+              Action
+            </button>
+          );
+        }
+        return <span className="text-slate-400 text-xs font-semibold">—</span>;
+      },
+    },
+  ];
+
+  if (!isHistory) {
+    cols.push({
+      key: "delete",
+      header: "DELETE",
+      minWidth: 140,
+      render: (_, row) => (
+        <button
+          onClick={() => onDeleteClick(row)}
+          className="inline-flex items-center gap-1 rounded-md bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
+        >
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Delete
+        </button>
+      ),
+    });
+  }
+
+  return cols;
+};
 
 /* ─── Detail row inside modal ────────────────────────────────── */
 function DetailRow({ label, value }) {
@@ -425,10 +431,11 @@ export default function StatusOfApplications() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedUserToDelete) return;
+    const appId = selectedUserToDelete?.id || selectedUserToDelete?.Id;
+    if (!appId) return;
     setIsDeleting(true);
     try {
-      await request(`/api/admin/applications/${selectedUserToDelete.id}`, {
+      await request(`/api/admin/applications/${appId}`, {
         method: "DELETE",
         auth: true,
       });
@@ -436,7 +443,7 @@ export default function StatusOfApplications() {
       setSelectedUserToDelete(null);
       fetchApplications();
     } catch (err) {
-      alert(err?.message || "Failed to delete application.");
+      alert(err?.message || "Failed to skip application.");
     } finally {
       setIsDeleting(false);
     }
@@ -456,7 +463,7 @@ export default function StatusOfApplications() {
     }
   };
 
-  const columns = getColumns(handleDebarClick, handleDeleteClick);
+  const columns = getColumns(handleDebarClick, handleDeleteClick, viewMode === "history");
 
   const currentWindowKey = {
     from: toDateKey(currentPublication?.From_Date),
@@ -715,7 +722,7 @@ export default function StatusOfApplications() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete / Skip Confirmation Modal */}
       {deleteModalOpen && selectedUserToDelete && (
         <div
           style={{
@@ -732,7 +739,7 @@ export default function StatusOfApplications() {
               background: "#fff",
               borderRadius: "16px",
               width: "100%",
-              maxWidth: "460px",
+              maxWidth: "480px",
               boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
               display: "flex",
               flexDirection: "column",
@@ -756,7 +763,7 @@ export default function StatusOfApplications() {
                   </svg>
                 </div>
                 <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
-                  Delete Application
+                  Skip / Reject Allotment
                 </p>
               </div>
               <button
@@ -779,7 +786,7 @@ export default function StatusOfApplications() {
                 marginBottom: "18px",
               }}>
                 <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#991b1b", lineHeight: 1.5 }}>
-                  Are you sure you want to delete this application? This action cannot be undone.
+                  Are you sure you want to skip this applicant? The application will not be removed from the database—it will be marked as <strong>Rejected</strong> and the quarter allotment will automatically pass to the next priority waiting employee.
                 </p>
               </div>
 
@@ -829,7 +836,7 @@ export default function StatusOfApplications() {
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? "Skipping..." : "Confirm & Skip"}
               </button>
             </div>
           </div>

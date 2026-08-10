@@ -138,7 +138,7 @@ function isHindiApplied() {
   );
 }
 
-export default function TranslateButton({ showPopup = true }) {
+export default function TranslateButton({ showPopup = true, className = "" }) {
   const [isHindi, setIsHindi] = useState(() => getTranslateCookie().includes("/en/hi"));
   const [isReady, setIsReady] = useState(false);
   const [popupState, setPopupState] = useState({
@@ -293,7 +293,7 @@ export default function TranslateButton({ showPopup = true }) {
         type="button"
         onClick={handleToggle}
         disabled={!isReady}
-        className="group inline-flex items-center gap-1.5 rounded-lg border border-white/85 bg-white px-3 py-1.5 text-[10px] font-semibold text-blue-950 shadow-sm hover:shadow-md transition-all  disabled:cursor-not-allowed disabled:opacity-60 lg:text-[14px]"
+        className={className || "group inline-flex items-center gap-1.5 rounded-lg border border-white/85 bg-white px-3 py-1.5 text-[10px] font-semibold text-blue-950 shadow-sm hover:shadow-md transition-all  disabled:cursor-not-allowed disabled:opacity-60 lg:text-[14px]"}
         title={isHindi ? "Switch to English" : "Switch to Hindi"}
         aria-label={isHindi ? "Switch language to English" : "Switch language to Hindi"}      >
         <svg

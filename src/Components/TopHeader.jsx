@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import Brand from "./Brand";
 import Info from "./Info";
-import TranslateButton from "./TranslateButton";
 
 function getRoleLabel(roleKey) {
   switch (roleKey) {
@@ -22,40 +21,6 @@ function getInitials(name = "") {
   return parts.map((part) => part[0]).join("").toUpperCase();
 }
 
-
-function FontSizeControls({ onDecrease, onIncrease, onReset }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <button
-        type="button"
-        onClick={onDecrease}
-        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
-        aria-label="Decrease font size"
-        title="Decrease font size"
-      >
-        A-
-      </button>
-      <button
-        type="button"
-        onClick={onReset}
-        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
-        aria-label="Reset font size"
-        title="Reset font size"
-      >
-        A
-      </button>
-      <button
-        type="button"
-        onClick={onIncrease}
-        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
-        aria-label="Increase font size"
-        title="Increase font size"
-      >
-        A+
-      </button>
-    </div>
-  );
-}
 
 export default function TopHeader({
   initial,
@@ -110,14 +75,12 @@ export default function TopHeader({
         </div>
 
         <div className="flex flex-nowrap items-center justify-end gap-2 sm:gap-3 lg:shrink-0">
-          <FontSizeControls onDecrease={decrease} onIncrease={increase} onReset={reset} />
-          <TranslateButton />
-          <span className="hidden min-w-0 text-sm text-white sm:block">
-            Welcome{" "}
-            <span className="tinos-regular inline-block max-w-[36vw] truncate align-bottom text-[16px] font-semibold text-orange-400 lg:max-w-[31vw] lg:text-[18px] 2xl:max-w-none">
+          <div className="hidden min-w-0 items-baseline text-sm font-medium text-white sm:flex gap-1.5">
+            <span>Welcome</span>
+            <span className="max-w-[36vw] truncate text-[16px] font-bold text-orange-400 lg:max-w-[31vw] lg:text-[24px] 2xl:max-w-none">
               {displayName}
             </span>
-          </span>
+          </div>
           <div className="hidden h-7 w-px bg-white/20 lg:block" />
           <Info
             initial={initials}
@@ -127,6 +90,9 @@ export default function TopHeader({
             notifications={notifications}
             logoutTo={logoutTo}
             onLogout={onLogout}
+            onDecreaseFont={decrease}
+            onIncreaseFont={increase}
+            onResetFont={reset}
           />
         </div>
       </div>

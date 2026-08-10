@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import { Files, HouseHeart, HousePlus, Users } from "lucide-react";
 import { request } from "../../api";
-
 
 import {
   Chart as ChartJS,
@@ -14,10 +13,9 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Bar, Pie } from "react-chartjs-2";
+import { Bar, Doughnut } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
-
 
 const STAT_CARDS = [
   {
@@ -51,100 +49,400 @@ const STAT_CARDS = [
 ];
 
 const TOOLTIP = {
-  backgroundColor: "rgba(15, 23, 42, 0.88)",
-  titleColor: "#f1f5f9",
-  bodyColor: "#cbd5e1",
+  backgroundColor: "rgba(15, 23, 42, 0.92)",
+  titleColor: "#f8fafc",
+  bodyColor: "#e2e8f0",
   padding: 10,
-  cornerRadius: 6,
+  cornerRadius: 8,
   displayColors: true,
   boxWidth: 10,
   boxHeight: 10,
 };
 
+// ── Helper to calculate smooth fade-in alpha for data labels after landing animation ──
+function getFadeAlpha(chart) {
+  if (!chart._labelsFadeStartTime) return 0;
+  const fadeDuration = 400; // 400ms smooth fade-in
+  const elapsed = Date.now() - chart._labelsFadeStartTime;
+  const rawProgress = Math.min(1, Math.max(0, elapsed / fadeDuration));
+  const alpha = 1 - Math.pow(1 - rawProgress, 3); // easeOutCubic
 
-// ── Quarter Type chart: horizontal bars, 1 row per type ──
-// BAR_HEIGHT_PX = pixels allocated per row (label + bar + gap)
-// The chart height is calculated dynamically based on actual row count
-const BAR_HEIGHT_PX = 44; // px per bar row — feels spacious, not cramped
-const BAR_MIN_HEIGHT = 300;
+  if (rawProgress < 1) {
+    requestAnimationFrame(() => {
+      if (chart.ctx) chart.draw();
+    });
+  }
+  return alpha;
+}
 
-function makeQuarterTypeOpts() {
+// ── Plugin to draw numerical counts neatly at the right end of each horizontal bar ──
+const endBarLabelsPlugin = {
+  id: "endBarLabels",
+  afterDatasetsDraw(chart) {
+    if (!chart._labelsFadeStartTime) {
+      return;
+    }
+
+    if (chart.options.scales?.x?.stacked) {
+      return;
+    }
+
+    const alpha = getFadeAlpha(chart);
+    if (alpha <= 0) return;
+
+    const { ctx } = chart;
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if (!meta.hidden) {
+        meta.data.forEach((element, index) => {
+          const value = dataset.data[index];
+          if (value !== undefined && value !== null && value > 0) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = "#334155";
+            ctx.font = "600 11px sans-serif";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(value.toLocaleString("en-IN"), element.x + 8, element.y);
+            ctx.restore();
+          }
+        });
+      }
+    });
+  },
+};
+
+function getCategoryStatusOpts(isStacked) {
   return {
     indexAxis: "y",
     responsive: true,
     maintainAspectRatio: false,
-    animation: { x: { duration: 1400, easing: "easeOutQuart", from: 0 } },
-    layout: { padding: { top: 8, bottom: 8, left: 4, right: 16 } },
+    categoryPercentage: isStacked ? 0.55 : 0.82,
+    barPercentage: 0.85,
+    animation: {
+      duration: 1200,
+      easing: "easeOutQuart",
+      onComplete: (context) => {
+        if (context.chart && !context.chart._labelsFadeStartTime) {
+          context.chart._labelsFadeStartTime = Date.now();
+          context.chart.draw();
+        }
+      },
+    },
+    animations: {
+      x: {
+        type: "number",
+        easing: "easeOutQuart",
+        duration: 1200,
+        from: 0,
+      },
+      y: {
+        duration: 0,
+      },
+      width: {
+        type: "number",
+        easing: "easeOutQuart",
+        duration: 1200,
+        from: 0,
+      },
+      height: {
+        duration: 0,
+      },
+    },
+    layout: { padding: { top: 16, bottom: 16, left: 4, right: 64 } },
     plugins: {
-      legend: { display: false },
+      legend: {
+        display: true,
+        position: "top",
+        align: "end",
+        labels: {
+          color: "#334155",
+          font: { size: 12, weight: "600" },
+          usePointStyle: true,
+          pointStyle: "circle",
+          padding: 16,
+        },
+      },
       tooltip: {
         ...TOOLTIP,
-        callbacks: { label: (c) => `  ${c.parsed.x} employees` },
+        callbacks: {
+          label: (c) => `  ${c.dataset.label}: ${c.parsed.x.toLocaleString("en-IN")} quarters`,
+        },
       },
     },
     scales: {
       x: {
+        stacked: isStacked,
         grid: { color: "rgba(0,0,0,0.05)" },
         ticks: { color: "#64748b", font: { size: 11 } },
+        beginAtZero: true,
       },
       y: {
+        stacked: isStacked,
         grid: { display: false },
-        ticks: {
-          color: "#1e293b",
-          font: { size: 11, weight: "500" },
-          showLabelBackdrop: true,
-          backdropColor: "rgba(241,245,249,0.85)",
-          backdropPadding: { x: 6, y: 3 },
-          // Ensure long labels don't get cut
-          maxRotation: 0,
-          autoSkip: false,
-        },
+        ticks: { color: "#1e293b", font: { size: 11, weight: "600" } },
       },
     },
   };
 }
 
+// ── Plugin to draw numerical counts at the top of vertical bars ──
+const topVerticalBarLabelsPlugin = {
+  id: "topVerticalBarLabels",
+  afterDatasetsDraw(chart) {
+    if (!chart._labelsFadeStartTime) {
+      return;
+    }
 
-const employeeClassOpts = {
-  responsive: true,
-  maintainAspectRatio: false,
-  animation: { duration: 1400, easing: "easeOutQuart" },
-  plugins: {
-    legend: { display: false },
-    tooltip: { ...TOOLTIP, callbacks: { label: (c) => `  ${c.parsed.y} employees` } },
-  },
-  scales: {
-    x: {
-      grid: { display: false },
-      ticks: { color: "#1e293b", font: { size: 10, weight: "500" }, maxRotation: 0 },
-    },
-    y: {
-      grid: { color: "rgba(0,0,0,0.05)" },
-      ticks: { color: "#64748b", font: { size: 10 } },
-    },
+    const alpha = getFadeAlpha(chart);
+    if (alpha <= 0) return;
+
+    const { ctx } = chart;
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if (!meta.hidden) {
+        meta.data.forEach((element, index) => {
+          const value = dataset.data[index];
+          if (value !== undefined && value !== null && value > 0) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = "#334155";
+            ctx.font = "bold 11px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(value.toLocaleString("en-IN"), element.x, element.y - 4);
+            ctx.restore();
+          }
+        });
+      }
+    });
   },
 };
 
+const donutCenterTextPlugin = {
+  id: "donutCenterText",
+  afterDraw(chart) {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
 
-const pieOpts = {
+    const dataset = chart.config.data.datasets[0];
+    if (!dataset || !dataset.data || !dataset.data.length) return;
+
+    const total = dataset.data.reduce((acc, curr) => acc + (Number(curr) || 0), 0);
+
+    ctx.save();
+    const centerX = (chartArea.left + chartArea.right) / 2;
+    const centerY = (chartArea.top + chartArea.bottom) / 2;
+
+    ctx.font = "600 11px sans-serif";
+    ctx.fillStyle = "#64748b";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Total", centerX, centerY - 9);
+
+    ctx.font = "bold 17px sans-serif";
+    ctx.fillStyle = "#0f172a";
+    ctx.fillText(total.toLocaleString("en-IN"), centerX, centerY + 9);
+
+    ctx.restore();
+  },
+};
+
+const classDoughnutOpts = {
   responsive: true,
   maintainAspectRatio: false,
-  animation: { duration: 1400, easing: "easeOutQuart", animateRotate: true, animateScale: true },
+  animation: {
+    duration: 1400,
+    easing: "easeOutQuart",
+    animateRotate: true,
+    animateScale: true,
+  },
+  animations: {
+    numbers: {
+      type: "number",
+      properties: ["circumference", "endAngle"],
+      from: 0,
+      duration: 1400,
+      easing: "easeOutQuart",
+    },
+  },
+  cutout: "52%",
+  layout: { padding: { left: 0, right: 36, top: 4, bottom: 4 } },
   plugins: {
     legend: {
       display: true,
       position: "right",
+      align: "center",
       labels: {
         color: "#1e293b",
-        font: { size: 11, weight: "500" },
-        padding: 14,
+        font: { size: 11, weight: "600" },
+        padding: 8,
         usePointStyle: true,
-        pointStyleWidth: 9,
+        pointStyle: "rectRounded",
+        pointStyleWidth: 15,
       },
     },
     tooltip: {
       ...TOOLTIP,
-      callbacks: { label: (c) => `  ${c.label}: ${c.parsed} applications` },
+      callbacks: {
+        label: (c) => `  ${c.label}: ${c.parsed.toLocaleString("en-IN")} employees`,
+      },
+    },
+  },
+};
+
+const historyChartOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: {
+    duration: 1200,
+    easing: "easeOutQuart",
+    onComplete: (context) => {
+      if (context.chart && !context.chart._labelsFadeStartTime) {
+        context.chart._labelsFadeStartTime = Date.now();
+        context.chart.draw();
+      }
+    },
+  },
+  animations: {
+    y: {
+      type: "number",
+      easing: "easeOutQuart",
+      duration: 1200,
+      from: (ctx) => (ctx.chart.scales.y ? ctx.chart.scales.y.getPixelForValue(0) : undefined),
+    },
+    x: { duration: 0 },
+    height: { type: "number", easing: "easeOutQuart", duration: 1200, from: 0 },
+    width: { duration: 0 },
+  },
+  layout: { padding: { top: 24, bottom: 4, left: 4, right: 16 } },
+  plugins: {
+    legend: {
+      display: true,
+      position: "top",
+      align: "end",
+      labels: {
+        color: "#334155",
+        font: { size: 12, weight: "600" },
+        usePointStyle: true,
+        pointStyle: "circle",
+        padding: 16,
+      },
+    },
+    tooltip: {
+      ...TOOLTIP,
+      padding: 12,
+      callbacks: {
+        title: (items) => {
+          const item = items[0];
+          return item ? `${item.label}` : "";
+        },
+        beforeBody: (items) => {
+          const item = items[0];
+          if (!item) return [];
+          const meta =
+            item.dataset?.committeeMeta?.[item.dataIndex] ||
+            item.chart?.data?.committeeMeta?.[item.dataIndex];
+          if (!meta) return [];
+          const lines = [];
+          if (meta.fromDate && meta.toDate) {
+            lines.push(`Publish Date: ${meta.fromDate} to ${meta.toDate}`);
+          }
+          if (meta.quarterTypes) {
+            lines.push(`Quarter Types: ${meta.quarterTypes}`);
+          }
+          return lines;
+        },
+        label: (c) => `  ${c.dataset.label}: ${c.parsed.y.toLocaleString("en-IN")} applications`,
+      },
+    },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { color: "#1e293b", font: { size: 11, weight: "600" } },
+    },
+    y: {
+      min: 0,
+      max: 100,
+      grid: { color: "rgba(0,0,0,0.05)" },
+      ticks: { color: "#64748b", font: { size: 11 }, stepSize: 10 },
+      beginAtZero: true,
+    },
+  },
+};
+
+const CUSTOM_CATEGORY_ORDER = [
+  "1 ROOM",
+  "A TYPE",
+  "B TYPE",
+  "B TYPE IIIR",
+  "C TYPE",
+  "C TYPE (MODIFIED)",
+  "D TYPE",
+  "E TYPE",
+];
+
+const TYPE_BAR_COLORS = [
+  "#2563EB", // Royal Blue
+  "#10B981", // Emerald
+  "#F59E0B", // Amber
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#06B6D4", // Cyan
+  "#F97316", // Orange
+  "#6366F1", // Indigo
+  "#14B8A6", // Teal
+  "#E11D48", // Rose
+];
+
+const typeChartOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: {
+    duration: 1200,
+    easing: "easeOutQuart",
+    onComplete: (context) => {
+      if (context.chart && !context.chart._labelsFadeStartTime) {
+        context.chart._labelsFadeStartTime = Date.now();
+        context.chart.draw();
+      }
+    },
+  },
+  animations: {
+    y: {
+      type: "number",
+      easing: "easeOutQuart",
+      duration: 1200,
+      from: (ctx) => (ctx.chart.scales.y ? ctx.chart.scales.y.getPixelForValue(0) : undefined),
+    },
+    x: {
+      duration: 0,
+    },
+    height: {
+      type: "number",
+      easing: "easeOutQuart",
+      duration: 1200,
+      from: 0,
+    },
+    width: {
+      duration: 0,
+    },
+  },
+  layout: { padding: { top: 20, bottom: 4 } },
+  plugins: {
+    legend: { display: false },
+    tooltip: { ...TOOLTIP, callbacks: { label: (c) => `  ${c.label}: ${c.parsed.y} employees` } },
+  },
+  scales: {
+    x: {
+      grid: { display: false },
+      ticks: { display: false },
+    },
+    y: {
+      grid: { color: "rgba(0,0,0,0.05)" },
+      ticks: { color: "#64748b", font: { size: 10 }, stepSize: 50 },
+      beginAtZero: true,
     },
   },
 };
@@ -160,7 +458,7 @@ function Card({ title, action, children, className = "" }) {
     >
       <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="truncate text-sm font-semibold text-slate-800">{title}</h2>
-        {action && <span className="shrink-0 text-xs text-slate-400">{action}</span>}
+        {action && <div className="shrink-0">{action}</div>}
       </div>
       {children}
     </div>
@@ -168,21 +466,70 @@ function Card({ title, action, children, className = "" }) {
 }
 
 export default function AdminDashboard() {
+  const currentYear = useMemo(() => new Date().getFullYear(), []);
+  const yearsList = useMemo(
+    () => [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4],
+    [currentYear]
+  );
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
   const [counts, setCounts] = useState({
     total: "—", occupied: "—", vacant: "—", beyondRepair: "—",
   });
 
-  const [typeChart, setTypeChart] = useState({
+  const [chartMode, setChartMode] = useState("grouped"); // "grouped" | "stacked"
+
+  const [historyChart, setHistoryChart] = useState({
     labels: [],
-    datasets: [{
-      label: "Employees",
-      data: [],
-      backgroundColor: "#378ADD",
-      borderRadius: 0,
-      borderSkipped: false,
-      categoryPercentage: 0.7,  // leaves breathing room between bars
-      barPercentage: 0.8,
-    }],
+    committeeMeta: [],
+    datasets: [
+      {
+        label: "Total Applications",
+        data: [],
+        backgroundColor: "#2563EB",
+        borderRadius: 0,
+        borderSkipped: false,
+        barThickness: 24,
+      },
+      {
+        label: "Approved Applications",
+        data: [],
+        backgroundColor: "#10B981",
+        borderRadius: 0,
+        borderSkipped: false,
+        barThickness: 24,
+      },
+    ],
+  });
+
+  const [categoryChart, setCategoryChart] = useState({
+    labels: [],
+    datasets: [
+      {
+        label: "Occupied",
+        data: [],
+        backgroundColor: "#2563EB",
+        borderRadius: 0,
+        borderSkipped: false,
+        barThickness: 20,
+      },
+      {
+        label: "Vacant",
+        data: [],
+        backgroundColor: "#10B981",
+        borderRadius: 0,
+        borderSkipped: false,
+        barThickness: 20,
+      },
+      {
+        label: "Others",
+        data: [],
+        backgroundColor: "#F59E0B",
+        borderRadius: 0,
+        borderSkipped: false,
+        barThickness: 20,
+      },
+    ],
   });
 
   const [classChart, setClassChart] = useState({
@@ -190,22 +537,21 @@ export default function AdminDashboard() {
     datasets: [{
       label: "Employees",
       data: [],
-      backgroundColor: ["#7F77DD", "#534AB7", "#1D9E75", "#EF9F27", "#D85A30"],
-      borderRadius: 0,
-      borderSkipped: false,
-      barThickness: 32,
+      backgroundColor: TYPE_BAR_COLORS,
+      borderColor: "#ffffff",
+      borderWidth: 2,
+      hoverOffset: 6,
     }],
   });
 
-
-  const [pieChart, setPieChart] = useState({
-    labels: ["Pending", "Approved", "Rejected"],
+  const [typeChart, setTypeChart] = useState({
+    labels: [],
     datasets: [{
+      label: "Employees",
       data: [],
-      backgroundColor: ["#EF9F27", "#1D9E75", "#E24B4A"],
-      borderColor: ["#fff", "#fff", "#fff"],
-      borderWidth: 3,
-      hoverOffset: 8,
+      backgroundColor: TYPE_BAR_COLORS,
+      borderRadius: 0,
+      borderSkipped: false,
     }],
   });
 
@@ -225,57 +571,147 @@ export default function AdminDashboard() {
       })))
       .catch(console.error);
 
-    request("/api/dashboard/estate-quarters/employees-by-type", { auth: true })
+    request("/api/dashboard/estate-quarters/category-status-counts", { auth: true })
       .then((d) => {
         if (!Array.isArray(d)) return;
-        setTypeChart((p) => ({
-          ...p,
-          labels: d.map((i) => i.type),
-          datasets: [{ ...p.datasets[0], data: d.map((i) => i.count) }],
-        }));
+        const sorted = [...d].sort((a, b) => {
+          const catA = String(a.category || "").trim().toUpperCase();
+          const catB = String(b.category || "").trim().toUpperCase();
+          const idxA = CUSTOM_CATEGORY_ORDER.indexOf(catA);
+          const idxB = CUSTOM_CATEGORY_ORDER.indexOf(catB);
+          const posA = idxA !== -1 ? idxA : 999;
+          const posB = idxB !== -1 ? idxB : 999;
+          if (posA !== posB) return posA - posB;
+          return catA.localeCompare(catB);
+        });
+
+        setCategoryChart({
+          labels: sorted.map((i) => i.category),
+          datasets: [
+            {
+              label: "Occupied",
+              data: sorted.map((i) => i.occupied),
+              backgroundColor: "#2563EB",
+              borderRadius: 0,
+              borderSkipped: false,
+              barThickness: 20,
+            },
+            {
+              label: "Vacant",
+              data: sorted.map((i) => i.vacant),
+              backgroundColor: "#10B981",
+              borderRadius: 0,
+              borderSkipped: false,
+              barThickness: 20,
+            },
+            {
+              label: "Others",
+              data: sorted.map((i) => i.others),
+              backgroundColor: "#F59E0B",
+              borderRadius: 0,
+              borderSkipped: false,
+              barThickness: 20,
+            },
+          ],
+        });
       })
       .catch(console.error);
 
     request("/api/dashboard/employees/count-by-class", { auth: true })
       .then((d) => {
         if (!Array.isArray(d)) return;
-        setClassChart((p) => ({
-          ...p,
+        const colors = d.map((_, idx) => TYPE_BAR_COLORS[idx % TYPE_BAR_COLORS.length]);
+        setClassChart({
           labels: d.map((i) => i.className),
-          datasets: [{ ...p.datasets[0], data: d.map((i) => i.count) }],
-        }));
+          datasets: [{
+            label: "Employees",
+            data: d.map((i) => i.count),
+            backgroundColor: colors,
+            borderColor: "#ffffff",
+            borderWidth: 2,
+            hoverOffset: 6,
+          }],
+        });
       })
       .catch(console.error);
 
-    request("/api/dashboard/applications/status-counts", { auth: true })
+    request("/api/dashboard/estate-quarters/employees-by-type", { auth: true })
       .then((d) => {
-        if (!d) return;
-        setPieChart((p) => ({
-          ...p,
-          datasets: [{ ...p.datasets[0], data: [d.pending || 0, d.approved || 0, d.rejected || 0] }],
-        }));
+        if (!Array.isArray(d)) return;
+        const activeTypes = d.filter((i) => Number(i.count) > 0);
+        const sortedTypes = [...activeTypes].sort((a, b) => {
+          const catA = String(a.type || "").trim().toUpperCase();
+          const catB = String(b.type || "").trim().toUpperCase();
+          const idxA = CUSTOM_CATEGORY_ORDER.indexOf(catA);
+          const idxB = CUSTOM_CATEGORY_ORDER.indexOf(catB);
+          const posA = idxA !== -1 ? idxA : 999;
+          const posB = idxB !== -1 ? idxB : 999;
+          if (posA !== posB) return posA - posB;
+          return catA.localeCompare(catB);
+        });
+
+        const colors = sortedTypes.map((_, idx) => TYPE_BAR_COLORS[idx % TYPE_BAR_COLORS.length]);
+        setTypeChart({
+          labels: sortedTypes.map((i) => i.type),
+          datasets: [{
+            label: "Employees",
+            data: sortedTypes.map((i) => i.count),
+            backgroundColor: colors,
+            borderRadius: 0,
+            borderSkipped: false,
+            barThickness: 24,
+          }],
+        });
       })
       .catch(console.error);
   }, []);
 
-  // ── Dynamic height: 44px per bar row, min 300px ──
-  // This ensures 10 rows get 440px, 5 rows get 300px, etc.
-  const typeChartHeight = Math.max(
-    BAR_MIN_HEIGHT,
-    typeChart.labels.length * BAR_HEIGHT_PX + 60  // +60 for x-axis + padding
-  );
+  useEffect(() => {
+    request(`/api/dashboard/allotment-committee/history?year=${selectedYear}`, { auth: true })
+      .then((d) => {
+        if (!d || !Array.isArray(d.committees)) return;
+        const comms = d.committees;
+        setHistoryChart({
+          labels: comms.map((c) => c.committeeName),
+          committeeMeta: comms,
+          datasets: [
+            {
+              label: "Total Applications",
+              data: comms.map((c) => c.totalApplications),
+              committeeMeta: comms,
+              backgroundColor: "#2563EB",
+              borderRadius: 0,
+              borderSkipped: false,
+              barThickness: 24,
+            },
+            {
+              label: "Approved Applications",
+              data: comms.map((c) => c.approvedApplications),
+              committeeMeta: comms,
+              backgroundColor: "#10B981",
+              borderRadius: 0,
+              borderSkipped: false,
+              barThickness: 24,
+            },
+          ],
+        });
+      })
+      .catch(console.error);
+  }, [selectedYear]);
+
+  const isStacked = chartMode === "stacked";
+  const categoryOpts = useMemo(() => getCategoryStatusOpts(isStacked), [isStacked]);
+
+  const rowHeight = isStacked ? 70 : 95;
+  const categoryChartHeight = Math.max(380, categoryChart.labels.length * rowHeight + 60);
 
   return (
     <AdminLayout
       title="Dashboard"
       subtitle="A quick overview of quarter management activity, requests, and notices."
     >
-
-      {/* ══ Stat Cards ══
-          `w-full` + `overflow-hidden` on the grid prevents any card from
-          exceeding the available content-area width.
-      */}
-      <div className="grid w-full grid-cols-2 gap-3 overflow-hidden lg:grid-cols-4">
+      {/* ══ Stat Cards ══ */}
+      <div className="grid w-full grid-cols-2 gap-4 overflow-hidden lg:grid-cols-4">
         {STAT_CARDS.map((card, i) => (
           <div
             key={card.key}
@@ -308,43 +744,115 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* ══ Charts ══ */}
-      <div className="grid w-full min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* ══ History of House Allotment Committee (Full Wide Chart) ══ */}
+      <div className="mt-6 w-full min-w-0">
+        <Card
+          title="History of House Allotment Committee"
+          action={
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              aria-label="Select Year"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+            >
+              {yearsList.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          }
+        >
+          <div className="w-full min-w-0" style={{ height: "clamp(300px, 38vh, 440px)" }}>
+            <Bar
+              key={`hist-${selectedYear}-${historyChart.datasets[0].data.length}`}
+              data={historyChart}
+              options={historyChartOpts}
+              plugins={[topVerticalBarLabelsPlugin]}
+            />
+          </div>
+        </Card>
+      </div>
 
-        {/* LEFT — Quarter Type horizontal bar
-            Height is DYNAMIC: 44px × number of rows so every bar has room.
-            No more cramped or clipped labels.
-        */}
-        <Card title="Employees by Quarter Type">
-          <div
-            className="w-full min-w-0"
-            style={{ height: `${typeChartHeight}px` }}
-          >
-            <Bar data={typeChart} options={makeQuarterTypeOpts()} />
+      {/* ══ Charts ══ */}
+      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-2 mt-6">
+
+        {/* LEFT — Grouped / Stacked Horizontal Bar Chart */}
+        <Card
+          title="Quarters Breakdown by Category"
+          action={
+            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setChartMode("grouped")}
+                className={`rounded-md px-2.5 py-1 transition-all ${
+                  chartMode === "grouped"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Grouped
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartMode("stacked")}
+                className={`rounded-md px-2.5 py-1 transition-all ${
+                  chartMode === "stacked"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Stacked
+              </button>
+            </div>
+          }
+        >
+          <div className="w-full min-w-0 max-h-[520px] overflow-y-auto pr-1">
+            <div style={{ height: `${categoryChartHeight}px`, minHeight: "380px" }}>
+              <Bar key={`cat-${categoryChart.labels.length}-${chartMode}`} data={categoryChart} options={categoryOpts} plugins={[endBarLabelsPlugin]} />
+            </div>
           </div>
         </Card>
 
         {/* RIGHT — two stacked */}
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-6">
 
-          <Card title="Employees by Class">
-            <div className="w-full min-w-0" style={{ height: "clamp(150px, 17vh, 220px)" }}>
-              <Bar data={classChart} options={employeeClassOpts} />
+          <Card title="Number of Employees by Class">
+            <div className="w-full min-w-0" style={{ height: "clamp(210px, 25vh, 280px)" }}>
+              {classChart.labels.length > 0 && (
+                <Doughnut
+                  key={`cls-${classChart.labels.join("-")}`}
+                  data={classChart}
+                  options={classDoughnutOpts}
+                  plugins={[donutCenterTextPlugin]}
+                />
+              )}
             </div>
           </Card>
 
-          <Card title="Applications by Status" className="flex-1">
-            <div className="w-full min-w-0" style={{ height: "clamp(160px, 19vh, 240px)" }}>
-              <Pie data={pieChart} options={pieOpts} />
+          <Card title="Number of Employees by Quarter Type" className="flex-1">
+            <div className="flex flex-col gap-3">
+              <div className="w-full min-w-0" style={{ height: "clamp(180px, 22vh, 260px)" }}>
+                <Bar key={`type-${typeChart.labels.length}`} data={typeChart} options={typeChartOpts} plugins={[topVerticalBarLabelsPlugin]} />
+              </div>
+              {typeChart.labels.length > 0 && (
+                <div className="grid grid-cols-3 gap-x-6 gap-y-2 pt-2.5 border-t border-slate-100 text-[11px] font-semibold text-slate-700">
+                  {typeChart.labels.map((label, idx) => (
+                    <div key={label} className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full shrink-0 shadow-sm"
+                        style={{ backgroundColor: TYPE_BAR_COLORS[idx % TYPE_BAR_COLORS.length] }}
+                      />
+                      <span className="truncate">{label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Card>
 
         </div>
       </div>
-
     </AdminLayout>
   );
 }
-
-
-

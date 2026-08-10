@@ -395,10 +395,13 @@ export default function ApplyForQuartersEmployees() {
     return () => { cancelled = true; };
   }, []);
 
+  const [rejectedApplication, setRejectedApplication] = useState(null);
+  const [rejectedPopupOpen, setRejectedPopupOpen] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
-    async function loadApprovedQuarter() {
+    async function loadApplicationStatus() {
       try {
         const data = await request("/api/admin/check-approval", { auth: true });
         if (cancelled) return;
@@ -406,16 +409,25 @@ export default function ApplyForQuartersEmployees() {
         const items = Array.isArray(data?.items) ? data.items : [];
         const approved = items.find((row) => String(row?.Status || "").toLowerCase() === "approved") || null;
         setApprovedQuarter(approved);
+
+        // Check if there is a rejected application that hasn't been dismissed this session
+        const rejected = items.find((row) => String(row?.Status || "").toLowerCase() === "rejected");
+        if (rejected) {
+          const dismissedKey = `dismissed_rejected_app_${rejected.Id || rejected.AppNo}`;
+          if (!sessionStorage.getItem(dismissedKey)) {
+            setRejectedApplication(rejected);
+            setRejectedPopupOpen(true);
+          }
+        }
       } catch (err) {
         if (!cancelled) {
-          console.error("Approved quarter load error:", err);
+          console.error("Application status load error:", err);
           setApprovedQuarter(null);
         }
       }
     }
-    
 
-    loadApprovedQuarter();
+    loadApplicationStatus();
     return () => {
       cancelled = true;
     };
@@ -502,100 +514,10 @@ export default function ApplyForQuartersEmployees() {
       selectedQuarterId: "",
       selectedQuarterRowKey: "",
     }));
+    setSubmitError("");
     setValidationErrors({});
   };
 
-  // const handleApply = async () => {
-  //   const nextErrors = {
-  //     department: !emp.department,
-  //     reason: !emp.reason,
-  //     selectedQuarter: emp.selectedQuarterId == null || emp.selectedQuarterId === "",
-  //     exchangeReason: isExchange && !emp.exchangeReason.trim(),
-  //     attachment: isExchange && !emp.attachment,
-  //   };
-  //   const hasError = Object.values(nextErrors).some(Boolean);
-  //   setValidationErrors(nextErrors);
-
-  //   if (hasError) {
-  //     showPopup({
-  //       title: "Required fields missing",
-  //       message: "Fill in all required fields to complete the application.",
-  //       variant: "error",
-  //     });
-  //     return;
-  //   }
-
-  //   try {
-  //     setSubmitting(true);
-
-  //     // Resolve the quarterId from the selected row (keeps original type from API)
-  //     const selectedRow = vacantQuarterRows.find(
-  //       (r) => String(r.rowKey) === String(emp.selectedQuarterRowKey)
-  //     );
-  //     const rawId = selectedRow?.quarterId ?? emp.selectedQuarterId;
-
-  //     // Prefer a numeric ID if the value is purely numeric, otherwise send as-is
-  //     const numericId = Number(rawId);
-  //     const resolvedQuarterId = Number.isFinite(numericId) && numericId > 0
-  //       ? numericId
-  //       : rawId; // send the original string ID if it isn't a clean positive integer
-
-  //     if (!resolvedQuarterId) {
-  //       showPopup({
-  //         title: "Invalid quarter selection",
-  //         message: "Could not determine the selected quarter ID. Please re-select a quarter and try again.",
-  //         variant: "error",
-  //       });
-  //       setSubmitting(false);
-  //       return;
-  //     }
-
-  //     let payload;
-
-  //     if (emp.attachment) {
-  //       payload = new FormData();
-  //       payload.append("attachment", emp.attachment);
-  //       payload.append("quarterId", String(resolvedQuarterId));
-  //       payload.append("department", emp.department);
-  //       payload.append("reason", emp.reason);
-  //       if (isExchange)
-  //         payload.append("exchangeReason", emp.exchangeReason || "");
-  //       payload.append("employeeId", emp.employeeId || user?.username || "");
-  //       payload.append("classOfEmployee", emp.classOfEmployee || "");
-  //       payload.append("casteOfEmployee", emp.casteOfEmployee || "");
-  //     } else {
-  //       payload = {
-  //         quarterId: resolvedQuarterId,
-  //         department: emp.department,
-  //         reason: emp.reason,
-  //         ...(isExchange ? { exchangeReason: emp.exchangeReason || "" } : {}),
-  //         employeeId: emp.employeeId || user?.username,
-  //         classOfEmployee: emp.classOfEmployee,
-  //         casteOfEmployee: emp.casteOfEmployee,
-  //       };
-  //     }
-
-  //     const data = await saveQuarterApplication(payload);
-  //     const message = `Your quarter application has been submitted successfully! Application No: ${
-  //       data?.appNo || "N/A"
-  //     }`;
-
-  //     navigate("/Quarters/Approval", {
-  //       state: { successMessage: message },
-  //     });
-  //   } catch (err) {
-  //     console.error("Application submission error:", err);
-  //     showPopup({
-  //       title: "Application failed",
-  //       message:
-  //         err?.message ||
-  //         "Failed to submit application. Please try again.",
-  //       variant: "error",
-  //     });
-  //     setSubmitting(false);
-  //   }
-  // };
-  //   const handleApply = async () => {
   const handleApply = async () => {
     if (!isApplicationOpen) {
       showPopup({
@@ -648,18 +570,19 @@ export default function ApplyForQuartersEmployees() {
           console.log("[Upload] Success:", uploadResult);
         } catch (uploadErr) {
           console.error("[Upload] FAILED:", uploadErr.message, uploadErr);
-          // Still navigate but warn the user
           setSubmitError(`Application submitted (${data.appNo}), but file upload failed: ${uploadErr.message}. You can retry the upload later.`);
           setSubmitting(false);
           return; // stop here so user sees the error
         }
       }
 
-      navigate("/Quarters/Approval", {
-        state: {
-          successMessage: `Your quarter application has been submitted successfully! Application No: ${data.appNo}`,
-        },
+      showPopup({
+        title: "Application Submitted Successfully",
+        message: `Your quarter application has been submitted successfully! Application No: ${data.appNo}`,
+        variant: "success",
       });
+
+      resetApplication();
     } catch (err) {
       setSubmitError(err.message || "Failed to submit. Please try again.");
     } finally {
@@ -1048,79 +971,91 @@ export default function ApplyForQuartersEmployees() {
                 {/* ── End Profile card + form details ── */}
 
                 {/* ── Vacant quarters table ── */}
-                <div
-                  className={`lms-data-transition bg-white rounded-2xl border shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden ${!isApplicationOpen
-                    ? "blur-[2px] opacity-60 border-[#e2e8f0]"
-                    : validationErrors.selectedQuarter
-                      ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
-                      : "border-[#e2e8f0]"
-                    }`}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Home size={16} className="text-[#1a2e5a]" />
-                      <h3 className="font-bold text-lg text-slate-900">
-                        Choose from Vacant Quarters Listing
-                        <RequiredMark />
-                      </h3>
-                    </div>
-                    <div className="text-[12px] font-semibold text-slate-500">
-                      {selectedQuarter
-                        ? `Selected: ${selectedQuarter.quarterNumber}`
-                        : "Select one available quarter"}
-                    </div>
-                  </div>
-
-                  {quartersError && (
-                    <div className="px-6 pb-3 text-[12px] font-semibold text-rose-600">
-                      {quartersError}
+                <div className={`relative rounded-2xl ${!isApplicationOpen ? "border-[2px] border-red-400" : ""}`}>
+                  {!isApplicationOpen && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center">
+                      <div className="bg-white/95 px-6 py-3 rounded-xl shadow-lg border border-red-300">
+                        <p className="font-bold text-red-600">
+                          🚫 Application is closed right now
+                        </p>
+                      </div>
                     </div>
                   )}
 
-                  {/* ── Not-eligible notice ── */}
-                  {isApplicationOpen &&
-                    publishedTypes.length > 0 &&
-                    eligibleVacantQuarterRows.length === 0 &&
-                    !quartersError && (
-                      <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm">
-                        <div className="flex items-start gap-4 px-5 py-5">
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
-                            <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                            </svg>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[14px] font-bold text-amber-800">
-                              Your eligible quarter type is not open for applications currently
-                            </p>
-                            <p className="mt-1 text-[12.5px] leading-relaxed text-amber-700">
-                              The current circular has opened applications only for:{" "}
-                              <span className="font-semibold">{publishedTypes.join(", ")}</span>.
-                              Your grade is not eligible for these types. Please wait for the next circular.
-                            </p>
-                          </div>
-                        </div>
+                  <div
+                    className={`lms-data-transition bg-white rounded-2xl border shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden ${!isApplicationOpen
+                      ? "blur-[2px] opacity-60 border-[#e2e8f0] pointer-events-none"
+                      : validationErrors.selectedQuarter
+                        ? "border-rose-500 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
+                        : "border-[#e2e8f0]"
+                      }`}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <Home size={16} className="text-[#1a2e5a]" />
+                        <h3 className="font-bold text-lg text-slate-900">
+                          Choose from Vacant Quarters Listing
+                          <RequiredMark />
+                        </h3>
+                      </div>
+                      <div className="text-[12px] font-semibold text-slate-500">
+                        {selectedQuarter
+                          ? `Selected: ${selectedQuarter.quarterNumber}`
+                          : "Select one available quarter"}
+                      </div>
+                    </div>
+
+                    {quartersError && (
+                      <div className="px-6 pb-3 text-[12px] font-semibold text-rose-600">
+                        {quartersError}
                       </div>
                     )}
 
-                  <div className="lms-quarter-grid bg-white pb-5 px-5 lg:pb-7 lg:px-7">
-                    <AgGridTable
-                      columns={quarterColumns}
-                      rows={eligibleVacantQuarterRows}
-                      rowKey={(row) => row?.rowKey}
-                      searchable
-                      pageSize={10}
-                      showExport={false}
-                      showFilter={false}
-                      contentAutoWidth={false}
-                      contentAlign="center"
-                      emptyMessage={
-                        empClassName
-                          ? "No vacant quarters available"
-                          : "Loading vacant quarters..."
-                      }
-                      searchPlaceholder="Search quarter type, area, quarter number..."
-                    />
+                    {/* ── Not-eligible notice ── */}
+                    {isApplicationOpen &&
+                      publishedTypes.length > 0 &&
+                      eligibleVacantQuarterRows.length === 0 &&
+                      !quartersError && (
+                        <div className="mx-5 mb-4 overflow-hidden rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 shadow-sm">
+                          <div className="flex items-start gap-4 px-5 py-5">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                              <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                              </svg>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[14px] font-bold text-amber-800">
+                                Your eligible quarter type is not open for applications currently
+                              </p>
+                              <p className="mt-1 text-[12.5px] leading-relaxed text-amber-700">
+                                The current circular has opened applications only for:{" "}
+                                <span className="font-semibold">{publishedTypes.join(", ")}</span>.
+                                Your grade is not eligible for these types. Please wait for the next circular.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                    <div className="lms-quarter-grid bg-white pb-5 px-5 lg:pb-7 lg:px-7">
+                      <AgGridTable
+                        columns={quarterColumns}
+                        rows={eligibleVacantQuarterRows}
+                        rowKey={(row) => row?.rowKey}
+                        searchable
+                        pageSize={10}
+                        showExport={false}
+                        showFilter={false}
+                        contentAutoWidth={false}
+                        contentAlign="center"
+                        emptyMessage={
+                          empClassName
+                            ? "No vacant quarters available"
+                            : "Loading vacant quarters..."
+                        }
+                        searchPlaceholder="Search quarter type, area, quarter number..."
+                      />
+                    </div>
                   </div>
                 </div>
                 {/* ── End Vacant quarters table ── */}
@@ -1165,6 +1100,222 @@ export default function ApplyForQuartersEmployees() {
         <Footer />
       </div>
       {/* End h-full bg wrapper */}
+
+      {/* Rejected Application Notification Modal */}
+      {rejectedPopupOpen && rejectedApplication && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#ffffff",
+              borderRadius: "20px",
+              width: "100%",
+              maxWidth: "520px",
+              boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.3)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              border: "1px solid #fee2e2",
+            }}
+          >
+            {/* Header banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%)",
+                padding: "20px 24px",
+                borderBottom: "1px solid #fecdd3",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "12px",
+                    background: "#ffe4e6",
+                    border: "1.5px solid #fca5a5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#e11d48",
+                  }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 700, color: "#9f1239" }}>
+                    Application Status Update
+                  </h3>
+                  <p style={{ margin: "2px 0 0", fontSize: "12px", color: "#be123c", fontWeight: 500 }}>
+                    Land Data Management System
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  sessionStorage.setItem(`dismissed_rejected_app_${rejectedApplication.Id || rejectedApplication.AppNo}`, "true");
+                  setRejectedPopupOpen(false);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#9f1239",
+                  fontSize: "20px",
+                  lineHeight: 1,
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                }}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: "22px 24px" }}>
+              <div
+                style={{
+                  background: "#fff5f5",
+                  border: "1px solid #fed7d7",
+                  borderRadius: "12px",
+                  padding: "14px 16px",
+                  marginBottom: "18px",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "13.5px", color: "#9b2c2c", fontWeight: 600, lineHeight: 1.5 }}>
+                  Your application for quarter allotment has been <span style={{ color: "#c53030", textDecoration: "underline" }}>Rejected</span> by the administration.
+                </p>
+                <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#742a2a", lineHeight: 1.4 }}>
+                  The quarter has been skipped to the next priority waiting employee or allotment was cancelled.
+                </p>
+              </div>
+
+              {/* Details card */}
+              <div
+                style={{
+                  background: "#f8fafc",
+                  borderRadius: "12px",
+                  border: "1px solid #e2e8f0",
+                  padding: "16px",
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "12px 16px",
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Application No
+                  </span>
+                  <p style={{ margin: "2px 0 0", fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>
+                    {rejectedApplication.AppNo || "—"}
+                  </p>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Status
+                  </span>
+                  <div style={{ marginTop: "2px" }}>
+                    <span className="inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide bg-rose-100 text-rose-700">
+                      Rejected
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Requested Quarter
+                  </span>
+                  <p style={{ margin: "2px 0 0", fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>
+                    {rejectedApplication.QtrRequested || "—"} ({rejectedApplication.QtrType || "—"})
+                  </p>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Location
+                  </span>
+                  <p style={{ margin: "2px 0 0", fontSize: "13px", fontWeight: 600, color: "#1e293b" }}>
+                    {rejectedApplication.QtrLocation || "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div
+              style={{
+                padding: "16px 24px 20px",
+                borderTop: "1px solid #f1f5f9",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+                background: "#fafafa",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem(`dismissed_rejected_app_${rejectedApplication.Id || rejectedApplication.AppNo}`, "true");
+                  setRejectedPopupOpen(false);
+                }}
+                style={{
+                  padding: "9px 18px",
+                  borderRadius: "9px",
+                  border: "1.5px solid #e2e8f0",
+                  background: "#ffffff",
+                  color: "#475569",
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Dismiss
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sessionStorage.setItem(`dismissed_rejected_app_${rejectedApplication.Id || rejectedApplication.AppNo}`, "true");
+                  setRejectedPopupOpen(false);
+                  navigate("/Quarters/Approval");
+                }}
+                style={{
+                  padding: "9px 20px",
+                  borderRadius: "9px",
+                  border: "none",
+                  background: "linear-gradient(135deg, #185FA5, #0f477f)",
+                  color: "#ffffff",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(24, 95, 165, 0.25)",
+                }}
+              >
+                Check Approval Status
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Popup
         open={popupState.open}
