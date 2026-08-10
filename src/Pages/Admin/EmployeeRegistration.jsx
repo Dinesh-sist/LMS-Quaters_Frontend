@@ -23,17 +23,6 @@ const CASTE_OPTIONS = [
   { value: "ST", label: "ST" },
 ];
 
-const CATEGORY_OPTIONS = [
-  { value: "", label: "-- No Quarter --" },
-  { value: "A TYPE", label: "A TYPE" },
-  { value: "B TYPE", label: "B TYPE" },
-  { value: "B TYPE IIIR", label: "B TYPE IIIR" },
-  { value: "C TYPE", label: "C TYPE" },
-  { value: "C TYPE (MODIFIED)", label: "C TYPE (MODIFIED)" },
-  { value: "D TYPE", label: "D TYPE" },
-];
-
-
 const DEPARTMENTS = [
   "Marine",
   "Finance",
@@ -55,7 +44,6 @@ const EMPTY_FORM = {
   classOfEmployee: "CLASS-III",
   casteOfEmployee: "GENERAL",
   department: "Administration & HR",
-  category: "",
   mobile: "",
   email: "",
 };
@@ -127,7 +115,6 @@ export default function EmployeeRegistration() {
           classOfEmployee: normalizeClass(res.empClass),
           casteOfEmployee: normalizeCaste(res.caste),
           department: normalizeDepartment(res.department),
-          category: res.userDetailsQuarter?.category || res.estateQuarter?.category || res.category || "",
           mobile: res.mobile || "",
           email: res.email || "",
         }));
@@ -172,8 +159,7 @@ export default function EmployeeRegistration() {
       gradDate,
       classOfEmployee,
       casteOfEmployee,
-      department,
-      category
+      department
     } = formData;
 
     // Validation for all fields
@@ -380,25 +366,7 @@ export default function EmployeeRegistration() {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    Current Quarter Category
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => handleInputChange("category", e.target.value)}
-                    disabled={isLoading}
-                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
-                  >
-                    {CATEGORY_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
+                <div className="col-span-1 sm:col-span-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Department *
                   </label>

@@ -5,7 +5,7 @@ import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
 import Image from "../assets/Image13.png";
 import Logo from "../assets/Logo.png";
-import { getEmployeeClasses, lookupEmployee, registerEmployee } from "../api";
+import { lookupEmployee, registerEmployee } from "../api";
 
 const emptyRegistration = {
   employeeId: "",
@@ -13,53 +13,11 @@ const emptyRegistration = {
   employeeName: "",
   dateOfJoining: "",
   className: "",
-  classChoice: "",
   mobile: "",
   email: "",
   password: "",
   confirmPassword: "",
 };
-
-function normalizeClassOptions(classOptions) {
-  const items = Array.isArray(classOptions) ? classOptions : [];
-
-  const options = items
-    .map((item) => ({
-      priority: item?.Class_PRIORITY,
-      className: item?.class_name,
-      classValue: item?.Class,
-    }))
-    .filter((item) => {
-      const className = typeof item.className === "string" ? item.className.trim() : "";
-      const classValue = typeof item.classValue === "string" ? item.classValue.trim() : "";
-      if (!className && !classValue) return false;
-      if (className && className.toLowerCase() === "none") return false;
-      if (classValue && classValue.toLowerCase() === "none") return false;
-      return true;
-    })
-    .map((item) => {
-      const className = typeof item.className === "string" ? item.className.trim() : "";
-      const classValue = typeof item.classValue === "string" ? item.classValue.trim() : "";
-      const priority = Number(item.priority);
-      const value = classValue || className;
-
-      if (className.toUpperCase() === "CLASS-I" || classValue.toUpperCase().includes("CLASS-I")) {
-        if (priority === 1) return { value, label: `${value} (Senior)` };
-        if (priority === 2) return { value, label: `${value} (Junior)` };
-      }
-
-      return { value, label: value };
-    });
-
-  return options.length
-    ? options
-    : [
-        { value: "Class I", label: "Class I" },
-        { value: "Class II", label: "Class II" },
-        { value: "Class III", label: "Class III" },
-        { value: "Class IV", label: "Class IV" },
-      ];
-}
 
 function Field({ label, children, className = "" }) {
   return (
@@ -76,30 +34,11 @@ const inputClass =
 export default function EmployeeRegister() {
   const navigate = useNavigate();
   const [reg, setReg] = useState(emptyRegistration);
-  const [classOptions, setClassOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successOpen, setSuccessOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const normalizedClassOptions = useMemo(() => normalizeClassOptions(classOptions), [classOptions]);
-
-  useEffect(() => {
-    let isActive = true;
-
-    getEmployeeClasses()
-      .then((data) => {
-        if (isActive) setClassOptions(Array.isArray(data?.items) ? data.items : []);
-      })
-      .catch(() => {
-        if (isActive) setClassOptions([]);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   const updateReg = (key, value) => {
     setReg((current) => ({ ...current, [key]: value }));
@@ -120,7 +59,6 @@ export default function EmployeeRegister() {
         employeeName: data?.employeeName || current.employeeName,
         dateOfJoining: data?.dateOfJoining || current.dateOfJoining,
         className: data?.className || current.className,
-        classChoice: data?.classChoice || current.classChoice,
       }));
     } catch (lookupError) {
       setError(lookupError?.message || "Employee lookup failed.");
@@ -145,7 +83,7 @@ export default function EmployeeRegister() {
         employeeName: reg.employeeName.trim(),
         dateOfJoining: reg.dateOfJoining,
         className: reg.className.trim(),
-        classChoice: reg.classChoice,
+        classChoice: reg.className.trim(),
         mobile: reg.mobile.trim(),
         email: reg.email.trim(),
         password: reg.password,
@@ -292,21 +230,6 @@ export default function EmployeeRegister() {
                     placeholder="Class name"
                     readOnly
                   />
-                </Field>
-
-                <Field label="Choose a Class" className="col-span-2">
-                  <select
-                    className={`${inputClass} appearance-auto`}
-                    value={reg.classChoice}
-                    onChange={(event) => updateReg("classChoice", event.target.value)}
-                  >
-                    <option value="">Choose a class</option>
-                    {normalizedClassOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
                 </Field>
 
                 <Field label="Mobile Number">
