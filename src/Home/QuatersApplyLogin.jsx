@@ -595,29 +595,19 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
   if (mode === "forgot") {
     return (
-      <div className="relative h-screen w-full overflow-hidden">
-        <style>{`
-          .employee-gradient-bg {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            background: linear-gradient(135deg, #1a2e5a, #2d4a8a, #e87722, #1a2e5a);
-            background-size: 300% 300%;
-          }
-          .employee-input:focus {
-            border-color: #1e3a8a !important;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(30,58,138,.12);
-          }
-        `}</style>
-        <div className="employee-gradient-bg" />
+      <div className="relative flex min-h-screen w-full flex-col bg-slate-50 font-sans">
+        <TopNavbar navTextColor="dark" />
+        
+        <div className="flex flex-1 items-center justify-center p-4">
+          <div className="w-full max-w-[440px] rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/50 sm:p-10">
+            <div className="mb-8 text-center">
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+                {forgotStep === "request" ? "Reset Password" : forgotStep === "verify" ? "Enter OTP" : "New Password"}
+              </h1>
+            </div>
 
-        <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-[#fcfefd] shadow-2xl">
-          <TopNavbar navTextColor="light" />
-
-          <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2">
             <form
-              className="flex w-full max-w-[520px] flex-col gap-4 rounded-[24px] border border-blue-950/40 bg-white px-5 py-6 shadow-[0_4px_24px_rgba(30,58,138,0.25)] md:px-7"
+              className="flex flex-col gap-5"
               onSubmit={
                 forgotStep === "request"
                   ? handleRequestOtp
@@ -626,43 +616,31 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     : handleResetPassword
               }
             >
-              <div>
-                <h1
-                  className="m-0 text-[24px] font-bold text-slate-900"
-                  style={{ fontFamily: "Georgia, serif" }}
-                >
-                  Forgot Password
-                </h1> 
-                <p className="mt-2 text-[13px] leading-5 text-slate-500">
-                  Reset your employee login password using an OTP sent to your registered email.
-                </p>
-              </div>
-
               {forgotStep === "request" ? (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Employee ID or Email
                   </label>
                   <input
                     type="text"
-                    className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                     value={forgotIdentifier}
                     onChange={(e) => setForgotIdentifier(e.target.value)}
-                    placeholder="Employee ID or registered email"
+                    placeholder="Enter your ID or email"
                   />
                 </div>
               ) : null}
 
               {forgotStep === "verify" ? (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
-                    OTP
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    6-Digit OTP
                   </label>
                   <input
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
-                    className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 text-[18px] font-bold tracking-[0.25em] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-xl font-medium tracking-[0.2em] text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
                     value={forgotOtp}
                     onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                     placeholder="000000"
@@ -671,117 +649,71 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
               ) : null}
 
               {forgotStep === "reset" ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
                       New Password
                     </label>
-                    <div className="relative">
-                      <input
-                        type={showForgotNewPass ? "text" : "password"}
-                        autoComplete="new-password"
-                        className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
-                        value={forgotNewPassword}
-                        onChange={(e) => setForgotNewPassword(e.target.value)}
-                        placeholder="New password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotNewPass((p) => !p)}
-                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600 cursor-pointer"
-                        aria-label={showForgotNewPass ? "Hide password" : "Show password"}
-                      >
-                        <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
-                          <path
-                            d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                          />
-                          <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6" />
-                          {!showForgotNewPass && (
-                            <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                          )}
-                        </svg>
-                      </button>
-                    </div>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                      value={forgotNewPassword}
+                      onChange={(e) => setForgotNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                    />
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
                       Confirm Password
                     </label>
-                    <div className="relative">
-                      <input
-                        type={showForgotConfirmPass ? "text" : "password"}
-                        autoComplete="new-password"
-                        className="employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-3 pr-10 text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
-                        value={forgotConfirmPassword}
-                        onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                        placeholder="Confirm password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowForgotConfirmPass((p) => !p)}
-                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600 cursor-pointer"
-                        aria-label={showForgotConfirmPass ? "Hide password" : "Show password"}
-                      >
-                        <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
-                          <path
-                            d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"
-                            stroke="currentColor"
-                            strokeWidth="1.6"
-                          />
-                          <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6" />
-                          {!showForgotConfirmPass && (
-                            <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                          )}
-                        </svg>
-                      </button>
-                    </div>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                      value={forgotConfirmPassword}
+                      onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                    />
                   </div>
                 </div>
               ) : null}
 
               {forgotMessage ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
                   {forgotMessage}
                 </div>
               ) : null}
 
               {error ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
                   {error}
                 </div>
               ) : null}
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-3 text-[14px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isLoading
-                  ? "Please wait..."
-                  : forgotStep === "request"
-                    ? "Send OTP"
-                    : forgotStep === "verify"
-                      ? "Verify OTP"
-                      : "Change Password"}
-              </button>
+              <div className="mt-2 flex flex-col gap-3">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isLoading ? "Processing..." : forgotStep === "request" ? "Send Reset Link" : forgotStep === "verify" ? "Verify Code" : "Update Password"}
+                </button>
 
-              <button
-                type="button"
-                className="w-full rounded-2xl border border-slate-200 bg-white py-3 text-[14px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
-                onClick={() => {
-                  setError("");
-                  resetForgotState();
-                  setMode("login");
-                }}
-              >
-                Back to Login
-              </button>
+                <button
+                  type="button"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2"
+                  onClick={() => {
+                    setError("");
+                    resetForgotState();
+                    setMode("login");
+                  }}
+                >
+                  Return to Login
+                </button>
+              </div>
             </form>
           </div>
-
-          <Footer sticky={false} />
         </div>
       </div>
     );
