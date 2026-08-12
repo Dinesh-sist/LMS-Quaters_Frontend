@@ -1,5 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  Mail,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  KeyRound,
+  ArrowLeft,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
 import Image from "../assets/Image13.png";
@@ -16,7 +30,7 @@ import {
 import { setAuth } from "../auth";
 
 export default function QuartersApplyLogin({ initialMode = "login" }) {
-  const [mode, setMode] = useState(initialMode); // "login" | "register"
+  const [mode, setMode] = useState(initialMode); // "login" | "forgot" | "register"
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -41,9 +55,11 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const [successOpen, setSuccessOpen] = useState(false);
 
   const [classOptions, setClassOptions] = useState([]);
-  const [forgotStep, setForgotStep] = useState("request");
+  const [forgotStep, setForgotStep] = useState("request"); // "request" | "verify" | "reset"
   const [forgotIdentifier, setForgotIdentifier] = useState("");
   const [forgotOtp, setForgotOtp] = useState("");
+  const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const [forgotResetToken, setForgotResetToken] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
@@ -51,10 +67,10 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const [showForgotConfirmPass, setShowForgotConfirmPass] = useState(false);
   const [forgotMessage, setForgotMessage] = useState("");
 
+  const otpInputRefs = useRef([]);
+
   const normalizedClassOptions = useMemo(() => {
     const items = Array.isArray(classOptions) ? classOptions : [];
-
-
 
     const opts = items
       .map((c) => ({
@@ -106,6 +122,8 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     setForgotStep("request");
     setForgotIdentifier("");
     setForgotOtp("");
+    setOtpValues(["", "", "", "", "", ""]);
+    setResendCountdown(0);
     setForgotResetToken("");
     setForgotNewPassword("");
     setForgotConfirmPassword("");
@@ -120,6 +138,27 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       fetchClasses();
     }
   }, [fetchClasses, initialMode]);
+
+  // Handle countdown for OTP resend
+  useEffect(() => {
+    let timer;
+    if (resendCountdown > 0) {
+      timer = setInterval(() => {
+        setResendCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
+  // Focus the first OTP box when entering the verify step
+  useEffect(() => {
+    if (mode === "forgot" && forgotStep === "verify") {
+      const t = setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [mode, forgotStep]);
 
   const handleLogin = async (e) => {
     e?.preventDefault();
@@ -156,7 +195,10 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     try {
       await requestPasswordResetOtp(forgotIdentifier.trim());
       setForgotStep("verify");
-      setForgotMessage("OTP sent to your registered email.");
+      setOtpValues(["", "", "", "", "", ""]);
+      setForgotOtp("");
+      setResendCountdown(30);
+      setForgotMessage("OTP sent successfully to your registered email.");
     } catch (e2) {
       setError(e2?.message || "Could not send OTP.");
     } finally {
@@ -164,24 +206,119 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     }
   };
 
+  const handleResendOtp = async () => {
+    if (resendCountdown > 0 || isLoading) return;
+    setError("");
+    setForgotMessage("");
+    setIsLoading(true);
+    try {
+      await requestPasswordResetOtp(forgotIdentifier.trim());
+      setOtpValues(["", "", "", "", "", ""]);
+      setForgotOtp("");
+      setResendCountdown(30);
+      setForgotMessage("A new 6-digit OTP has been sent to your registered email.");
+      otpInputRefs.current[0]?.focus();
+    } catch (e2) {
+      setError(e2?.message || "Failed to resend OTP.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpBoxChange = (index, value) => {
+    setError("");
+    const numericVal = value.replace(/\D/g, "");
+
+    if (!numericVal) {
+      const updated = [...otpValues];
+      updated[index] = "";
+      setOtpValues(updated);
+      setForgotOtp(updated.join(""));
+      return;
+    }
+
+    const updated = [...otpValues];
+    if (numericVal.length === 1) {
+      updated[index] = numericVal;
+      setOtpValues(updated);
+      setForgotOtp(updated.join(""));
+      if (index < 5) {
+        otpInputRefs.current[index + 1]?.focus();
+      }
+    } else {
+      // Pasted or entered multiple digits
+      const chars = numericVal.slice(0, 6).split("");
+      chars.forEach((c, i) => {
+        if (index + i < 6) {
+          updated[index + i] = c;
+        }
+      });
+      setOtpValues(updated);
+      setForgotOtp(updated.join(""));
+      const nextIdx = Math.min(index + chars.length, 5);
+      otpInputRefs.current[nextIdx]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace") {
+      if (!otpValues[index] && index > 0) {
+        const updated = [...otpValues];
+        updated[index - 1] = "";
+        setOtpValues(updated);
+        setForgotOtp(updated.join(""));
+        otpInputRefs.current[index - 1]?.focus();
+      } else {
+        const updated = [...otpValues];
+        updated[index] = "";
+        setOtpValues(updated);
+        setForgotOtp(updated.join(""));
+      }
+    } else if (e.key === "ArrowLeft" && index > 0) {
+      e.preventDefault();
+      otpInputRefs.current[index - 1]?.focus();
+    } else if (e.key === "ArrowRight" && index < 5) {
+      e.preventDefault();
+      otpInputRefs.current[index + 1]?.focus();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      handleVerifyOtp();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pasted) return;
+    const updated = ["", "", "", "", "", ""];
+    for (let i = 0; i < pasted.length; i++) {
+      updated[i] = pasted[i];
+    }
+    setOtpValues(updated);
+    setForgotOtp(updated.join(""));
+    const targetIdx = Math.min(pasted.length, 5);
+    otpInputRefs.current[targetIdx]?.focus();
+  };
+
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
     setError("");
     setForgotMessage("");
 
-    if (!forgotOtp.trim()) {
-      setError("Enter the 6-digit OTP.");
+    const currentOtp = otpValues.join("").trim();
+    if (currentOtp.length < 6) {
+      setError("Please enter the complete 6-digit OTP.");
       return;
     }
 
     setIsLoading(true);
     try {
-      const data = await verifyPasswordResetOtp(forgotIdentifier.trim(), forgotOtp.trim());
+      const data = await verifyPasswordResetOtp(forgotIdentifier.trim(), currentOtp);
       setForgotResetToken(data?.resetToken || "");
       setForgotStep("reset");
       setForgotMessage("OTP verified. Create your new password.");
     } catch (e2) {
-      setError(e2?.message || "Invalid OTP.");
+      setError(e2?.message || "Invalid OTP. Please check and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -208,11 +345,13 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     setIsLoading(true);
     try {
       await resetEmployeePassword(forgotResetToken, forgotNewPassword);
-      setForgotMessage("Password changed successfully. Please login with your new password.");
+      setForgotMessage("Password changed successfully! Returning to login...");
       window.setTimeout(() => {
+        const savedId = forgotIdentifier;
         resetForgotState();
         setMode("login");
-      }, 1200);
+        if (savedId) setUsername(savedId);
+      }, 1400);
     } catch (e2) {
       setError(e2?.message || "Could not reset password.");
     } finally {
@@ -320,18 +459,18 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
           <TopNavbar navTextColor="light" />
 
-          <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-8 lg:pb-8 ">
+          <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(400px,560px)] lg:gap-10 lg:px-10 xl:gap-14 xl:px-16">
             <div className="hidden items-center justify-center lg:flex lg:self-stretch">
               <img
                 src={Image}
                 alt="Paradip Port Authority building"
-                className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] lg:max-w-[600px] object-contain"
+                className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] lg:max-w-[520px] object-contain"
               />
             </div>
 
-            <div className="flex items-center justify-center lg:justify-start">
+            <div className="flex items-center justify-center lg:justify-end">
               <form
-                className="flex max-h-full w-full max-w-[min(100%,560px)] flex-col gap-[clamp(12px,1.7vh,18px)] overflow-y-auto rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 "
+                className="flex max-h-full w-full max-w-[min(100%,560px)] flex-col gap-[clamp(12px,1.7vh,18px)] overflow-y-auto rounded-[20px] border border-slate-200 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.08)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-7 lg:ml-auto"
                 onSubmit={handleRegister}
               >
                 <div>
@@ -340,7 +479,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
                     </div>
                     <div>
-                      <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-orange-500">
+                      <p className="m-0 text-[11px] font-bold uppercase tracking-[0.24em] text-blue-800">
                         Paradip Port Authority
                       </p>
                       <h1
@@ -352,17 +491,17 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     </div>
                   </div>
 
-                  <p className="m-0 text-[12px] leading-5 text-slate-400 sm:text-[13px]">
+                  <p className="m-0 text-[11px] leading-5 text-slate-700 sm:text-[13px]">
                     Fill in your employee details to create access for the quarters application portal.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Employee ID</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">Employee ID</label>
                     <input
                       type="text"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.employeeId}
                       onChange={(e) => setReg((r) => ({ ...r, employeeId: e.target.value }))}
                       placeholder="Employee ID"
@@ -370,13 +509,13 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">
                       Date of Birth
                     </label>
                     <div className="flex items-center gap-2">
                       <input
                         type="date"
-                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.dateOfBirth}
                         onChange={(e) => setReg((r) => ({ ...r, dateOfBirth: e.target.value }))}
                       />
@@ -384,7 +523,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                         type="button"
                         onClick={handleLookup}
                         disabled={isLoading}
-                        className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-[12px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 disabled:opacity-60"
+                        className="shrink-0 rounded-xl border border-slate-200 bg-white px-3 py-3 text-[11px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 disabled:opacity-60"
                       >
                         Fetch
                       </button>
@@ -393,12 +532,12 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                  <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">
                     Name of the Employee
                   </label>
                   <input
                     type="text"
-                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                     value={reg.employeeName}
                     onChange={(e) => setReg((r) => ({ ...r, employeeName: e.target.value }))}
                     placeholder="Employee name"
@@ -408,12 +547,12 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">
                       Date of Joining
                     </label>
                     <input
                       type="date"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.dateOfJoining}
                       onChange={(e) => setReg((r) => ({ ...r, dateOfJoining: e.target.value }))}
                       readOnly
@@ -421,10 +560,10 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Class Name</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">Class Name</label>
                     <input
                       type="text"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.className}
                       onChange={(e) => setReg((r) => ({ ...r, className: e.target.value }))}
                       placeholder="Class name"
@@ -434,9 +573,9 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Choose a class</label>
+                  <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">Choose a class</label>
                   <select
-                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200"
+                    className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200"
                     value={reg.classChoice}
                     onChange={(e) => setReg((r) => ({ ...r, classChoice: e.target.value }))}
                   >
@@ -451,10 +590,10 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Mobile number</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">Mobile number</label>
                     <input
                       type="tel"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.mobile}
                       onChange={(e) => setReg((r) => ({ ...r, mobile: e.target.value }))}
                       placeholder="Mobile"
@@ -462,11 +601,11 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Email (Username)</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">Email (Username)</label>
                     <input
                       type="email"
                       autoComplete="email"
-                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                      className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                       value={reg.email}
                       onChange={(e) => setReg((r) => ({ ...r, email: e.target.value }))}
                       placeholder="name@domain.com"
@@ -476,12 +615,12 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">Password</label>
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">Password</label>
                     <div className="relative">
                       <input
                         type={showRegPass ? "text" : "password"}
                         autoComplete="new-password"
-                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.password}
                         onChange={(e) => setReg((r) => ({ ...r, password: e.target.value }))}
                         placeholder="Create password"
@@ -489,7 +628,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       <button
                         type="button"
                         onClick={() => setShowRegPass((p) => !p)}
-                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600"
+                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-700 transition-colors hover:text-slate-600"
                         aria-label={showRegPass ? "Hide password" : "Show password"}
                       >
                         <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
@@ -513,14 +652,14 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-500">
+                    <label className="text-[11px] font-bold uppercase tracking-[2px] text-slate-900">
                       Re-enter password
                     </label>
                     <div className="relative">
                       <input
                         type={showRegConfirmPass ? "text" : "password"}
                         autoComplete="new-password"
-                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] lg:text-[13px] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
+                        className="ql-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
                         value={reg.confirmPassword}
                         onChange={(e) => setReg((r) => ({ ...r, confirmPassword: e.target.value }))}
                         placeholder="Re-enter password"
@@ -528,7 +667,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       <button
                         type="button"
                         onClick={() => setShowRegConfirmPass((p) => !p)}
-                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600"
+                        className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-700 transition-colors hover:text-slate-600"
                         aria-label={showRegConfirmPass ? "Hide password" : "Show password"}
                       >
                         <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
@@ -585,136 +724,10 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
             <div className="w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-2xl">
               <div className="text-[15px] font-bold text-slate-900">Successfully registered</div>
-              <div className="mt-1 text-[13px] text-slate-500">Redirecting back to Employee Login…</div>
+              <div className="mt-1 text-[13px] text-slate-900">Redirecting back to Employee Login…</div>
             </div>
           </div>
         ) : null}
-      </div>
-    );
-  }
-
-  if (mode === "forgot") {
-    return (
-      <div className="relative flex min-h-screen w-full flex-col bg-slate-50 font-sans">
-        <TopNavbar navTextColor="dark" />
-        
-        <div className="flex flex-1 items-center justify-center p-4">
-          <div className="w-full max-w-[440px] rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/50 sm:p-10">
-            <div className="mb-8 text-center">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-                {forgotStep === "request" ? "Reset Password" : forgotStep === "verify" ? "Enter OTP" : "New Password"}
-              </h1>
-            </div>
-
-            <form
-              className="flex flex-col gap-5"
-              onSubmit={
-                forgotStep === "request"
-                  ? handleRequestOtp
-                  : forgotStep === "verify"
-                    ? handleVerifyOtp
-                    : handleResetPassword
-              }
-            >
-              {forgotStep === "request" ? (
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Employee ID or Email
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                    value={forgotIdentifier}
-                    onChange={(e) => setForgotIdentifier(e.target.value)}
-                    placeholder="Enter your ID or email"
-                  />
-                </div>
-              ) : null}
-
-              {forgotStep === "verify" ? (
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    6-Digit OTP
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-center text-xl font-medium tracking-[0.2em] text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                    value={forgotOtp}
-                    onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000"
-                  />
-                </div>
-              ) : null}
-
-              {forgotStep === "reset" ? (
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      New Password
-                    </label>
-                    <input
-                      type="password"
-                      autoComplete="new-password"
-                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                      value={forgotNewPassword}
-                      onChange={(e) => setForgotNewPassword(e.target.value)}
-                      placeholder="At least 6 characters"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Confirm Password
-                    </label>
-                    <input
-                      type="password"
-                      autoComplete="new-password"
-                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-colors focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-                      value={forgotConfirmPassword}
-                      onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                      placeholder="Re-enter new password"
-                    />
-                  </div>
-                </div>
-              ) : null}
-
-              {forgotMessage ? (
-                <div className="rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-                  {forgotMessage}
-                </div>
-              ) : null}
-
-              {error ? (
-                <div className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
-                  {error}
-                </div>
-              ) : null}
-
-              <div className="mt-2 flex flex-col gap-3">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isLoading ? "Processing..." : forgotStep === "request" ? "Send Reset Link" : forgotStep === "verify" ? "Verify Code" : "Update Password"}
-                </button>
-
-                <button
-                  type="button"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2"
-                  onClick={() => {
-                    setError("");
-                    resetForgotState();
-                    setMode("login");
-                  }}
-                >
-                  Return to Login
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
       </div>
     );
   }
@@ -730,7 +743,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         @keyframes loginCardEnter {
           0% {
             opacity: 0;
-            transform: translate3d(75px, 0, 0);
+            transform: translate3d(50px, 0, 0);
           }
           100% {
             opacity: 1;
@@ -746,7 +759,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
           animation: gradientMove 15s ease-in-out infinite;
         }
         .employee-login-card {
-          animation: loginCardEnter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+          animation: loginCardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
           will-change: transform, opacity;
         }
         .employee-login-stage {
@@ -803,12 +816,12 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         }
         @media (max-height: 760px) and (min-width: 1280px) {
           .employee-login-stage {
-            align-items: flex-start;
+            align-items: center;
             min-height: auto;
           }
           .employee-login-card {
-            gap: 10px;
-            padding-block: 18px;
+            gap: 12px;
+            padding-block: 20px;
           }
           .employee-login-heading {
             margin-bottom: 8px;
@@ -835,145 +848,506 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       <div className="relative z-10 flex min-h-screen w-full flex-col bg-[#fcfefd] shadow-2xl">
         <TopNavbar navTextColor="light" />
 
-        <div className="employee-login-stage flex flex-1 items-center px-4 py-5 sm:px-6 sm:py-6 xl:grid xl:grid-cols-[minmax(0,1.45fr)_minmax(380px,520px)] xl:gap-8 xl:px-8 xl:py-6 2xl:grid-cols-[minmax(0,1.7fr)_minmax(400px,540px)]">
+        <div className="employee-login-stage flex flex-1 items-center justify-center px-4 py-6 sm:px-6 sm:py-8 xl:grid xl:grid-cols-[minmax(0,1.45fr)_minmax(400px,500px)] xl:gap-10 xl:px-12 xl:py-8 2xl:grid-cols-[minmax(0,1.65fr)_minmax(420px,520px)]">
           <div className="hidden items-center justify-center xl:flex xl:self-stretch">
             <img
               src={Image}
               alt="Paradip Port Authority building"
-              className="h-auto max-h-[calc(100vh-190px)] w-full max-w-[min(58vw,760px)] object-contain" />
+              className="h-auto max-h-[calc(100vh-190px)] w-full max-w-[min(56vw,720px)] object-contain"
+            />
           </div>
 
-          <div className="employee-login-shell flex items-center justify-center xl:justify-start">
-            <div className="employee-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 xl:px-7">
-              <div>
-                <div className="employee-login-heading mb-4 flex items-center gap-4">
+          <div className="employee-login-shell flex items-center justify-center w-full">
+            {/* Main Interactive Card Container */}
+            <div className="employee-login-card relative mt-3 sm:mt-5 xl:mt-6 flex w-full max-w-[min(100%,480px)] flex-col gap-[clamp(10px,1.5vh,16px)] rounded-[22px] border border-blue-950/70 bg-white px-5 py-6 shadow-[0_6px_28px_rgba(30,58,138,0.32)] sm:px-6">
 
+              {/* Back to Home Button - Top Right */}
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer sm:right-4 sm:top-4"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Home
+              </button>
+
+
+              {/* MODE 1: LOGIN */}
+              {mode === "login" && (
+                <>
                   <div>
+                    <div className="employee-login-heading mb-3 flex items-center gap-3.5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                        <User className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h1
+                          className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
+                          style={{ fontFamily: "Georgia, serif" }}
+                        >
+                          Employee Login
+                        </h1>
+                        <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
+                          Quarters Portal
+                        </p>
+                      </div>
+                    </div>
 
-                    <h1
-                      className="employee-login-title m-0 mt-1.5 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px] "
-                      style={{ fontFamily: "Georgia, serif" }}
-                    >
-                      Employee Login
-                    </h1>
+                    <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
+                      Sign in to access the quarters application portal with your employee credentials.
+                    </p>
                   </div>
-                </div>
 
-                <p className="employee-login-copy m-0 text-[12px] text-slate-400 sm:text-[13px]">
-                  Sign in to access the quarters application portal with your employee credentials.
-                </p>
-              </div>
+                  <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleLogin}>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                        Username
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          autoComplete="off"
+                          name="employee_username"
+                          id="employee_username"
+                          className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
+                          placeholder="Email or Employee ID"
+                        />
+                        <User className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-700" size={16} />
+                      </div>
+                    </div>
 
-              <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleLogin}>
-                <div className="flex flex-col gap-1.5">
-                  <label className="employee-login-label text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Username</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      autoComplete="off"
-                      name="employee_username"
-                      id="employee_username"
-                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
-                      placeholder="Email"
-                    />
-                    <svg
-                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 20 20"
-                      fill="none"
+                    <div className="flex flex-col gap-1.5">
+                      <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPass ? "text" : "password"}
+                          autoComplete="current-password"
+                          name="employee_password"
+                          id="employee_password"
+                          className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
+                          placeholder="Enter your password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPass((p) => !p)}
+                          className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-700 transition-colors hover:text-slate-600 cursor-pointer"
+                          aria-label={showPass ? "Hide password" : "Show password"}
+                        >
+                          {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        <span>{error}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      className="employee-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px] cursor-pointer"
+                      disabled={isLoading}
                     >
-                      <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" />
-                      <path
-                        d="M3 18c0-4 3.134-6 7-6s7 2 7 6"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-                </div>
+                      {isLoading ? "Logging in..." : "Login as Employee"}
+                    </button>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="employee-login-label text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Password</label>
-                  <div className="relative">
-                    <input
-                      type={showPass ? "text" : "password"}
-                      autoComplete="new-password"
-                      name="employee_password"
-                      id="employee_password"
-                      className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
-                      placeholder="Enter your password"
-                    />
+                    <div className="text-center text-[12px] text-slate-700 sm:text-[12.5px] py-1">
+                      <span>Can&apos;t remember the Password? </span>
+                      <button
+                        type="button"
+                        className="font-bold text-blue-950 underline transition-colors hover:text-blue-700 cursor-pointer bg-transparent border-0 p-0"
+                        onClick={() => {
+                          setError("");
+                          resetForgotState();
+                          if (username.trim()) {
+                            setForgotIdentifier(username.trim());
+                          }
+                          setMode("forgot");
+                        }}
+                      >
+                        Click here
+                      </button>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => setShowPass((p) => !p)}
-                      className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600"
-                      aria-label={showPass ? "Hide password" : "Show password"}
+                      className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px] cursor-pointer"
+                      onClick={() => {
+                        setError("");
+                        navigate("/EmployeeRegister");
+                      }}
                     >
-                      <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
-                        <path
-                          d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                        />
-                        <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6" />
-                        {!showPass && (
-                          <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                        )}
-                      </svg>
+                      New Register
                     </button>
-                  </div>
-                </div>
 
-                {error && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
-                )}
 
-                <button
-                  type="submit"
-                  className="employee-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px]"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Logging in..." : "Login as Employee"}
-                </button>
+                  </form>
+                </>
+              )}
 
-                <button
-                  type="button"
-                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px]"
-                  onClick={() => {
-                    setError("");
-                    resetForgotState();
-                    setMode("forgot");
-                  }}
-                >
-                  Forgot Password?
-                </button>
+              {/* MODE 2: FORGOT PASSWORD FLOW (Rendered within the same card div!) */}
+              {mode === "forgot" && (
+                <>
+                  {/* STEP 1: Enter email id or employee id */}
+                  {forgotStep === "request" && (
+                    <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleRequestOtp}>
+                      <div>
+                        <div className="employee-login-heading mb-3 flex items-center gap-3.5">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                            <Mail className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h1
+                              className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
+                              style={{ fontFamily: "Georgia, serif" }}
+                            >
+                              Forgot Password
+                            </h1>
+                            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
+                              Account Recovery
+                            </p>
+                          </div>
+                        </div>
 
-                <button
-                  type="button"
-                  className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px]"
-                  onClick={async () => {
-                    setError("");
-                    navigate("/EmployeeRegister");
-                  }}
-                >
-                  New Register
-                </button>
+                        <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
+                          Enter your registered Email ID or Employee ID to receive a verification OTP.
+                        </p>
+                      </div>
 
-                <div className="employee-login-back mt-auto pt-3 text-center text-[12px] text-slate-400">
-                  <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
-                    &larr; Back to Home
-                  </Link>
-                </div>
+                      <div className="flex flex-col gap-1.5 mt-1">
+                        <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                          Enter email id or employee id
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            autoComplete="off"
+                            name="forgot_identifier"
+                            id="forgot_identifier"
+                            autoFocus
+                            className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pl-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                            value={forgotIdentifier}
+                            onChange={(e) => setForgotIdentifier(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && handleRequestOtp(e)}
+                            placeholder="Enter email id or employee id"
+                          />
+                          <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" size={16} />
+                        </div>
+                      </div>
 
-              </form>
+                      {error && (
+                        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <span>{error}</span>
+                        </div>
+                      )}
+
+                      {forgotMessage && (
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-700">
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                          <span>{forgotMessage}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="employee-login-action mt-2 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            <span>Sending OTP...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Send className="h-4 w-4" />
+                            <span>Send OTP</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                        onClick={() => {
+                          setError("");
+                          resetForgotState();
+                          setMode("login");
+                        }}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Back to Login</span>
+                      </button>
+                    </form>
+                  )}
+
+                  {/* STEP 2: Enter OTP (Replaces previous div with 6 square boxes and security icon) */}
+                  {forgotStep === "verify" && (
+                    <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleVerifyOtp}>
+                      <div>
+                        <div className="employee-login-heading mb-3 flex items-center gap-3.5">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-600 shadow-sm">
+                            <ShieldCheck className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h1
+                              className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
+                              style={{ fontFamily: "Georgia, serif" }}
+                            >
+                              Enter OTP
+                            </h1>
+                            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-600">
+                              Identity Verification
+                            </p>
+                          </div>
+                        </div>
+
+                        <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
+                          Enter the 6-digit verification code sent to{" "}
+                          <span className="font-semibold text-blue-950 break-all">{forgotIdentifier}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-2 mt-1">
+                        <div className="flex items-center justify-between">
+                          <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                            Enter 6-Digit OTP
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setError("");
+                              setForgotMessage("");
+                              setForgotStep("request");
+                            }}
+                            className="text-[11px] font-semibold text-blue-900 hover:underline cursor-pointer"
+                          >
+                            Change ID/Email
+                          </button>
+                        </div>
+
+                        {/* 6 Square Input Boxes */}
+                        <div className="flex items-center justify-between gap-1.5 sm:gap-2 py-1">
+                          {otpValues.map((val, idx) => (
+                            <input
+                              key={idx}
+                              ref={(el) => (otpInputRefs.current[idx] = el)}
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={1}
+                              value={val}
+                              onChange={(e) => handleOtpBoxChange(idx, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                              onPaste={handleOtpPaste}
+                              className={`h-12 w-11 sm:h-14 sm:w-12 rounded-xl border-2 text-center text-[20px] sm:text-[22px] font-extrabold text-blue-950 transition-all duration-200 outline-none ${val ? "border-blue-900 bg-white shadow-xs" : "border-slate-200 bg-blue-50/70"
+                                } focus:border-blue-900 focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,58,138,0.15)]`}
+                            />
+                          ))}
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px] text-slate-900 pt-0.5">
+                          <span>Didn&apos;t receive code?</span>
+                          {resendCountdown > 0 ? (
+                            <span className="text-slate-700 font-medium">Resend in {resendCountdown}s</span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={handleResendOtp}
+                              disabled={isLoading}
+                              className="font-bold text-blue-900 hover:underline cursor-pointer disabled:opacity-50"
+                            >
+                              Resend OTP
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {error && (
+                        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <span>{error}</span>
+                        </div>
+                      )}
+
+                      {forgotMessage && (
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-700">
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                          <span>{forgotMessage}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="employee-login-action mt-2 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            <span>Verifying OTP...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck className="h-4 w-4" />
+                            <span>Verify OTP</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                        onClick={() => {
+                          setError("");
+                          resetForgotState();
+                          setMode("login");
+                        }}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Back to Login</span>
+                      </button>
+                    </form>
+                  )}
+
+                  {/* STEP 3: Create New Password */}
+                  {forgotStep === "reset" && (
+                    <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleResetPassword}>
+                      <div>
+                        <div className="employee-login-heading mb-3 flex items-center gap-3.5">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 shadow-sm">
+                            <KeyRound className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h1
+                              className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
+                              style={{ fontFamily: "Georgia, serif" }}
+                            >
+                              Reset Password
+                            </h1>
+                            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-600">
+                              Secure New Password
+                            </p>
+                          </div>
+                        </div>
+
+                        <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
+                          Create a new password of at least 6 characters for your employee account.
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-3 mt-1">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                            New Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showForgotNewPass ? "text" : "password"}
+                              autoComplete="new-password"
+                              className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pl-10 pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                              value={forgotNewPassword}
+                              onChange={(e) => setForgotNewPassword(e.target.value)}
+                              placeholder="New password (min 6 chars)"
+                            />
+                            <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" size={16} />
+                            <button
+                              type="button"
+                              onClick={() => setShowForgotNewPass((p) => !p)}
+                              className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-700 transition-colors hover:text-slate-600 cursor-pointer"
+                              aria-label={showForgotNewPass ? "Hide password" : "Show password"}
+                            >
+                              {showForgotNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                            Confirm Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              type={showForgotConfirmPass ? "text" : "password"}
+                              autoComplete="new-password"
+                              className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pl-10 pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                              value={forgotConfirmPassword}
+                              onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                              placeholder="Confirm new password"
+                            />
+                            <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" size={16} />
+                            <button
+                              type="button"
+                              onClick={() => setShowForgotConfirmPass((p) => !p)}
+                              className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-700 transition-colors hover:text-slate-600 cursor-pointer"
+                              aria-label={showForgotConfirmPass ? "Hide password" : "Show password"}
+                            >
+                              {showForgotConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {error && (
+                        <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700">
+                          <AlertCircle className="h-4 w-4 shrink-0" />
+                          <span>{error}</span>
+                        </div>
+                      )}
+
+                      {forgotMessage && (
+                        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-semibold text-emerald-700">
+                          <CheckCircle2 className="h-4 w-4 shrink-0" />
+                          <span>{forgotMessage}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="employee-login-action mt-2 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                            <span>Updating password...</span>
+                          </>
+                        ) : (
+                          <>
+                            <KeyRound className="h-4 w-4" />
+                            <span>Change Password</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                        onClick={() => {
+                          setError("");
+                          resetForgotState();
+                          setMode("login");
+                        }}
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Back to Login</span>
+                      </button>
+                    </form>
+                  )}
+                </>
+              )}
+
             </div>
           </div>
         </div>
@@ -982,4 +1356,3 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     </div>
   );
 }
-

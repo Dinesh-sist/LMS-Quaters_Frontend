@@ -1,11 +1,18 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import {
+  User,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  AlertCircle,
+  ArrowLeft,
+} from "lucide-react";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
 import Image2 from "../assets/image8.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
-
 
 const ROLES = ["Admin"];
 
@@ -60,14 +67,14 @@ export default function StaffLogin() {
         @keyframes loginCardEnter {
           0% {
             opacity: 0;
-            transform: translate3d(75px, 0, 0);
+            transform: translate3d(0, 30px, 0) scale(0.97);
           }
           100% {
             opacity: 1;
-            transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0) scale(1);
           }
         }
-        .sl-gradient-bg {
+        .staff-gradient-bg {
           position: absolute;
           inset: 0;
           z-index: 0;
@@ -75,150 +82,220 @@ export default function StaffLogin() {
           background-size: 300% 300%;
           animation: gradientMove 15s ease-in-out infinite;
         }
-        .sl-login-card {
-          animation: loginCardEnter 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+        .staff-login-card {
+          animation: loginCardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
           will-change: transform, opacity;
         }
-        .sl-input:focus {
+        .staff-input:focus {
           border-color: #1e3a8a !important;
           outline: none;
           box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
         }
+        .staff-login-stage {
+          min-height: calc(100vh - 120px);
+        }
+        .staff-login-shell {
+          max-width: 500px;
+        }
+        .staff-login-form {
+          gap: 14px;
+        }
+        .staff-login-copy {
+          line-height: 1.55;
+        }
+
+        @media (max-height: 700px) {
+          .staff-login-title {
+            font-size: 24px;
+          }
+          .staff-login-copy {
+            display: none;
+          }
+          .staff-login-label {
+            font-size: 9px;
+          }
+          .staff-login-field,
+          .staff-login-action {
+            padding-top: 8px;
+            padding-bottom: 8px;
+          }
+        }
+
+        @media (max-height: 600px) {
+          .staff-login-shell {
+            max-width: 460px;
+          }
+          .staff-login-card {
+            padding: 14px 16px;
+            gap: 8px;
+          }
+          .staff-login-stage {
+            padding-top: 4px;
+            padding-bottom: 4px;
+          }
+          .staff-login-shell {
+            max-width: 440px;
+          }
+          .staff-login-card {
+            border-radius: 16px;
+          }
+        }
+
+        @media (min-height: 800px) {
+          .staff-login-heading {
+            margin-bottom: 14px;
+          }
+          .staff-login-title {
+            font-size: 30px;
+          }
+          .staff-login-form {
+            gap: 16px;
+          }
+          .staff-login-back {
+            padding-top: 2px;
+          }
+        }
         @media (prefers-reduced-motion: reduce) {
-          .sl-gradient-bg,
-          .sl-login-card {
+          .staff-gradient-bg,
+          .staff-login-card {
             animation: none !important;
           }
         }
       `}</style>
+      <div className="staff-gradient-bg" />
 
-      <div className="sl-gradient-bg" />
-
-      <div className="relative z-10 flex h-screen w-full flex-col overflow-hidden bg-white shadow-2xl">
+      <div className="relative z-10 flex min-h-screen w-full flex-col bg-[#fcfefd] shadow-2xl">
         <TopNavbar navTextColor="light" />
 
-        <div className="flex min-h-0 flex-1 items-center px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-2 lg:grid lg:grid-cols-[2fr_1fr] lg:gap-6 lg:px-10 lg:pb-8">          <div className="hidden items-center justify-center lg:flex lg:self-stretch">
-          <img
-            src={Image2}
-            alt="Staff at desk"
-            className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[min(58vw,880px)] lg:max-w-[600px] object-contain" />
-        </div>
+        <div className="staff-login-stage flex flex-1 items-center justify-center px-4 py-6 sm:px-6 sm:py-8 xl:grid xl:grid-cols-[minmax(0,1.45fr)_minmax(400px,500px)] xl:gap-10 xl:px-12 xl:py-8 2xl:grid-cols-[minmax(0,1.65fr)_minmax(420px,520px)]">
+          <div className="hidden items-center justify-center xl:flex xl:self-stretch">
+            <img
+              src={Image2}
+              alt="Staff at desk"
+              className="h-auto max-h-[calc(100vh-190px)] w-full max-w-[min(56vw,720px)] object-contain"
+            />
+          </div>
 
-          <div className="flex items-center justify-center lg:justify-start">
-            <form
-              className="sl-login-card flex w-full max-w-[min(100%,500px)] flex-col gap-[clamp(12px,1.7vh,18px)] rounded-[20px] border border-blue-950/70 bg-white px-4 py-5 shadow-[0_4px_24px_rgba(30,58,138,0.4)] sm:rounded-[24px] sm:px-5 sm:py-6 md:px-6 lg:px-8" onSubmit={handleSubmit}
-            >
+          <div className="staff-login-shell flex items-center justify-center w-full">
+            {/* Main Interactive Card Container */}
+            <div className="staff-login-card relative mt-3 sm:mt-5 xl:mt-6 flex w-full max-w-[min(100%,480px)] flex-col gap-[clamp(10px,1.5vh,16px)] rounded-[22px] border border-blue-950/70 bg-white px-5 py-6 shadow-[0_6px_28px_rgba(30,58,138,0.32)] sm:px-6">
+
+              {/* Back to Home Button - Top Right */}
+              <button
+                type="button"
+                onClick={() => navigate("/")}
+                className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer sm:right-4 sm:top-4"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Home
+              </button>
+
               <div>
-                <h2
-                  className="m-0 mb-1 text-[clamp(22px,2.5vw,38px)] lg:text-[38px] font-bold text-slate-900"
-                  style={{ fontFamily: "Georgia, serif" }}
-                >
-                  Sign In
-                </h2>
-                <p className="m-0 text-[13px] lg:text-[13px] leading-5 text-slate-400">
-                  Use your official PPA staff credentials
+                <div className="staff-login-heading mb-3 flex items-center gap-3.5">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                    <ShieldCheck className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h1
+                      className="staff-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
+                      style={{ fontFamily: "Georgia, serif" }}
+                    >
+                      Staff Login
+                    </h1>
+                    <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
+                      Quarters Portal
+                    </p>
+                  </div>
+                </div>
+
+                <p className="staff-login-copy m-0 text-[12px] text-slate-700 sm:text-[13px]">
+                  Use your official PPA staff credentials to access the admin dashboard.
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Role</label>
-                <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-                  {ROLES.map((r) => (
-                    <button
-                      key={r}
-                      type="button"
-                      onClick={() => setRole(r)}
-                      className={`min-h-[clamp(38px,4.2vh,44px)] rounded-full border-2 px-2 py-1.5 text-center text-[clamp(11px,0.95vw,13px)] lg:text-[13px] font-semibold transition-all duration-150 sm:px-3 sm:py-1 ${role === r
-                        ? "border-blue-950 bg-blue-950 text-white shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
-                        : "border-slate-200 bg-white text-slate-600 hover:opacity-80"
-                        }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
+              <form className="staff-login-form flex flex-1 flex-col" onSubmit={handleSubmit}>
+                <div className="flex flex-col gap-2">
+                  <label className="staff-login-label text-[12px] font-bold uppercase tracking-[2px] text-slate-700">Role</label>
+                  <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                    {ROLES.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setRole(r)}
+                        className={`min-h-[clamp(38px,4.2vh,44px)] rounded-full border-2 px-2 py-1.5 text-center text-[clamp(11px,0.95vw,13px)] lg:text-[13px] font-semibold transition-all duration-150 sm:px-3 sm:py-1 cursor-pointer ${role === r
+                          ? "border-blue-950 bg-blue-950 text-white shadow-[0_2px_10px_rgba(30,58,138,0.2)]"
+                          : "border-slate-200 bg-white text-slate-600 hover:opacity-80"
+                          }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Username</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    autoComplete="username"
-                    className="sl-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] lg:text-[13px] text-blue-950 transition-all duration-200 placeholder:text-slate-300" value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="staff.username"
-                  />
-                  <svg
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                  >
-                    <circle cx="10" cy="7" r="4" stroke="currentColor" strokeWidth="1.6" />
-                    <path
-                      d="M3 18c0-4 3.134-6 7-6s7 2 7 6"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
+                <div className="flex flex-col gap-1.5">
+                  <label className="staff-login-label text-[12px] font-bold uppercase tracking-[2px] text-slate-700">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      autoComplete="username"
+                      name="staff_username"
+                      id="staff_username"
+                      className="staff-login-field staff-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
+                      placeholder="staff.username"
                     />
-                  </svg>
+                    <User className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-700" size={16} />
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-[2px] text-slate-400">Password</label>
-                <div className="relative">
-                  <input
-                    type={showPass ? "text" : "password"}
-                    autoComplete="current-password"
-                    className="sl-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPass((p) => !p)}
-                    className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-400 transition-colors hover:text-slate-600"
-                    aria-label={showPass ? "Hide password" : "Show password"}
-                  >
-                    <svg width="17" height="17" viewBox="0 0 20 20" fill="none">
-                      <path
-                        d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                      />
-                      <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.6" />
-                      {!showPass && (
-                        <path d="M3 3l14 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                      )}
-                    </svg>
-                  </button>
+                <div className="flex flex-col gap-1.5">
+                  <label className="staff-login-label text-[12px] font-bold uppercase tracking-[2px] text-slate-700">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPass ? "text" : "password"}
+                      autoComplete="current-password"
+                      name="staff_password"
+                      id="staff_password"
+                      className="staff-login-field staff-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pr-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass((p) => !p)}
+                      className="absolute right-2.5 top-1/2 flex -translate-y-1/2 items-center bg-transparent p-0.5 text-slate-700 transition-colors hover:text-slate-600 cursor-pointer"
+                      aria-label={showPass ? "Hide password" : "Show password"}
+                    >
+                      {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="submit"
-                className="mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] lg:text-[14px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60" disabled={loading}
-              >
-                {loading ? "Verifying..." : `Login as ${role}`}
-              </button>
+                {error && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
-              {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
-
-              <div className="mt-auto pt-5 text-center text-[12px] text-slate-400">
-                <Link to="/" className="font-semibold text-blue-950 no-underline hover:underline">
-                  &larr; Back to Home
-                </Link>
-              </div>
-
-            </form>
+                <button
+                  type="submit"
+                  className="staff-login-action mt-1 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px] cursor-pointer"
+                  disabled={loading}
+                >
+                  {loading ? "Verifying..." : `Login as ${role}`}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
         <Footer sticky={false} />

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
@@ -29,7 +29,7 @@ function Field({ label, children, className = "" }) {
 }
 
 const inputClass =
-  "min-h-[40px] w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3 text-[13px] text-blue-950 outline-none transition-all duration-200 placeholder:text-slate-300 focus:border-blue-900 focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,58,138,0.12)] disabled:cursor-not-allowed";
+  "min-h-[36px] w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3 py-1 text-[12.5px] text-blue-950 outline-none transition-all duration-200 placeholder:text-slate-300 focus:border-blue-900 focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,58,138,0.12)] disabled:cursor-not-allowed";
 
 export default function EmployeeRegister() {
   const navigate = useNavigate();
@@ -106,26 +106,26 @@ export default function EmployeeRegister() {
     <div className="flex h-screen w-full flex-col overflow-hidden">
       <TopNavbar navTextColor="light" />
 
-      <div className="flex min-h-0 flex-1 items-stretch px-4 py-4 sm:px-6 lg:px-10">
-        <div className="mx-auto grid w-full max-w-[1440px] min-h-0 items-stretch gap-6 lg:grid-cols-[1fr_2fr]">
+      <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-3 sm:px-6 lg:px-10 xl:px-16">
+        <div className="mx-auto grid w-full max-w-[1360px] min-h-0 items-center justify-center gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(400px,560px)] lg:gap-10 xl:gap-14">
 
           {/* Left — illustration */} 
           <section className="hidden min-h-0 lg:flex lg:items-center lg:justify-center">
             <img
               src={Image}
               alt="Paradip Port Authority building"
-              className="h-auto max-h-full w-full object-contain"
+              className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[520px] object-contain"
             />
           </section>
 
           {/* Right — form panel */}
-          <section className="flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-blue-950/30 bg-white shadow-[0_4px_24px_rgba(30,58,138,0.28)]">
+          <section className="flex max-h-[calc(100vh-140px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[22px] border border-blue-950/30 bg-white shadow-[0_4px_24px_rgba(30,58,138,0.28)] lg:ml-auto">
 
             {/* Panel header */}
-            <div className="shrink-0 border-b border-slate-200 px-5 py-3 lg:px-7">
+            <div className="shrink-0 border-b border-slate-200 px-5 py-2.5 lg:px-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
                     <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
                   </div>
                   <div>
@@ -133,7 +133,7 @@ export default function EmployeeRegister() {
                       Paradip Port Authority
                     </p>
                     <h1
-                      className="m-0 mt-0.5 text-[20px] font-bold leading-tight text-slate-900 lg:text-[24px]"
+                      className="m-0 mt-0.5 text-[19px] font-bold leading-tight text-slate-900 lg:text-[22px]"
                       style={{ fontFamily: "Georgia, serif" }}
                     >
                       Employee Registration
@@ -143,12 +143,13 @@ export default function EmployeeRegister() {
                 <button
                   type="button"
                   onClick={() => navigate("/QuartersApplyLogin")}
-                  className="shrink-0 min-h-[36px] rounded-2xl border border-slate-200 bg-white px-4 text-[12px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="shrink-0 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer"
                 >
+                  <ArrowLeft className="h-3.5 w-3.5" />
                   Back to Login
                 </button>
               </div>
-              <p className="mt-1.5 text-[11px] leading-4 text-slate-500">
+              <p className="mt-1 text-[11px] leading-4 text-slate-500">
                 Fill in your official employee details to create access for the quarters application portal.
               </p>
             </div>
