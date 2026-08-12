@@ -384,16 +384,16 @@ const CUSTOM_CATEGORY_ORDER = [
 ];
 
 const TYPE_BAR_COLORS = [
-  "#2563EB", // Royal Blue
-  "#10B981", // Emerald
-  "#F59E0B", // Amber
-  "#8B5CF6", // Purple
-  "#EC4899", // Pink
-  "#06B6D4", // Cyan
+  "#1ba0b5ff", // Blue
+  "#ab3771ff", // Pink
   "#F97316", // Orange
-  "#6366F1", // Indigo
-  "#14B8A6", // Teal
-  "#E11D48", // Rose
+  "#cf774eff", // Purple
+  "#EAB308", // Yellow
+  "#2eafd7ff", // Light Blue
+  "#F472B6", // Light Pink
+  "#FB923C", // Light Orange
+  "#C084FC", // Light Purple
+  "#FDE047", // Light Yellow
 ];
 
 const typeChartOpts = {
@@ -486,7 +486,7 @@ export default function AdminDashboard() {
       {
         label: "Total Applications",
         data: [],
-        backgroundColor: "#2563EB",
+        backgroundColor: "#3B82F6",
         borderRadius: 0,
         borderSkipped: false,
         barThickness: 30,
@@ -494,7 +494,7 @@ export default function AdminDashboard() {
       {
         label: "Approved Applications",
         data: [],
-        backgroundColor: "#10B981",
+        backgroundColor: "#EC4899",
         borderRadius: 0,
         borderSkipped: false,
         barThickness: 30,
@@ -508,7 +508,7 @@ export default function AdminDashboard() {
       {
         label: "Occupied",
         data: [],
-        backgroundColor: "#fd0606a5",
+        backgroundColor: "#3eacbfff",
         borderRadius: 0,
         borderSkipped: false,
         barThickness: 20,
@@ -516,7 +516,7 @@ export default function AdminDashboard() {
       {
         label: "Vacant",
         data: [],
-        backgroundColor: "#10B981",
+        backgroundColor: "#EC4899",
         borderRadius: 0,
         borderSkipped: false,
         barThickness: 20,
@@ -524,7 +524,7 @@ export default function AdminDashboard() {
       {
         label: "Others",
         data: [],
-        backgroundColor: "#F59E0B",
+        backgroundColor: "#F97316",
         borderRadius: 0,
         borderSkipped: false,
         barThickness: 20,
@@ -587,11 +587,12 @@ export default function AdminDashboard() {
 
         setCategoryChart({
           labels: sorted.map((i) => i.category),
+
           datasets: [
             {
               label: "Occupied",
               data: sorted.map((i) => i.occupied),
-              backgroundColor: "#f70b0bd2",
+              backgroundColor: "#219599ff",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 20,
@@ -599,7 +600,7 @@ export default function AdminDashboard() {
             {
               label: "Vacant",
               data: sorted.map((i) => i.vacant),
-              backgroundColor: "#10B981",
+              backgroundColor: "#EC4899",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 20,
@@ -607,7 +608,7 @@ export default function AdminDashboard() {
             {
               label: "Others",
               data: sorted.map((i) => i.others),
-              backgroundColor: "#F59E0B",
+              backgroundColor: "#F97316",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 20,
@@ -679,7 +680,7 @@ export default function AdminDashboard() {
               label: "Total Applications",
               data: comms.map((c) => c.totalApplications),
               committeeMeta: comms,
-              backgroundColor: "#2563EB",
+              backgroundColor: "#2dbdc7ff",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 40,
@@ -688,7 +689,7 @@ export default function AdminDashboard() {
               label: "Approved Applications",
               data: comms.map((c) => c.approvedApplications),
               committeeMeta: comms,
-              backgroundColor: "#10B981",
+              backgroundColor: "#EC4899",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 40,
@@ -705,6 +706,7 @@ export default function AdminDashboard() {
   const rowHeight = isStacked ? 70 : 95;
   const categoryChartHeight = Math.max(380, categoryChart.labels.length * rowHeight + 60);
 
+  
   return (
     <AdminLayout
       title="Dashboard"
@@ -785,22 +787,20 @@ export default function AdminDashboard() {
               <button
                 type="button"
                 onClick={() => setChartMode("grouped")}
-                className={`rounded-md px-2.5 py-1 transition-all ${
-                  chartMode === "grouped"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`rounded-md px-2.5 py-1 transition-all ${chartMode === "grouped"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 Grouped
               </button>
               <button
                 type="button"
                 onClick={() => setChartMode("stacked")}
-                className={`rounded-md px-2.5 py-1 transition-all ${
-                  chartMode === "stacked"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
+                className={`rounded-md px-2.5 py-1 transition-all ${chartMode === "stacked"
+                  ? "bg-white text-blue-600 shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+                  }`}
               >
                 Stacked
               </button>
