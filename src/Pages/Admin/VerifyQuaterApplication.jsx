@@ -125,7 +125,7 @@ const makeColumns = (onReview) => [
   { key: "GradDate", header: "GRAD_Date", minWidth: 140 },
   { key: "DateOfJoining", header: "Date_of_Join", minWidth: 155 },
   { key: "Basic", header: "Basic", renderer: "basic", minWidth: 110 },
-  { key: "DateOfBirth", header: "DATA_OF_BIRTH", minWidth: 150 },
+  { key: "DateOfBirth", header: "DATE OF BIRTH", minWidth: 150 },
   { key: "Department", header: "DEPT", minWidth: 150 },
   { key: "Caste", header: "CASTE_ID", render: renderCasteBadge, minWidth: 120 },
   { key: "CurrentQuarterType", header: "CURRENT QTY_Type", minWidth: 180 },

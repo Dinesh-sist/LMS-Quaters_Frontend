@@ -118,9 +118,10 @@ export function stopPublication() {
     auth: true,
   });
 }
-export function generateApprovalMails() {
+export function generateApprovalMails(payload = {}) {
   return request("/api/admin/generate-approval-mails", {
     method: "POST",
+    body: payload,
     auth: true,
   });
 }

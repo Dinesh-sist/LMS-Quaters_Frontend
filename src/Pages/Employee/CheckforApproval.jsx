@@ -38,135 +38,142 @@ function toDateKey(value) {
   return `${year}-${month}-${day}`;
 }
 
-const makeColumns = (onDelete) => [
-  { key: "AppNo", header: "APP NO", minWidth: 140 },
-  { key: "EmpId", header: "EMP ID", minWidth: 130 },
-  { key: "EmpName", header: "EMP NAME", minWidth: 200 },
-  { key: "Class", header: "CLASS", minWidth: 140 },
-  { key: "Caste", header: "CASTE", minWidth: 110 },
-  { key: "GradDate", header: "GRAD DATE", minWidth: 130 },
-  { key: "EmailId", header: "EMAIL", minWidth: 210 },
-  { key: "ReqDate", header: "REQ DATE", minWidth: 120 },
-  { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 160 },
-  { key: "QtrLocation", header: "LOCATION", minWidth: 190 },
-  { key: "QtrType", header: "QTR TYPE", minWidth: 130 },
-  { key: "Reason", header: "REASON", minWidth: 140 },
-  {
-    key: "AttachmentPath",
-    header: "ATTACHMENT",
-    minWidth: 160,
-    render: (value) => {
-      if (!value) return <span className="text-slate-400 text-xs">—</span>;
+const makeColumns = (onDelete, isHistory = false) => {
+  const cols = [
+    { key: "AppNo", header: "APP NO", minWidth: 140 },
+    { key: "EmpId", header: "EMP ID", minWidth: 130 },
+    { key: "EmpName", header: "EMP NAME", minWidth: 200 },
+    { key: "Class", header: "CLASS", minWidth: 140 },
+    { key: "Caste", header: "CASTE", minWidth: 110 },
+    { key: "GradDate", header: "GRAD DATE", minWidth: 130 },
+    { key: "EmailId", header: "EMAIL", minWidth: 210 },
+    { key: "ReqDate", header: "REQ DATE", minWidth: 120 },
+    { key: "QtrRequested", header: "REQUESTED QTR", minWidth: 160 },
+    { key: "QtrLocation", header: "LOCATION", minWidth: 190 },
+    { key: "QtrType", header: "QTR TYPE", minWidth: 130 },
+    { key: "Reason", header: "REASON", minWidth: 140 },
+    {
+      key: "AttachmentPath",
+      header: "ATTACHMENT",
+      minWidth: 160,
+      render: (value) => {
+        if (!value) return <span className="text-slate-400 text-xs">—</span>;
 
-      const normalised = value.replace(/\\/g, "/").replace(/^.*uploads\//, "");
-      const fileUrl = `${API_BASE}/uploads/${normalised}`;
-      const fileName = normalised.split("/").pop();
+        const normalised = value.replace(/\\/g, "/").replace(/^.*uploads\//, "");
+        const fileUrl = `${API_BASE}/uploads/${normalised}`;
+        const fileName = normalised.split("/").pop();
 
-      // Blob-fetch forces a real download instead of opening in the browser tab
-      const handleDownload = async (e) => {
-        e.preventDefault();
-        try {
-          const res = await fetch(fileUrl);
-          if (!res.ok) throw new Error("File not found");
-          const blob = await res.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = objectUrl;
-          link.download = fileName;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          URL.revokeObjectURL(objectUrl);
-        } catch {
-          alert("Could not download the file. Please try again.");
-        }
-      };
+        // Blob-fetch forces a real download instead of opening in the browser tab
+        const handleDownload = async (e) => {
+          e.preventDefault();
+          try {
+            const res = await fetch(fileUrl);
+            if (!res.ok) throw new Error("File not found");
+            const blob = await res.blob();
+            const objectUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = objectUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(objectUrl);
+          } catch {
+            alert("Could not download the file. Please try again.");
+          }
+        };
 
-      return (
+        return (
+          <button
+            type="button"
+            onClick={handleDownload}
+            title={`Download ${fileName}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+              padding: "4px 10px",
+              borderRadius: "6px",
+              background: "#E6F1FB",
+              color: "#185FA5",
+              fontWeight: 600,
+              fontSize: "11px",
+              textDecoration: "none",
+              border: "1px solid #b3d0ef",
+              cursor: "pointer",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#c7dff5")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#E6F1FB")}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Download
+          </button>
+        );
+      },
+    },
+    {
+      key: "PublishedDateFrom",
+      header: "PUBLISHED FROM",
+      minWidth: 150,
+      render: (value) => formatDate(value),
+    },
+    {
+      key: "PublishedDateTo",
+      header: "PUBLISHED TO",
+      minWidth: 150,
+      render: (value) => formatDate(value),
+    },
+    {
+      key: "Status",
+      header: "STATUS",
+      minWidth: 180,
+      render: (value) => (
+        <span
+          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[value?.toLowerCase()] || "bg-slate-100 text-slate-600"
+            }`}
+        >
+          {statusLabel(value)}
+        </span>
+      ),
+    },
+  ];
+
+  if (!isHistory) {
+    cols.push({
+      key: "action",
+      header: "ACTION",
+      minWidth: 120,
+      sortable: false,
+      filterable: false,
+      render: (_, row) => (
         <button
           type="button"
-          onClick={handleDownload}
-          title={`Download ${fileName}`}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            padding: "4px 10px",
-            borderRadius: "6px",
-            background: "#E6F1FB",
-            color: "#185FA5",
-            fontWeight: 600,
-            fontSize: "11px",
-            textDecoration: "none",
-            border: "1px solid #b3d0ef",
-            cursor: "pointer",
-            transition: "background 0.15s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#c7dff5")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "#E6F1FB")}
+          onClick={() => onDelete(row)}
+          className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 active:scale-95"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Download
+          Delete
         </button>
-      );
-    },
-  },
-  {
-    key: "PublishedDateFrom",
-    header: "PUBLISHED FROM",
-    minWidth: 150,
-    render: (value) => formatDate(value),
-  },
-  {
-    key: "PublishedDateTo",
-    header: "PUBLISHED TO",
-    minWidth: 150,
-    render: (value) => formatDate(value),
-  },
-  {
-    key: "Status",
-    header: "STATUS",
-    minWidth: 180,
-    render: (value) => (
-      <span
-        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[value?.toLowerCase()] || "bg-slate-100 text-slate-600"
-          }`}
-      >
-        {statusLabel(value)}
-      </span>
-    ),
-  },
-  {
-    key: "action",
-    header: "ACTION",
-    minWidth: 120,
-    sortable: false,
-    filterable: false,
-    render: (_, row) => (
-      <button
-        type="button"
-        onClick={() => onDelete(row)}
-        className="inline-flex items-center rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 active:scale-95"
-      >
-        Delete
-      </button>
-    ),
-  },
-];
+      ),
+    });
+  }
+
+  return cols;
+};
 
 function PageSummaryBar({ rows }) {
   const totalRequests = rows.length;
@@ -334,7 +341,7 @@ export default function CheckApproval() {
     }
   };
 
-  const columns = makeColumns(handleDelete);
+  const columns = makeColumns(handleDelete, viewMode === "history");
 
   //fetch the data's form the database and  display in the table format with the help of ag-grid table and also display the status of the application with the help of the status column and also display the success message if the application is approved or rejected or pending or cancelled and also display the error message if there is any error in fetching the data from the database and also display the loading message while fetching the data from the database and also display the empty message if there is no data in the database and also display the total number of requests and also display the number of approved requests and also display the number of pending requests and also display the number of rejected requests in the page summary bar.
   return (

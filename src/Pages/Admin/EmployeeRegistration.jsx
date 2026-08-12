@@ -92,15 +92,25 @@ export default function EmployeeRegistration() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPopulated, setIsPopulated] = useState(false);
 
   // Form field changes helper
   const handleInputChange = (field, value) => {
+    if (field === "employeeId") {
+      setIsPopulated(false);
+    }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleEmployeeIdBlur = async () => {
     const empId = formData.employeeId.trim();
-    if (!empId) return;
+    if (!empId) {
+      setFormData(EMPTY_FORM);
+      setFormError("");
+      setFormSuccess("");
+      setIsPopulated(false);
+      return;
+    }
 
     setIsLoading(true);
     setFormError("");
@@ -117,24 +127,26 @@ export default function EmployeeRegistration() {
           classOfEmployee: normalizeClass(res.empClass),
           casteOfEmployee: normalizeCaste(res.caste),
           department: normalizeDepartment(res.department),
-          category: res.category || "",
+          category: res.userDetailsQuarter?.category || res.estateQuarter?.category || res.category || "",
           mobile: res.mobile || "",
           email: res.email || "",
         }));
+        setIsPopulated(true);
         setFormSuccess(`Details populated for employee: ${res.name || empId}`);
       } else {
+        setIsPopulated(false);
         setFormError("Employee ID not found in database. Please enter details manually.");
+        setFormData(prev => ({ ...EMPTY_FORM, employeeId: prev.employeeId }));
       }
     } catch (err) {
       console.error("Error looking up employee:", err);
+      setIsPopulated(false);
       setFormError("Failed to lookup employee ID. You can still enter details manually.");
+      setFormData(prev => ({ ...EMPTY_FORM, employeeId: prev.employeeId }));
     } finally {
       setIsLoading(false);
     }
   };
-
-
-
 
   const handleEmployeeIdKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -143,6 +155,7 @@ export default function EmployeeRegistration() {
     }
   };
 
+  
   // Register single employee handler
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
@@ -176,14 +189,13 @@ export default function EmployeeRegistration() {
     if (!department) return setFormError("Department is required.");
 
 
-    
-
 
     setIsLoading(true);
     try {
       const res = await registerEmployeeAdmin(formData);
       setFormSuccess(res.message || `Employee "${employeeName}" registered/updated successfully.`);
       setFormData(EMPTY_FORM);
+      setIsPopulated(false);
     } catch (err) {
       console.error("Error registering employee:", err);
       setFormError(err.message || "Failed to register/update employee details in the database.");
@@ -192,7 +204,7 @@ export default function EmployeeRegistration() {
     }
   };
 
-  
+
   return (
     <AdminLayout
       title="Employee Registration"
@@ -220,13 +232,13 @@ export default function EmployeeRegistration() {
 
         <form onSubmit={handleSingleSubmit} className="space-y-4">
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[95%] mx-auto">
             {/* SECTION 1: Personal Details */}
             <div className="bg-slate-50/40 border border-slate-100 rounded-xl p-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1.5 mb-3">
                 1. Personal Details
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Employee ID *
@@ -239,7 +251,7 @@ export default function EmployeeRegistration() {
                     onKeyDown={handleEmployeeIdKeyDown}
                     disabled={isLoading}
                     placeholder={isLoading ? "Loading..." : "e.g. PPA-1050"}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
                 </div>
 
@@ -253,7 +265,7 @@ export default function EmployeeRegistration() {
                     onChange={(e) => handleInputChange("employeeName", e.target.value)}
                     disabled={isLoading}
                     placeholder="Enter Full Name"
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
                 </div>
 
@@ -266,10 +278,9 @@ export default function EmployeeRegistration() {
                     value={formData.dateOfBirth}
                     onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
                     disabled={isLoading}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
                 </div>
-
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Mobile Number *
@@ -280,7 +291,7 @@ export default function EmployeeRegistration() {
                     onChange={(e) => handleInputChange("mobile", e.target.value)}
                     disabled={isLoading}
                     placeholder="e.g. 9876543210"
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
                 </div>
 
@@ -294,18 +305,20 @@ export default function EmployeeRegistration() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     disabled={isLoading}
                     placeholder="e.g. name@example.com"
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
                 </div>
               </div>
             </div>
+
+
 
             {/* SECTION 2: Official & Employment Details */}
             <div className="bg-slate-50/40 border border-slate-100 rounded-xl p-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-1.5 mb-3">
                 2. Official & Employment Details
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Date of Joining *
@@ -315,9 +328,10 @@ export default function EmployeeRegistration() {
                     value={formData.dateOfJoining}
                     onChange={(e) => handleInputChange("dateOfJoining", e.target.value)}
                     disabled={isLoading}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
                 </div>
+
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
@@ -328,7 +342,7 @@ export default function EmployeeRegistration() {
                     value={formData.gradDate}
                     onChange={(e) => handleInputChange("gradDate", e.target.value)}
                     disabled={isLoading}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
                 </div>
 
@@ -340,7 +354,7 @@ export default function EmployeeRegistration() {
                     value={formData.classOfEmployee}
                     onChange={(e) => handleInputChange("classOfEmployee", e.target.value)}
                     disabled={isLoading}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   >
                     {CLASS_OPTIONS.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -356,7 +370,7 @@ export default function EmployeeRegistration() {
                     value={formData.casteOfEmployee}
                     onChange={(e) => handleInputChange("casteOfEmployee", e.target.value)}
                     disabled={isLoading}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   >
                     {CASTE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -374,7 +388,7 @@ export default function EmployeeRegistration() {
                     value={formData.category}
                     onChange={(e) => handleInputChange("category", e.target.value)}
                     disabled={isLoading}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   >
                     {CATEGORY_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -384,7 +398,7 @@ export default function EmployeeRegistration() {
                   </select>
                 </div>
 
-                <div className="col-span-1 sm:col-span-2">
+                <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
                     Department *
                   </label>
@@ -392,7 +406,7 @@ export default function EmployeeRegistration() {
                     value={formData.department}
                     onChange={(e) => handleInputChange("department", e.target.value)}
                     disabled={isLoading}
-                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-white px-3 text-[13px] text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 disabled:opacity-50"
+                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   >
                     {DEPARTMENTS.map(dept => (
                       <option key={dept} value={dept}>{dept}</option>
@@ -407,7 +421,12 @@ export default function EmployeeRegistration() {
           <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
             <button
               type="button"
-              onClick={() => setFormData(EMPTY_FORM)}
+              onClick={() => {
+                setFormData(EMPTY_FORM);
+                setIsPopulated(false);
+                setFormError("");
+                setFormSuccess("");
+              }}
               disabled={isLoading}
               className="min-h-[38px] rounded-xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
             >
@@ -419,7 +438,7 @@ export default function EmployeeRegistration() {
               className="min-h-[38px] rounded-xl bg-orange-500 hover:bg-orange-600 px-6 text-[13px] font-bold text-white transition shadow-[0_2px_8px_rgba(249,115,22,0.25)] flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <UserPlus size={16} />
-              {isLoading ? "Saving..." : "Register Employee"}
+              {isLoading ? "Saving..." : isPopulated ? "Update Employee" : "Register Employee"}
             </button>
           </div>
 

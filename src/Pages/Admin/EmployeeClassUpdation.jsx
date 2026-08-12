@@ -85,14 +85,15 @@ function makeActionRenderer(onPromote, onDemote, busyEmpId) {
     const canDemote = rank < 5 && !isBusy;
 
     const baseBtn = {
-      display: "inline-flex", alignItems: "center", gap: 4,
-      padding: "4px 12px", borderRadius: 8, fontSize: 11, fontWeight: 700,
+      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 4,
+      width: 92, minWidth: 92, height: 30, padding: "0 8px", borderRadius: 8, fontSize: 11, fontWeight: 700,
       border: "1px solid", cursor: "pointer", transition: "opacity 0.15s",
       whiteSpace: "nowrap",
+      boxSizing: "border-box",
     };
 
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, height: "100%" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", height: "100%" }}>
         <button
           style={{
             ...baseBtn,
@@ -366,7 +367,7 @@ export default function EmployeeClassUpdation() {
     },
     {
       key: "action", header: "Action", field: "action",
-      sortable: false, filterable: false, width: 230,
+      sortable: false, filterable: false, width: 260, minWidth: 260, flex: 0,
       render: (_, row) => <ActionRenderer data={row} />,
     },
   ];
@@ -376,6 +377,7 @@ export default function EmployeeClassUpdation() {
       title="Employee Class Updation"
       subtitle="Promote or demote employees across classification tiers."
     >
+
       {/* ── Load error ── */}
       {loadError && (
         <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4">
@@ -461,6 +463,7 @@ export default function EmployeeClassUpdation() {
             </div>
           </div>
 
+
           <div className="flex items-center gap-3">
             {selectedClass && (
               <span className="rounded-lg px-3 py-1 text-[12px] font-bold"
@@ -472,6 +475,7 @@ export default function EmployeeClassUpdation() {
                 {tableRows.length} employee{tableRows.length !== 1 ? "s" : ""} in {selectedClass}
               </span>
             )}
+            
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}

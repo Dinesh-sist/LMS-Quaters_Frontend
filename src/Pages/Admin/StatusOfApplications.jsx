@@ -23,6 +23,18 @@ function toDateKey(value) {
   return `${year}-${month}-${day}`;
 }
 
+function getDefaultMailFileNo() {
+  return `AD/EST/GENL/QRS/VIII-2/${new Date().getFullYear()}(Pt.)/`;
+}
+
+function getTodayDateInputValue() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 // const columns = [
 //   { key: "priorityNo", header: "PRIORITY NO",    minWidth: 120 },
 //   { key: "appNo",      header: "APP NO",         minWidth: 130 },
@@ -37,186 +49,109 @@ function toDateKey(value) {
 //   { key: "reqQtrLocation", header: "REQUESTED QTR LOCATION", minWidth: 220 },
 //   { key: "reqQtrType", header: "REQUESTED QTR TYPE", minWidth: 180 },
 //   { key: "exchange",   header: "EXCHANGE",       minWidth: 140 },
-function renderQuarterTypeBadge(val) {
-  if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
-  const normalized = String(val).trim().toUpperCase().replace(/\s+/g, " ");
-
-  let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
-
-  if (normalized.includes("A TYPE") || normalized === "A") {
-    badgeStyle = "bg-sky-100 text-sky-800 border-sky-200";
-  } else if (normalized.includes("B TYPE IIIR") || normalized.includes("B-IIIR") || normalized.includes("IIIR")) {
-    badgeStyle = "bg-teal-100 text-teal-800 border-teal-200";
-  } else if (normalized.includes("B TYPE") || normalized === "B") {
-    badgeStyle = "bg-emerald-100 text-emerald-800 border-emerald-200";
-  } else if (normalized.includes("C TYPE (MODIFIED)") || normalized.includes("MODIFIED") || normalized.includes("C-MODIFIED")) {
-    badgeStyle = "bg-purple-100 text-purple-800 border-purple-200";
-  } else if (normalized.includes("C TYPE") || normalized === "C") {
-    badgeStyle = "bg-indigo-100 text-indigo-800 border-indigo-200";
-  } else if (normalized.includes("D TYPE") || normalized === "D") {
-    badgeStyle = "bg-rose-100 text-rose-800 border-rose-200";
-  }
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border ${badgeStyle}`}
-    >
-      {val}
-    </span>
-  );
-}
-
-function renderClassBadge(val) {
-  if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
-  const normalized = String(val).trim().toUpperCase().replace(/\s+/g, "");
-
-  let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
-
-  if (normalized.includes("SR-CLASS-I") || normalized.includes("SRCLASS-I") || normalized.includes("SRCLASS1")) {
-    badgeStyle = "bg-blue-100 text-blue-800 border-blue-200"; // Royal Blue for SR-CLASS-I
-  } else if (normalized.includes("JR-CLASS-I") || normalized.includes("JRCLASS-I") || normalized.includes("JRCLASS1")) {
-    badgeStyle = "bg-indigo-100 text-indigo-800 border-indigo-200"; // Indigo for JR-CLASS-I
-  } else if (normalized.includes("CLASS-III") || normalized.includes("CLASS3")) {
-    badgeStyle = "bg-amber-100 text-amber-800 border-amber-200"; // Amber for CLASS-III
-  } else if (normalized.includes("JR-CLASS-II") || normalized.includes("JRCLASS-II") || normalized.includes("CLASS-II") || normalized.includes("CLASS2")) {
-    badgeStyle = "bg-teal-100 text-teal-800 border-teal-200"; // Teal for JR-CLASS-II / CLASS-II
-  } else if (normalized.includes("CLASS-IV") || normalized.includes("CLASS-VI") || normalized.includes("CLASS4") || normalized.includes("CLASS6")) {
-    badgeStyle = "bg-purple-100 text-purple-800 border-purple-200"; // Purple for CLASS-IV / VI
-  }
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide border ${badgeStyle}`}
-    >
-      {val}
-    </span>
-  );
-}
-
-const getColumns = (onDebarClick, onDeleteClick) => [
-  // EMP ID
-  { key: "empId", header: "EMP ID", renderer: "empId", pinned: "left", width: 75, minWidth: 75 },
-  // EMP NAME
-  { key: "empName", header: "EMP NAME", minWidth: 220 },
-  // CLASS
-  { key: "class", header: "CLASS", renderer: "class", render: renderClassBadge, minWidth: 155 },
-  // GRAD DATE
-  { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
-  // DEPARTMENT
-  { key: "dept", header: "DEPARTMENT", minWidth: 150 },
-  // CASTE ID
-  {
-    key: "casteId",
-    header: "CASTE ID",
-    minWidth: 130,
-    render: (val) => {
-      if (!val) return <span className="text-slate-400 text-xs font-semibold">—</span>;
-      const normalized = String(val).trim().toUpperCase();
-
-      let badgeStyle = "bg-slate-100 text-slate-700 border-slate-200";
-      if (normalized === "GENERAL" || normalized === "GEN") {
-        badgeStyle = "bg-blue-100 text-blue-700 border-blue-200";
-      } else if (normalized === "SC") {
-        badgeStyle = "bg-purple-100 text-purple-700 border-purple-200";
-      } else if (normalized === "ST") {
-        badgeStyle = "bg-amber-100 text-amber-700 border-amber-200";
-      } else if (normalized === "OBC") {
-        badgeStyle = "bg-emerald-100 text-emerald-700 border-emerald-200";
-      }
-
-      return (
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${badgeStyle}`}
-        >
-          {val}
-        </span>
-      );
+const getColumns = (onDebarClick, onDeleteClick, isHistory = false) => {
+  const cols = [
+    // EMP ID
+    { key: "empId", header: "EMP ID", renderer: "empId", minWidth: 135 },
+    // EMP NAME
+    { key: "empName", header: "EMP NAME", minWidth: 220 },
+    // CLASS
+    { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
+    // GRAD DATE
+    { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
+    // DEPARTMENT
+    { key: "dept", header: "DEPARTMENT", minWidth: 150 },
+    // CASTE ID
+    { key: "casteId", header: "CASTE ID", minWidth: 120 },
+    // CURRENT QTR TYPE
+    { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
+    // CURRENT QTR — combined area_type / quarter_no
+    {
+      key: "currentQtr",
+      header: "CURRENT QTR",
+      minWidth: 160,
+      render: (_, row) =>
+        row?.currentAreaType && row?.currentQuarterNo
+          ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
+          : "—",
     },
-  },
-  // CURRENT QTR TYPE
-  { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
-  // CURRENT QTR — combined area_type / quarter_no
-  {
-    key: "currentQtr",
-    header: "CURRENT QTR",
-    minWidth: 160,
-    render: (_, row) =>
-      row?.currentAreaType && row?.currentQuarterNo
-        ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
-        : "—",
-  },
-  // REQUEST QUARTER TYPE
-  { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200, render: renderQuarterTypeBadge },
-  // REQUEST QUARTER LOCATION (Area Type)
-  { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
-  // REQUEST QUARTER NUMBER
-  { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
+    // REQUEST QUARTER TYPE
+    { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200 },
+    // REQUEST QUARTER LOCATION (Area Type)
+    { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
+    // REQUEST QUARTER NUMBER
+    { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
 
-  // EXCHANGE
+    // EXCHANGE
 
-  { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
+    { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
 
-  // ROSTER NO
+    // ROSTER NO
 
-  { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
+    { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
 
-  // STATUS
+    // STATUS
 
-  {
-    key: "result",
-    header: "STATUS",
-    minWidth: 150,
-    render: (value) => {
-      const normalized = (value || "").toLowerCase();
-      const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
-      return (
-        <span
-          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[normalized] || "bg-yellow-100 text-yellow-600"
-            }`}
-        >
-          {label}
-        </span>
-      );
-    },
-  },
-  // DEBARRED
-  {
-    key: "debarred",
-    header: "DEBARRED",
-    minWidth: 130,
-    render: (_, row) => {
-      const resultLower = (row.result || "").toLowerCase();
-      if (resultLower === "approved" || resultLower === "allotted") {
+    {
+      key: "result",
+      header: "STATUS",
+      minWidth: 150,
+      render: (value) => {
+        const normalized = (value || "").toLowerCase();
+        const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
         return (
-          <button
-            onClick={() => onDebarClick(row)}
-            className="inline-flex rounded-md bg-rose-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 hover:bg-rose-200 transition-colors"
+          <span
+            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusStyles[normalized] || "bg-slate-100 text-slate-600"
+              }`}
           >
-            Debare
-          </button>
+            {label}
+          </span>
         );
-      }
-      return <span className="text-slate-400 text-xs font-semibold">—</span>;
+      },
     },
-  },
-  // DELETE
-  {
-    key: "delete",
-    header: "DELETE",
-    minWidth: 140,
-    render: (_, row) => (
-      <button
-        onClick={() => onDeleteClick(row)}
-        className="inline-flex items-center gap-1 rounded-md bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
-      >
-        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-        Delete
-      </button>
-    ),
-  },
-];
+    // DEBARRED
+    {
+      key: "debarred",
+      header: "DEBARRED",
+      minWidth: 130,
+      render: (_, row) => {
+        const resultLower = (row.result || "").toLowerCase();
+        if (resultLower === "approved" || resultLower === "allotted") {
+          return (
+            <button
+              onClick={() => onDebarClick(row)}
+              className="inline-flex rounded-md bg-rose-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-700 hover:bg-rose-200 transition-colors"
+            >
+              Action
+            </button>
+          );
+        }
+        return <span className="text-slate-400 text-xs font-semibold">—</span>;
+      },
+    },
+  ];
+
+  if (!isHistory) {
+    cols.push({
+      key: "delete",
+      header: "DELETE",
+      minWidth: 140,
+      render: (_, row) => (
+        <button
+          onClick={() => onDeleteClick(row)}
+          className="inline-flex items-center gap-1 rounded-md bg-red-50 border border-red-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-red-600 hover:bg-red-100 hover:border-red-300 transition-colors cursor-pointer"
+        >
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Delete
+        </button>
+      ),
+    });
+  }
+
+  return cols;
+};
 
 /* ─── Detail row inside modal ────────────────────────────────── */
 function DetailRow({ label, value }) {
@@ -429,6 +364,8 @@ export default function StatusOfApplications() {
   // Mail Modal State
   const [mailModalOpen, setMailModalOpen] = useState(false);
   const [isMailing, setIsMailing] = useState(false);
+  const [mailFileNo, setMailFileNo] = useState(getDefaultMailFileNo());
+  const [mailIssueDate, setMailIssueDate] = useState(getTodayDateInputValue());
 
   const fetchApplications = () => {
     setLoading(true);
@@ -508,10 +445,11 @@ export default function StatusOfApplications() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedUserToDelete) return;
+    const appId = selectedUserToDelete?.id || selectedUserToDelete?.Id;
+    if (!appId) return;
     setIsDeleting(true);
     try {
-      await request(`/api/admin/applications/${selectedUserToDelete.id}`, {
+      await request(`/api/admin/applications/${appId}`, {
         method: "DELETE",
         auth: true,
       });
@@ -519,16 +457,36 @@ export default function StatusOfApplications() {
       setSelectedUserToDelete(null);
       fetchApplications();
     } catch (err) {
-      alert(err?.message || "Failed to delete application.");
+      alert(err?.message || "Failed to skip application.");
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const openMailModal = () => {
+    setMailFileNo((value) => value || getDefaultMailFileNo());
+    setMailIssueDate((value) => value || getTodayDateInputValue());
+    setMailModalOpen(true);
+  };
+
+  const closeMailModal = () => {
+    if (isMailing) return;
+    setMailModalOpen(false);
+  };
+
   const handleGenerateMailConfirm = async () => {
+    const trimmedFileNo = mailFileNo.trim();
+    if (!trimmedFileNo || !mailIssueDate) {
+      alert("Please enter both File No. and Date.");
+      return;
+    }
+
     setIsMailing(true);
     try {
-      const res = await generateApprovalMails();
+      const res = await generateApprovalMails({
+        fileNo: trimmedFileNo,
+        issueDate: mailIssueDate,
+      });
       alert(res.message || "Mail generation started.");
       setMailModalOpen(false);
       fetchApplications();
@@ -539,7 +497,7 @@ export default function StatusOfApplications() {
     }
   };
 
-  const columns = getColumns(handleDebarClick, handleDeleteClick);
+  const columns = getColumns(handleDebarClick, handleDeleteClick, viewMode === "history");
 
   const currentWindowKey = {
     from: toDateKey(currentPublication?.From_Date),
@@ -599,7 +557,7 @@ export default function StatusOfApplications() {
             </button>
           </div>
           <button
-            onClick={() => setMailModalOpen(true)}
+            onClick={openMailModal}
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
           >
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -798,7 +756,7 @@ export default function StatusOfApplications() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete / Skip Confirmation Modal */}
       {deleteModalOpen && selectedUserToDelete && (
         <div
           style={{
@@ -815,7 +773,7 @@ export default function StatusOfApplications() {
               background: "#fff",
               borderRadius: "16px",
               width: "100%",
-              maxWidth: "460px",
+              maxWidth: "480px",
               boxShadow: "0 25px 60px rgba(0,0,0,0.2)",
               display: "flex",
               flexDirection: "column",
@@ -839,7 +797,7 @@ export default function StatusOfApplications() {
                   </svg>
                 </div>
                 <p style={{ fontSize: "16px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
-                  Delete Application
+                  Skip / Reject Allotment
                 </p>
               </div>
               <button
@@ -862,7 +820,7 @@ export default function StatusOfApplications() {
                 marginBottom: "18px",
               }}>
                 <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#991b1b", lineHeight: 1.5 }}>
-                  Are you sure you want to delete this application? This action cannot be undone.
+                  Are you sure you want to skip this applicant? The application will not be removed from the database—it will be marked as <strong>Rejected</strong> and the quarter allotment will automatically pass to the next priority waiting employee.
                 </p>
               </div>
 
@@ -912,7 +870,7 @@ export default function StatusOfApplications() {
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                {isDeleting ? "Deleting..." : "Delete"}
+                {isDeleting ? "Skipping..." : "Confirm & Skip"}
               </button>
             </div>
           </div>
@@ -963,7 +921,7 @@ export default function StatusOfApplications() {
                 </p>
               </div>
               <button
-                onClick={() => setMailModalOpen(false)}
+                onClick={closeMailModal}
                 style={{
                   background: "none", border: "none", cursor: "pointer",
                   color: "#94a3b8", fontSize: "20px", lineHeight: 1, padding: "2px 6px",
@@ -973,10 +931,58 @@ export default function StatusOfApplications() {
 
             <div style={{ padding: "24px" }}>
               <p style={{ margin: 0, fontSize: "14px", color: "#475569", lineHeight: 1.6 }}>
-                Are you sure you want to lock in the allotted winners, mark them as <strong>Approved</strong>, and email them their allotment order PDFs?
+                Enter the File No. and Date to print at the top of the allotment order PDFs before sending the approval mails.
               </p>
+              <div style={{ display: "grid", gap: "14px", marginTop: "18px" }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    File No.
+                  </span>
+                  <input
+                    type="text"
+                    value={mailFileNo}
+                    onChange={(e) => setMailFileNo(e.target.value)}
+                    disabled={isMailing}
+                    placeholder="Enter file number"
+                    style={{
+                      width: "100%",
+                      border: "1.5px solid #cbd5e1",
+                      borderRadius: "10px",
+                      padding: "10px 12px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      outline: "none",
+                      background: isMailing ? "#f8fafc" : "#fff",
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                    Date
+                  </span>
+                  <input
+                    type="date"
+                    value={mailIssueDate}
+                    onChange={(e) => setMailIssueDate(e.target.value)}
+                    disabled={isMailing}
+                    style={{
+                      width: "100%",
+                      border: "1.5px solid #cbd5e1",
+                      borderRadius: "10px",
+                      padding: "10px 12px",
+                      fontSize: "14px",
+                      fontWeight: 600,
+                      color: "#0f172a",
+                      outline: "none",
+                      background: isMailing ? "#f8fafc" : "#fff",
+                    }}
+                  />
+                </label>
+              </div>
               <p style={{ margin: "12px 0 0 0", fontSize: "13px", color: "#64748b" }}>
-                This process runs in the background and may take a few minutes if there are many winners.
+                After confirmation, the selected winners will be marked as Approved and emailed with these PDF details.
               </p>
             </div>
 
@@ -987,7 +993,7 @@ export default function StatusOfApplications() {
             }}>
               <button
                 type="button"
-                onClick={() => setMailModalOpen(false)}
+                onClick={closeMailModal}
                 disabled={isMailing}
                 style={{
                   padding: "8px 18px", borderRadius: "8px",
@@ -999,13 +1005,13 @@ export default function StatusOfApplications() {
               <button
                 type="button"
                 onClick={handleGenerateMailConfirm}
-                disabled={isMailing}
+                disabled={isMailing || !mailFileNo.trim() || !mailIssueDate}
                 style={{
                   padding: "8px 20px", borderRadius: "8px",
                   border: "none", background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
                   color: "#fff", fontSize: "13px", fontWeight: 700,
-                  cursor: isMailing ? "not-allowed" : "pointer",
-                  opacity: isMailing ? 0.6 : 1,
+                  cursor: isMailing || !mailFileNo.trim() || !mailIssueDate ? "not-allowed" : "pointer",
+                  opacity: isMailing || !mailFileNo.trim() || !mailIssueDate ? 0.6 : 1,
                   display: "inline-flex", alignItems: "center", gap: "6px",
                   boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
                 }}
