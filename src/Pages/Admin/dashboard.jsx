@@ -489,7 +489,7 @@ export default function AdminDashboard() {
         backgroundColor: "#2563EB",
         borderRadius: 0,
         borderSkipped: false,
-        barThickness: 24,
+        barThickness: 30,
       },
       {
         label: "Approved Applications",
@@ -497,7 +497,7 @@ export default function AdminDashboard() {
         backgroundColor: "#10B981",
         borderRadius: 0,
         borderSkipped: false,
-        barThickness: 24,
+        barThickness: 30,
       },
     ],
   });
@@ -508,7 +508,7 @@ export default function AdminDashboard() {
       {
         label: "Occupied",
         data: [],
-        backgroundColor: "#2563EB",
+        backgroundColor: "#fd0606a5",
         borderRadius: 0,
         borderSkipped: false,
         barThickness: 20,
@@ -591,7 +591,7 @@ export default function AdminDashboard() {
             {
               label: "Occupied",
               data: sorted.map((i) => i.occupied),
-              backgroundColor: "#2563EB",
+              backgroundColor: "#f70b0bd2",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 20,
@@ -682,7 +682,7 @@ export default function AdminDashboard() {
               backgroundColor: "#2563EB",
               borderRadius: 0,
               borderSkipped: false,
-              barThickness: 24,
+              barThickness: 40,
             },
             {
               label: "Approved Applications",
@@ -691,7 +691,7 @@ export default function AdminDashboard() {
               backgroundColor: "#10B981",
               borderRadius: 0,
               borderSkipped: false,
-              barThickness: 24,
+              barThickness: 40,
             },
           ],
         });

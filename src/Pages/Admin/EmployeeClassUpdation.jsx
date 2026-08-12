@@ -27,7 +27,7 @@ const CLASS_CARD = {
     cardBg: "border-indigo-300/70 bg-gradient-to-br from-indigo-700 via-blue-500 to-sky-400",
   },
   "Class 2": {
-    cardBg: "border-sky-300/70 bg-gradient-to-br from-blue-700 via-sky-500 to-cyan-400",
+    cardBg: "border-green-300/70 bg-gradient-to-br from-green-700 via-emerald-500 to-lime-400",
   },
   "Class 3": {
     cardBg: "border-amber-300/70 bg-gradient-to-br from-amber-600 via-orange-400 to-amber-400",
@@ -39,11 +39,11 @@ const CLASS_CARD = {
 
 // Badge styles for table cells and modal
 const CLASS_BADGE = {
-  "Jr.Class 1": { bg: "#ede9fe", color: "#6d28d9", border: "#c4b5fd" },
-  "Sr.Class 1": { bg: "#fcfee9", color: "#d9b928", border: "#d9b928" },
-  "Class 2": { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
+  "Jr.Class 1": { bg: "#ede9fe", color: "#3d28d9ff", border: "#b5c9fdff" },
+  "Sr.Class 1": { bg: "#fcdefcff", color: "#b328d9ff", border: "#9a40b4ff" },
+  "Class 2": { bg: "#dbfedcff", color: "#087706ff", border: "#87ce75ff" },
   "Class 3": { bg: "#ffedd5", color: "#c2410c", border: "#fed7aa" },
-  "Class 4": { bg: "#f1f5f9", color: "#475569", border: "#cbd5e1" },
+  "Class 4": { bg: "#fbe0e0ff", color: "#9b1010ff", border: "#f78585ff" },
 };
 
 const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")`;
