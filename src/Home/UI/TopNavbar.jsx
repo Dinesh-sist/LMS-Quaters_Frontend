@@ -454,7 +454,7 @@ export default function TopNavbar({
           }`}
       >
         {/* Maximum width container to unify sizes across 1024px up to 1440px+ */}
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2">
+        <div className="flex max-w-[100%] items-center justify-between gap-2">
 
           {/* Brand/Logo Section */}
           <div className="flex min-w-0 shrink-0 items-center gap-3">
@@ -493,11 +493,6 @@ export default function TopNavbar({
 
           {/* Desktop Controls & Navigation (Remains consistent from 1024px through 1440px) */}
           <div className="hidden xl:flex items-center gap-2 xl:gap-4">
-            <div className="flex items-center gap-1.5  shrink-0">
-              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} onReset={resetFontSize} />
-              <TranslateButton showPopup={!hideTranslatePopup} />
-            </div>
-
             <nav className="flex items-center gap-1">
               {NAV_ITEMS.map(({ label, to, dropdown }) => {
                 if (dropdown) {
@@ -577,6 +572,10 @@ export default function TopNavbar({
                 );
               })}
             </nav>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} onReset={resetFontSize} />
+              <TranslateButton showPopup={!hideTranslatePopup} />
+            </div>
           </div>
         </div>
 
