@@ -706,7 +706,7 @@ export default function AdminDashboard() {
   const rowHeight = isStacked ? 70 : 95;
   const categoryChartHeight = Math.max(380, categoryChart.labels.length * rowHeight + 60);
 
-  
+
   return (
     <AdminLayout
       title="Dashboard"
@@ -745,6 +745,8 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+
 
       {/* ══ History of House Allotment Committee (Full Wide Chart) ══ */}
       <div className="mt-6 w-full min-w-0">
