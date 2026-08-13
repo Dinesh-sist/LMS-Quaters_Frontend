@@ -55,6 +55,13 @@ export function lookupEmployee(employeeId, dateOfBirth) {
   return request("/api/employee/lookup", { method: "POST", body: { employeeId, dateOfBirth } });
 }
 
+export function forgotUsername(employeeId, dateOfBirth) {
+  return request("/api/auth/forgot-username", {
+    method: "POST",
+    body: { employeeId, dateOfBirth },
+  });
+}
+
 export function requestPasswordResetOtp(identifier) {
   return request("/api/auth/forgot-password/request-otp", {
     method: "POST",

@@ -6,6 +6,7 @@ import {
   Sparkles
 } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
+import Popup from "../../Components/Popup";
 import { lookupQuarterEmployee, registerEmployeeAdmin } from "../../api";
 
 // Standard employee classes (matching backend DB values)
@@ -33,6 +34,9 @@ const DEPARTMENTS = [
   "Administration & HR",
   "Electrical",
   "Materials Management",
+  "Estate",
+  "Security",
+  "Others",
 ];
 
 const EMPTY_FORM = {
@@ -77,10 +81,13 @@ const normalizeDepartment = (dept) => {
 export default function EmployeeRegistration() {
   // Registration form states
   const [formData, setFormData] = useState(EMPTY_FORM);
-  const [formError, setFormError] = useState("");
-  const [formSuccess, setFormSuccess] = useState("");
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const [isLoading, setIsLoading] = useState(false);
   const [isPopulated, setIsPopulated] = useState(false);
+
+  const showToast = (message, title = "Error", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   // Form field changes helper
   const handleInputChange = (field, value) => {
@@ -94,15 +101,11 @@ export default function EmployeeRegistration() {
     const empId = formData.employeeId.trim();
     if (!empId) {
       setFormData(EMPTY_FORM);
-      setFormError("");
-      setFormSuccess("");
       setIsPopulated(false);
       return;
     }
 
     setIsLoading(true);
-    setFormError("");
-    setFormSuccess("");
     try {
       const res = await lookupQuarterEmployee(empId);
       if (res.exists) {
@@ -119,16 +122,16 @@ export default function EmployeeRegistration() {
           email: res.email || "",
         }));
         setIsPopulated(true);
-        setFormSuccess(`Details populated for employee: ${res.name || empId}`);
+        showToast(`Details populated for employee: ${res.name || empId}`, "Employee Found", "success");
       } else {
         setIsPopulated(false);
-        setFormError("Employee ID not found in database. Please enter details manually.");
+        showToast("Employee ID not found in database. Please enter details manually.", "Notice", "info");
         setFormData(prev => ({ ...EMPTY_FORM, employeeId: prev.employeeId }));
       }
     } catch (err) {
       console.error("Error looking up employee:", err);
       setIsPopulated(false);
-      setFormError("Failed to lookup employee ID. You can still enter details manually.");
+      showToast("Failed to lookup employee ID. You can still enter details manually.", "Lookup Notice", "info");
       setFormData(prev => ({ ...EMPTY_FORM, employeeId: prev.employeeId }));
     } finally {
       setIsLoading(false);
@@ -142,12 +145,8 @@ export default function EmployeeRegistration() {
     }
   };
 
-  
-  // Register single employee handler
   const handleSingleSubmit = async (e) => {
     e.preventDefault();
-    setFormError("");
-    setFormSuccess("");
 
     const {
       employeeId,
@@ -163,58 +162,45 @@ export default function EmployeeRegistration() {
     } = formData;
 
     // Validation for all fields
-    if (!employeeId.trim()) return setFormError("Employee ID is required.");
-    if (!employeeName.trim()) return setFormError("Employee Name is required.");
-    if (!dateOfBirth) return setFormError("Date of Birth is required.");
-    if (!mobile.trim()) return setFormError("Mobile Number is required.");
-    if (!email.trim()) return setFormError("Email Address is required.");
-    if (!dateOfJoining) return setFormError("Date of Joining is required.");
-    if (!gradDate) return setFormError("Grade Date is required.");
-    if (!classOfEmployee) return setFormError("Class of Employee is required.");
-    if (!casteOfEmployee) return setFormError("Caste of Employee is required.");
-    if (!department) return setFormError("Department is required.");
-
-
+    if (!employeeId.trim()) return showToast("Employee ID is required.", "Validation Error");
+    if (!employeeName.trim()) return showToast("Employee Name is required.", "Validation Error");
+    if (!dateOfBirth) return showToast("Date of Birth is required.", "Validation Error");
+    if (!mobile.trim()) return showToast("Mobile Number is required.", "Validation Error");
+    if (!email.trim()) return showToast("Email Address is required.", "Validation Error");
+    if (!dateOfJoining) return showToast("Date of Joining is required.", "Validation Error");
+    if (!gradDate) return showToast("Grade Date is required.", "Validation Error");
+    if (!classOfEmployee) return showToast("Class of Employee is required.", "Validation Error");
+    if (!casteOfEmployee) return showToast("Caste of Employee is required.", "Validation Error");
+    if (!department) return showToast("Department is required.", "Validation Error");
 
     setIsLoading(true);
     try {
       const res = await registerEmployeeAdmin(formData);
-      setFormSuccess(res.message || `Employee "${employeeName}" registered/updated successfully.`);
+      showToast(res.message || `Employee "${employeeName}" registered/updated successfully.`, "Success", "success");
       setFormData(EMPTY_FORM);
       setIsPopulated(false);
     } catch (err) {
       console.error("Error registering employee:", err);
-      setFormError(err.message || "Failed to register/update employee details in the database.");
+      showToast(err.message || "Failed to register/update employee details in the database.", "Registration Error");
     } finally {
       setIsLoading(false);
     }
   };
-
 
   return (
     <AdminLayout
       title="Employee Registration"
       subtitle="Register a new employee with their official details in the system."
     >
+      <Popup
+        {...popup}
+        onClose={() => setPopup({ ...popup, open: false })}
+      />
       <div className="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles size={18} className="text-orange-500" />
           <h2 className="text-lg font-bold text-slate-900 font-semibold">New Employee Registration Form</h2>
         </div>
-
-        {formError && (
-          <div className="mb-4 flex gap-2 items-center rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            <AlertTriangle size={18} className="shrink-0" />
-            <span className="font-semibold">{formError}</span>
-          </div>
-        )}
-
-        {formSuccess && (
-          <div className="mb-4 flex gap-2 items-center rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 font-semibold font-bold">
-            <CheckCircle2 size={18} className="shrink-0" />
-            <span>{formSuccess}</span>
-          </div>
-        )}
 
         <form onSubmit={handleSingleSubmit} className="space-y-4">
 
@@ -392,8 +378,6 @@ export default function EmployeeRegistration() {
               onClick={() => {
                 setFormData(EMPTY_FORM);
                 setIsPopulated(false);
-                setFormError("");
-                setFormSuccess("");
               }}
               disabled={isLoading}
               className="min-h-[38px] rounded-xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"

@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
+import Popup from "../../Components/Popup";
 import { request, getLatestPublication, generateApprovalMails } from "../../api";
 import Logo from "../../assets/Logo.png";
 
@@ -346,8 +347,13 @@ export default function StatusOfApplications() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const [viewMode, setViewMode] = useState("current");
   const [currentPublication, setCurrentPublication] = useState(null);
+
+  const showToast = (message, title = "Notice", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   // Debar Modal State
   const [debarModalOpen, setDebarModalOpen] = useState(false);
@@ -374,7 +380,9 @@ export default function StatusOfApplications() {
         setRows(Array.isArray(data?.items) ? data.items : []);
       })
       .catch((fetchError) => {
-        setError(fetchError?.message || "Failed to load application statuses.");
+        const msg = fetchError?.message || "Failed to load application statuses.";
+        setError(msg);
+        showToast(msg, "Error Loading Applications");
       })
       .finally(() => {
         setLoading(false);
@@ -409,12 +417,12 @@ export default function StatusOfApplications() {
   const handleDebarSubmit = async (e) => {
     e.preventDefault();
     if (!debarFromDate || !debarToDate) {
-      alert("Please select both from and to dates.");
+      showToast("Please select both from and to dates.", "Validation Error");
       return;
     }
 
     if (new Date(debarFromDate) > new Date(debarToDate)) {
-      alert("To Date must be after From Date.");
+      showToast("To Date must be after From Date.", "Validation Error");
       return;
     }
 
@@ -429,11 +437,11 @@ export default function StatusOfApplications() {
         },
         auth: true,
       });
-      alert(`Successfully debarred ${selectedUserToDebar.empName}`);
+      showToast(`Successfully debarred ${selectedUserToDebar.empName}`, "Debarred", "success");
       setDebarModalOpen(false);
       fetchApplications();
     } catch (err) {
-      alert(err.message || "Failed to debar user.");
+      showToast(err.message || "Failed to debar user.", "Debar Failed");
     } finally {
       setIsDebarring(false);
     }
@@ -453,11 +461,12 @@ export default function StatusOfApplications() {
         method: "DELETE",
         auth: true,
       });
+      showToast("Application skipped successfully.", "Success", "success");
       setDeleteModalOpen(false);
       setSelectedUserToDelete(null);
       fetchApplications();
     } catch (err) {
-      alert(err?.message || "Failed to skip application.");
+      showToast(err?.message || "Failed to skip application.", "Error");
     } finally {
       setIsDeleting(false);
     }
@@ -477,7 +486,7 @@ export default function StatusOfApplications() {
   const handleGenerateMailConfirm = async () => {
     const trimmedFileNo = mailFileNo.trim();
     if (!trimmedFileNo || !mailIssueDate) {
-      alert("Please enter both File No. and Date.");
+      showToast("Please enter both File No. and Date.", "Validation Error");
       return;
     }
 
@@ -487,11 +496,11 @@ export default function StatusOfApplications() {
         fileNo: trimmedFileNo,
         issueDate: mailIssueDate,
       });
-      alert(res.message || "Mail generation started.");
+      showToast(res.message || "Mail generation started.", "Success", "success");
       setMailModalOpen(false);
       fetchApplications();
     } catch (err) {
-      alert(err?.message || "Failed to generate mails.");
+      showToast(err?.message || "Failed to generate mails.", "Error");
     } finally {
       setIsMailing(false);
     }
@@ -504,27 +513,21 @@ export default function StatusOfApplications() {
     to: toDateKey(currentPublication?.To_Date),
   };
 
-  const isPublicationActive = currentPublication?.Current_State === "Published";
+  const currentApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return true;
+    return (
+      toDateKey(row?.publishedDateFrom || row?.PublishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.publishedDateTo || row?.PublishedDateTo) === currentWindowKey.to
+    );
+  });
 
-  const currentApplicationRows = isPublicationActive
-    ? rows.filter((row) => {
-      if (!currentWindowKey.from || !currentWindowKey.to) return true;
-      return (
-        toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-        toDateKey(row?.publishedDateTo) === currentWindowKey.to
-      );
-    })
-    : [];
-
-  const historyApplicationRows = isPublicationActive
-    ? rows.filter((row) => {
-      if (!currentWindowKey.from || !currentWindowKey.to) return true;
-      return !(
-        toDateKey(row?.publishedDateFrom) === currentWindowKey.from &&
-        toDateKey(row?.publishedDateTo) === currentWindowKey.to
-      );
-    })
-    : rows;
+  const historyApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return false;
+    return !(
+      toDateKey(row?.publishedDateFrom || row?.PublishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.publishedDateTo || row?.PublishedDateTo) === currentWindowKey.to
+    );
+  });
 
   const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
 
@@ -556,15 +559,17 @@ export default function StatusOfApplications() {
               History of Applications
             </button>
           </div>
-          <button
-            onClick={openMailModal}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
-          >
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            Generate Mail
-          </button>
+          {viewMode !== "history" && (
+            <button
+              onClick={openMailModal}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+            >
+              <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              Generate Mail
+            </button>
+          )}
         </div>
       }
     >
@@ -1016,13 +1021,20 @@ export default function StatusOfApplications() {
                   boxShadow: "0 2px 8px rgba(37,99,235,0.3)",
                 }}
               >
-
                 {isMailing ? "Generating..." : "Generate & Send Mails"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
     </AdminLayout>
   );
 }

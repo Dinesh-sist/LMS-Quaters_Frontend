@@ -3,6 +3,7 @@ import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
+import Popup from "../Components/Popup";
 import Image from "../assets/Image13.png";
 import Logo from "../assets/Logo.png";
 import { lookupEmployee, registerEmployee } from "../api";
@@ -35,33 +36,75 @@ export default function EmployeeRegister() {
   const navigate = useNavigate();
   const [reg, setReg] = useState(emptyRegistration);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successOpen, setSuccessOpen] = useState(false);
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const showToast = (message, title = "Error", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
+
   const updateReg = (key, value) => {
-    setReg((current) => ({ ...current, [key]: value }));
+    if (key === "employeeId" || key === "dateOfBirth") {
+      setReg((current) => ({
+        ...current,
+        [key]: value,
+        employeeName: "",
+        dateOfJoining: "",
+        className: "",
+        mobile: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      }));
+    } else {
+      setReg((current) => ({ ...current, [key]: value }));
+    }
   };
 
   const handleLookup = async () => {
-    setError("");
     if (!reg.employeeId.trim() || !reg.dateOfBirth) {
-      setError("Enter Employee ID and Date of Birth to fetch details.");
+      showToast("Enter Employee ID and Date of Birth to fetch details.", "Lookup Failed");
       return;
     }
+
+    // Clear previous fetched data & passwords immediately before fetching new details
+    setReg((current) => ({
+      ...current,
+      employeeName: "",
+      dateOfJoining: "",
+      className: "",
+      mobile: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    }));
 
     setIsLoading(true);
     try {
       const data = await lookupEmployee(reg.employeeId.trim(), reg.dateOfBirth);
       setReg((current) => ({
         ...current,
-        employeeName: data?.employeeName || current.employeeName,
-        dateOfJoining: data?.dateOfJoining || current.dateOfJoining,
-        className: data?.className || current.className,
+        employeeName: data?.employeeName || "",
+        dateOfJoining: data?.dateOfJoining || "",
+        className: data?.className || "",
+        mobile: data?.mobile || "",
+        email: data?.email || "",
       }));
+      showToast("Employee details fetched successfully.", "Employee Found", "success");
     } catch (lookupError) {
-      setError(lookupError?.message || "Employee lookup failed.");
+      // Ensure all fields remain cleared on lookup failure
+      setReg((current) => ({
+        ...current,
+        employeeName: "",
+        dateOfJoining: "",
+        className: "",
+        mobile: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      }));
+      showToast(lookupError?.message || "Employee lookup failed.", "Lookup Failed");
     } finally {
       setIsLoading(false);
     }
@@ -69,11 +112,10 @@ export default function EmployeeRegister() {
 
   const handleRegister = async (event) => {
     event.preventDefault();
-    setError("");
 
-    if (!reg.email.trim()) return setError("Email is required.");
-    if (!reg.password) return setError("Password is required.");
-    if (reg.password !== reg.confirmPassword) return setError("Passwords do not match.");
+    if (!reg.email.trim()) return showToast("Email is required.", "Validation Error");
+    if (!reg.password) return showToast("Password is required.", "Validation Error");
+    if (reg.password !== reg.confirmPassword) return showToast("Passwords do not match.", "Validation Error");
 
     setIsLoading(true);
     try {
@@ -89,14 +131,13 @@ export default function EmployeeRegister() {
         password: reg.password,
       });
 
-      setSuccessOpen(true);
+      showToast("Registered successfully! Redirecting to login...", "Success", "success");
       window.setTimeout(() => {
-        setSuccessOpen(false);
         setReg(emptyRegistration);
         navigate("/QuartersApplyLogin", { replace: true });
-      }, 1200);
+      }, 1500);
     } catch (registerError) {
-      setError(registerError?.message || "Registration failed.");
+      showToast(registerError?.message || "Registration failed.", "Registration Error");
     } finally {
       setIsLoading(false);
     }
@@ -125,11 +166,11 @@ export default function EmployeeRegister() {
             <div className="shrink-0 border-b border-slate-200 px-5 py-2.5 lg:px-6">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
                     <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
                   </div>
                   <div>
-                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.24em] text-orange-500">
+                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.15em] text-orange-500">
                       Paradip Port Authority
                     </p>
                     <h1
@@ -159,12 +200,6 @@ export default function EmployeeRegister() {
 
               {/* Scrollable fields area */}
               <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 lg:px-8">
-
-              {error ? (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[12px] font-semibold text-red-700">
-                  {error}
-                </div>
-              ) : null}
 
               {/* Fetch section */}
               <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3">
@@ -240,6 +275,7 @@ export default function EmployeeRegister() {
                     value={reg.mobile}
                     onChange={(event) => updateReg("mobile", event.target.value)}
                     placeholder="Mobile"
+                    readOnly
                   />
                 </Field>
 
@@ -251,6 +287,7 @@ export default function EmployeeRegister() {
                     value={reg.email}
                     onChange={(event) => updateReg("email", event.target.value)}
                     placeholder="name@domain.com"
+                    readOnly
                   />
                 </Field>
 
@@ -324,14 +361,13 @@ export default function EmployeeRegister() {
 
       <Footer sticky={false} />
 
-      {successOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="text-[15px] font-bold text-slate-900">Successfully registered</div>
-            <div className="mt-1 text-[13px] text-slate-500">Redirecting back to Employee Login...</div>
-          </div>
-        </div>
-      ) : null}
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
+import Popup from "../../Components/Popup";
 import { request, API_BASE, getLatestPublication } from "../../api";
 import Logo from "../../assets/Logo.png";
 
@@ -619,9 +620,14 @@ export default function VerifyQuarterApplications() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const [selected, setSelected] = useState(null); // row being reviewed
   const [viewMode, setViewMode] = useState("current");
   const [currentPublication, setCurrentPublication] = useState(null);
+
+  const showToast = (message, title = "Notice", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   const load = () => {
     setLoading(true);
@@ -642,7 +648,11 @@ export default function VerifyQuarterApplications() {
         });
         setRows(updatedApps);
       })
-      .catch((err) => setError(err?.message || "Failed to load applications."))
+      .catch((err) => {
+        const msg = err?.message || "Failed to load applications.";
+        setError(msg);
+        showToast(msg, "Error Loading Applications");
+      })
       .finally(() => setLoading(false));
   };
 
@@ -670,27 +680,21 @@ export default function VerifyQuarterApplications() {
     to: toDateKey(currentPublication?.To_Date),
   };
 
-  const isPublicationActive = currentPublication?.Current_State === "Published";
+  const currentApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return true;
+    return (
+      toDateKey(row?.PublishedDateFrom || row?.publishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.PublishedDateTo || row?.publishedDateTo) === currentWindowKey.to
+    );
+  });
 
-  const currentApplicationRows = isPublicationActive
-    ? rows.filter((row) => {
-      if (!currentWindowKey.from || !currentWindowKey.to) return true;
-      return (
-        toDateKey(row?.PublishedDateFrom) === currentWindowKey.from &&
-        toDateKey(row?.PublishedDateTo) === currentWindowKey.to
-      );
-    })
-    : [];
-
-  const historyApplicationRows = isPublicationActive
-    ? rows.filter((row) => {
-      if (!currentWindowKey.from || !currentWindowKey.to) return true;
-      return !(
-        toDateKey(row?.PublishedDateFrom) === currentWindowKey.from &&
-        toDateKey(row?.PublishedDateTo) === currentWindowKey.to
-      );
-    })
-    : rows;
+  const historyApplicationRows = rows.filter((row) => {
+    if (!currentWindowKey.from || !currentWindowKey.to) return false;
+    return !(
+      toDateKey(row?.PublishedDateFrom || row?.publishedDateFrom) === currentWindowKey.from &&
+      toDateKey(row?.PublishedDateTo || row?.publishedDateTo) === currentWindowKey.to
+    );
+  });
 
   const visibleRows = viewMode === "history" ? historyApplicationRows : currentApplicationRows;
 
@@ -760,6 +764,14 @@ export default function VerifyQuarterApplications() {
           onAction={handleAction}
         />
       )}
+
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
     </AdminLayout>
   );
 }

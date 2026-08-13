@@ -13,9 +13,13 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  Copy,
+  Check,
+  UserCheck,
 } from "lucide-react";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
+import Popup from "../Components/Popup";
 import Image from "../assets/Image13.png";
 import Logo from "../assets/Logo.png";
 import {
@@ -26,17 +30,23 @@ import {
   requestPasswordResetOtp,
   resetEmployeePassword,
   verifyPasswordResetOtp,
+  forgotUsername,
 } from "../api";
 import { setAuth } from "../auth";
 
 export default function QuartersApplyLogin({ initialMode = "login" }) {
-  const [mode, setMode] = useState(initialMode); // "login" | "forgot" | "register"
+  const [mode, setMode] = useState(initialMode); // "login" | "forgot" | "forgot-username" | "register"
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const navigate = useNavigate();
+
+  const showToast = (message, title = "Notice", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   const [reg, setReg] = useState({
     employeeId: "",
@@ -66,6 +76,35 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const [showForgotNewPass, setShowForgotNewPass] = useState(false);
   const [showForgotConfirmPass, setShowForgotConfirmPass] = useState(false);
   const [forgotMessage, setForgotMessage] = useState("");
+  const [forgotAccountInfo, setForgotAccountInfo] = useState(null);
+
+  // Forgot Username State
+  const [forgotUserEmpId, setForgotUserEmpId] = useState("");
+  const [forgotUserDob, setForgotUserDob] = useState("");
+  const [retrievedUsername, setRetrievedUsername] = useState(null);
+  const [copiedUsername, setCopiedUsername] = useState(false);
+
+  const resetForgotUsernameState = () => {
+    setForgotUserEmpId("");
+    setForgotUserDob("");
+    setRetrievedUsername(null);
+    setCopiedUsername(false);
+  };
+
+  const resetForgotState = () => {
+    setForgotStep("request");
+    setForgotIdentifier("");
+    setForgotOtp("");
+    setOtpValues(["", "", "", "", "", ""]);
+    setResendCountdown(0);
+    setForgotResetToken("");
+    setForgotNewPassword("");
+    setForgotConfirmPassword("");
+    setShowForgotNewPass(false);
+    setShowForgotConfirmPass(false);
+    setForgotMessage("");
+    setForgotAccountInfo(null);
+  };
 
   const otpInputRefs = useRef([]);
 
@@ -118,18 +157,55 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     }
   }, []);
 
-  const resetForgotState = () => {
-    setForgotStep("request");
-    setForgotIdentifier("");
-    setForgotOtp("");
-    setOtpValues(["", "", "", "", "", ""]);
-    setResendCountdown(0);
-    setForgotResetToken("");
-    setForgotNewPassword("");
-    setForgotConfirmPassword("");
-    setShowForgotNewPass(false);
-    setShowForgotConfirmPass(false);
-    setForgotMessage("");
+  const handleForgotUsername = async (e) => {
+    e?.preventDefault();
+    setError("");
+    setRetrievedUsername(null);
+    setCopiedUsername(false);
+
+    if (!forgotUserEmpId.trim()) {
+      setError("Please enter your Employee ID.");
+      showToast("Please enter your Employee ID.", "Validation Error");
+      return;
+    }
+    if (!forgotUserDob) {
+      setError("Please select your Date of Birth.");
+      showToast("Please select your Date of Birth.", "Validation Error");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const data = await forgotUsername(forgotUserEmpId.trim(), forgotUserDob);
+      setRetrievedUsername({
+        username: data.username,
+        employeeName: data.employeeName,
+        employeeId: data.employeeId,
+      });
+      showToast("Username retrieved successfully.", "Account Found", "success");
+    } catch (err) {
+      const msg = err?.message || "Could not retrieve username.";
+      setError(msg);
+      showToast(msg, "Search Failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCopyUsername = () => {
+    if (!retrievedUsername?.username) return;
+    navigator.clipboard.writeText(retrievedUsername.username);
+    setCopiedUsername(true);
+    setTimeout(() => setCopiedUsername(false), 2000);
+  };
+
+  const handleUseUsernameForLogin = () => {
+    if (!retrievedUsername?.username) return;
+    const uName = retrievedUsername.username;
+    resetForgotUsernameState();
+    setError("");
+    setUsername(uName);
+    setMode("login");
   };
 
   useEffect(() => {
@@ -169,13 +245,16 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       const data = await login(username.trim(), password);
       if (data?.user?.role?.toLowerCase() !== "employee") {
         setError("This account is not an employee.");
+        showToast("This account is not an employee.", "Access Denied");
         return;
       }
       setAuth({ token: data.token, user: data.user });
       localStorage.setItem("lmsq_terms_accepted", "1");
       navigate("/Quarters/ApplyEmployees", { replace: true });
     } catch (e2) {
-      setError(e2?.message || "Login failed.");
+      const msg = e2?.message || "Login failed.";
+      setError(msg);
+      showToast(msg, "Login Failed");
     } finally {
       setIsLoading(false);
     }
@@ -187,7 +266,9 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     setForgotMessage("");
 
     if (!forgotIdentifier.trim()) {
-      setError("Enter your Employee ID or registered email.");
+      const msg = "Enter your Employee ID or registered email.";
+      setError(msg);
+      showToast(msg, "Validation Error");
       return;
     }
 
@@ -198,9 +279,13 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       setOtpValues(["", "", "", "", "", ""]);
       setForgotOtp("");
       setResendCountdown(30);
-      setForgotMessage("OTP sent successfully to your registered email.");
+      const successMsg = "OTP sent successfully to your registered email.";
+      setForgotMessage(successMsg);
+      showToast(successMsg, "OTP Sent", "success");
     } catch (e2) {
-      setError(e2?.message || "Could not send OTP.");
+      const msg = e2?.message || "Could not send OTP.";
+      setError(msg);
+      showToast(msg, "Request Failed");
     } finally {
       setIsLoading(false);
     }
@@ -216,10 +301,14 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       setOtpValues(["", "", "", "", "", ""]);
       setForgotOtp("");
       setResendCountdown(30);
-      setForgotMessage("A new 6-digit OTP has been sent to your registered email.");
+      const successMsg = "A new 6-digit OTP has been sent to your registered email.";
+      setForgotMessage(successMsg);
+      showToast(successMsg, "OTP Resent", "success");
       otpInputRefs.current[0]?.focus();
     } catch (e2) {
-      setError(e2?.message || "Failed to resend OTP.");
+      const msg = e2?.message || "Failed to resend OTP.";
+      setError(msg);
+      showToast(msg, "Resend Failed");
     } finally {
       setIsLoading(false);
     }
@@ -307,7 +396,9 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
 
     const currentOtp = otpValues.join("").trim();
     if (currentOtp.length < 6) {
-      setError("Please enter the complete 6-digit OTP.");
+      const msg = "Please enter the complete 6-digit OTP.";
+      setError(msg);
+      showToast(msg, "Validation Error");
       return;
     }
 
@@ -315,10 +406,19 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     try {
       const data = await verifyPasswordResetOtp(forgotIdentifier.trim(), currentOtp);
       setForgotResetToken(data?.resetToken || "");
+      setForgotAccountInfo({
+        username: data?.username || "",
+        employeeName: data?.employeeName || "",
+        employeeId: data?.employeeId || "",
+      });
       setForgotStep("reset");
-      setForgotMessage("OTP verified. Create your new password.");
+      const successMsg = "OTP verified! Create your new password below.";
+      setForgotMessage(successMsg);
+      showToast(successMsg, "Verified", "success");
     } catch (e2) {
-      setError(e2?.message || "Invalid OTP. Please check and try again.");
+      const msg = e2?.message || "Invalid OTP. Please check and try again.";
+      setError(msg);
+      showToast(msg, "Verification Failed");
     } finally {
       setIsLoading(false);
     }
@@ -330,30 +430,40 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     setForgotMessage("");
 
     if (!forgotNewPassword) {
-      setError("Enter a new password.");
+      const msg = "Enter a new password.";
+      setError(msg);
+      showToast(msg, "Validation Error");
       return;
     }
     if (forgotNewPassword.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      const msg = "Password must be at least 6 characters long.";
+      setError(msg);
+      showToast(msg, "Validation Error");
       return;
     }
     if (forgotNewPassword !== forgotConfirmPassword) {
-      setError("Passwords do not match.");
+      const msg = "Passwords do not match.";
+      setError(msg);
+      showToast(msg, "Validation Error");
       return;
     }
 
     setIsLoading(true);
     try {
       await resetEmployeePassword(forgotResetToken, forgotNewPassword);
-      setForgotMessage("Password changed successfully! Returning to login...");
+      const successMsg = "Password changed successfully! Returning to login...";
+      setForgotMessage(successMsg);
+      showToast(successMsg, "Password Updated", "success");
       window.setTimeout(() => {
-        const savedId = forgotIdentifier;
+        const savedId = forgotAccountInfo?.username || forgotIdentifier;
         resetForgotState();
         setMode("login");
         if (savedId) setUsername(savedId);
       }, 1400);
     } catch (e2) {
-      setError(e2?.message || "Could not reset password.");
+      const msg = e2?.message || "Could not reset password.";
+      setError(msg);
+      showToast(msg, "Reset Failed");
     } finally {
       setIsLoading(false);
     }
@@ -363,9 +473,24 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
     e?.preventDefault();
     setError("");
 
-    if (!reg.email.trim()) return setError("Email is required.");
-    if (!reg.password) return setError("Password is required.");
-    if (reg.password !== reg.confirmPassword) return setError("Passwords do not match.");
+    if (!reg.email.trim()) {
+      const msg = "Email is required.";
+      setError(msg);
+      showToast(msg, "Validation Error");
+      return;
+    }
+    if (!reg.password) {
+      const msg = "Password is required.";
+      setError(msg);
+      showToast(msg, "Validation Error");
+      return;
+    }
+    if (reg.password !== reg.confirmPassword) {
+      const msg = "Passwords do not match.";
+      setError(msg);
+      showToast(msg, "Validation Error");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -381,6 +506,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         password: reg.password,
       });
 
+      showToast("Registered successfully! Redirecting to login...", "Success", "success");
       setSuccessOpen(true);
       setTimeout(() => {
         setSuccessOpen(false);
@@ -401,7 +527,9 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         navigate("/QuartersApplyLogin", { replace: true });
       }, 1200);
     } catch (e2) {
-      setError(e2?.message || "Registration failed.");
+      const msg = e2?.message || "Registration failed.";
+      setError(msg);
+      showToast(msg, "Registration Error");
     } finally {
       setIsLoading(false);
     }
@@ -410,21 +538,54 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   const handleLookup = async () => {
     setError("");
     if (!reg.employeeId.trim() || !reg.dateOfBirth) {
-      setError("Enter Employee ID and Date of Birth to fetch details.");
+      const msg = "Enter Employee ID and Date of Birth to fetch details.";
+      setError(msg);
+      showToast(msg, "Lookup Required");
       return;
     }
+
+    // Clear previous fetched data & passwords immediately before fetching new details
+    setReg((r) => ({
+      ...r,
+      employeeName: "",
+      dateOfJoining: "",
+      className: "",
+      classChoice: "",
+      mobile: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    }));
+
     setIsLoading(true);
     try {
       const data = await lookupEmployee(reg.employeeId.trim(), reg.dateOfBirth);
       setReg((r) => ({
         ...r,
-        employeeName: data?.employeeName || r.employeeName,
-        dateOfJoining: data?.dateOfJoining || r.dateOfJoining,
-        className: data?.className || r.className,
-        classChoice: data?.classChoice || r.classChoice,
+        employeeName: data?.employeeName || "",
+        dateOfJoining: data?.dateOfJoining || "",
+        className: data?.className || "",
+        classChoice: data?.classChoice || data?.className || "",
+        mobile: data?.mobile || "",
+        email: data?.email || "",
       }));
+      showToast("Employee details fetched successfully.", "Employee Found", "success");
     } catch (e2) {
-      setError(e2?.message || "Employee lookup failed.");
+      // Ensure all fields remain cleared on lookup failure
+      setReg((r) => ({
+        ...r,
+        employeeName: "",
+        dateOfJoining: "",
+        className: "",
+        classChoice: "",
+        mobile: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      }));
+      const msg = e2?.message || "Employee lookup failed.";
+      setError(msg);
+      showToast(msg, "Lookup Failed");
     } finally {
       setIsLoading(false);
     }
@@ -597,6 +758,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       value={reg.mobile}
                       onChange={(e) => setReg((r) => ({ ...r, mobile: e.target.value }))}
                       placeholder="Mobile"
+                      readOnly
                     />
                   </div>
 
@@ -609,6 +771,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       value={reg.email}
                       onChange={(e) => setReg((r) => ({ ...r, email: e.target.value }))}
                       placeholder="name@domain.com"
+                      readOnly
                     />
                   </div>
                 </div>
@@ -960,28 +1123,43 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                     >
                       {isLoading ? "Logging in..." : "Login as Employee"}
                     </button>
-
-                    <div className="text-center text-[12px] text-slate-700 sm:text-[12.5px] py-1">
-                      <span>Can&apos;t remember the Password? </span>
-                      <button
-                        type="button"
-                        className="font-bold text-blue-950 underline transition-colors hover:text-blue-700 cursor-pointer bg-transparent border-0 p-0"
-                        onClick={() => {
-                          setError("");
-                          resetForgotState();
-                          if (username.trim()) {
-                            setForgotIdentifier(username.trim());
-                          }
-                          setMode("forgot");
-                        }}
-                      >
-                        Click here
-                      </button>
+                    <div className="flex flex-col sm:flex-row items-center justify-between text-[11.5px] sm:text-[12px] text-slate-700 py-1 gap-1">
+                      <div>
+                        <span>Forgot Username? </span>
+                        <button
+                          type="button"
+                          className="font-bold text-blue-950 underline transition-colors hover:text-blue-700 cursor-pointer bg-transparent border-0 p-0"
+                          onClick={() => {
+                            setError("");
+                            resetForgotUsernameState();
+                            setMode("forgot-username");
+                          }}
+                        >
+                          Find here
+                        </button>
+                      </div>
+                      <div>
+                        <span>Forgot Password? </span>
+                        <button
+                          type="button"
+                          className="font-bold text-blue-950 underline transition-colors hover:text-blue-700 cursor-pointer bg-transparent border-0 p-0"
+                          onClick={() => {
+                            setError("");
+                            resetForgotState();
+                            if (username.trim()) {
+                              setForgotIdentifier(username.trim());
+                            }
+                            setMode("forgot");
+                          }}
+                        >
+                          Reset here
+                        </button>
+                      </div>
                     </div>
 
                     <button
                       type="button"
-                      className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px] cursor-pointer"
+                      className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950  transition-all duration-200 hover:bg-indigo-950 hover:text-white xl:text-[14px] hover:shadow-[0_4px_18px_rgba(30,58,138,0.28)] cursor-pointer"
                       onClick={() => {
                         setError("");
                         navigate("/EmployeeRegister");
@@ -995,7 +1173,166 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                 </>
               )}
 
-              {/* MODE 2: FORGOT PASSWORD FLOW (Rendered within the same card div!) */}
+              {/* MODE 2: FORGOT USERNAME FLOW */}
+              {mode === "forgot-username" && (
+                <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleForgotUsername}>
+                  <div>
+                    <div className="employee-login-heading mb-3 flex items-center gap-3.5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                        <UserCheck className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h1
+                          className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
+                          style={{ fontFamily: "Georgia, serif" }}
+                        >
+                          Forgot Username
+                        </h1>
+                        <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
+                          Account Recovery
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
+                      Enter your Employee ID and Date of Birth to find your registered login username.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-3 mt-1">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                        Employee ID
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          autoComplete="off"
+                          name="forgot_user_empid"
+                          id="forgot_user_empid"
+                          autoFocus
+                          className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] pl-10 text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                          value={forgotUserEmpId}
+                          onChange={(e) => setForgotUserEmpId(e.target.value)}
+                          placeholder="Enter your Employee ID"
+                        />
+                        <User className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-700" size={16} />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
+                        Date of Birth
+                      </label>
+                      <input
+                        type="date"
+                        name="forgot_user_dob"
+                        id="forgot_user_dob"
+                        className="employee-login-field employee-input w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3.5 py-[clamp(10px,1.3vh,14px)] text-[clamp(12px,1vw,13px)] text-blue-950 transition-all duration-200 placeholder:text-slate-300 xl:text-[13px]"
+                        value={forgotUserDob}
+                        onChange={(e) => setForgotUserDob(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs text-red-700">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  {retrievedUsername && (
+                    <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50/90 p-4 shadow-sm space-y-2.5">
+                      <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>Account Found</span>
+                      </div>
+                      
+                      <div className="rounded-xl border border-emerald-200 bg-white p-3 shadow-xs">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                          Your Registered Login Username:
+                        </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-[13.5px] sm:text-[14.5px] font-extrabold text-blue-950 select-all break-all">
+                            {retrievedUsername.username}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleCopyUsername}
+                            className="shrink-0 flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-700 hover:bg-blue-950 hover:text-white transition-colors cursor-pointer"
+                            title="Copy username"
+                          >
+                            {copiedUsername ? (
+                              <>
+                                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {retrievedUsername.employeeName && (
+                          <div className="mt-2 pt-1.5 border-t border-slate-100 text-[11.5px] text-slate-600 flex items-center justify-between">
+                            <span>Name: <strong className="text-slate-900">{retrievedUsername.employeeName}</strong></span>
+                            {retrievedUsername.employeeId && (
+                              <span className="text-slate-500">ID: {retrievedUsername.employeeId}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleUseUsernameForLogin}
+                        className="w-full rounded-xl bg-blue-950 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-900 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <UserCheck className="h-3.5 w-3.5" />
+                        <span>Proceed to Login with this Username</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {!retrievedUsername && (
+                    <button
+                      type="submit"
+                      className="employee-login-action mt-2 w-full rounded-2xl border-0 bg-blue-950 py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Searching...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserCheck className="h-4 w-4" />
+                          <span>Find My Username</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="employee-login-action w-full rounded-2xl border border-slate-200 bg-white py-[clamp(10px,1.5vh,14px)] text-[clamp(12px,1vw,14px)] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 xl:text-[14px] cursor-pointer flex items-center justify-center gap-2"
+                    onClick={() => {
+                      setError("");
+                      resetForgotUsernameState();
+                      setMode("login");
+                    }}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back to Login</span>
+                  </button>
+                </form>
+              )}
+
+              {/* MODE 3: FORGOT PASSWORD FLOW (Rendered within the same card div!) */}
               {mode === "forgot" && (
                 <>
                   {/* STEP 1: Enter email id or employee id */}
@@ -1247,6 +1584,26 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                         </p>
                       </div>
 
+                      {/* Display retrieved account info so user sees their username */}
+                      {forgotAccountInfo?.username && (
+                        <div className="rounded-xl border border-blue-200 bg-blue-50/80 px-3.5 py-2.5 flex items-center justify-between text-blue-950">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                              Your Account Username:
+                            </span>
+                            <span className="font-mono font-extrabold text-[13px] text-blue-950">
+                              {forgotAccountInfo.username}
+                            </span>
+                            {forgotAccountInfo.employeeName && (
+                              <span className="text-slate-600 block text-[11px]">
+                                ({forgotAccountInfo.employeeName})
+                              </span>
+                            )}
+                          </div>
+                          <User className="h-5 w-5 text-blue-800 shrink-0" />
+                        </div>
+                      )}
+
                       <div className="flex flex-col gap-3 mt-1">
                         <div className="flex flex-col gap-1.5">
                           <label className="employee-login-label text-[11px] font-bold uppercase tracking-[2px] text-slate-700">
@@ -1353,6 +1710,14 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         </div>
         <Footer sticky={false} />
       </div>
+
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
     </div>
   );
 }

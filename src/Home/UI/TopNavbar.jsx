@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { label: "About", to: "/about", dropdown: false },
   { label: "Apply Online", to: null, dropdown: true },
   { label: "Staff Login", to: "/StaffLogin", dropdown: false },
-  { label: "Outsiders", to: "/OutsidersLogin", dropdown: false },
+  { label: "Outsiders", to: "https://ppa-lms.in/outsider/", dropdown: false },
   { label: "REMS", to: "/REMSLogin", dropdown: false },
 
 ];
@@ -82,6 +82,7 @@ export default function TopNavbar({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [isOutsiderLoading, setIsOutsiderLoading] = useState(false);
   const [hasAcceptedTerms, setHasAcceptedTerms] = useState(false);
   const [hasReadAll, setHasReadAll] = useState(false);
   const [fontSize, setFontSize] = useState(() => {
@@ -109,6 +110,15 @@ export default function TopNavbar({
     setHasAcceptedTerms(false);
     setHasReadAll(false);
     setShowTermsModal(true);
+  };
+
+  const handleOutsiderClick = (e) => {
+    if (e) e.preventDefault();
+    closeAllMenus();
+    setIsOutsiderLoading(true);
+    window.setTimeout(() => {
+      window.location.href = "https://ppa-lms.in/outsider/";
+    }, 1500);
   };
 
   const handleAgree = () => {
@@ -146,7 +156,7 @@ export default function TopNavbar({
   }, [showTermsModal]);
 
   useEffect(() => {
-    if (!showTermsModal) return undefined;
+    if (!showTermsModal && !isOutsiderLoading) return undefined;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden"; 
@@ -154,7 +164,7 @@ export default function TopNavbar({
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [showTermsModal]);
+  }, [showTermsModal, isOutsiderLoading]);
 
   const termsModal =
     showTermsModal && typeof document !== "undefined"
@@ -326,6 +336,57 @@ export default function TopNavbar({
       )
       : null;
 
+  const outsiderLoaderModal =
+    isOutsiderLoading && typeof document !== "undefined"
+      ? createPortal(
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-slate-950/75 px-4 backdrop-blur-md transition-all duration-300">
+            <div className="relative flex w-full max-w-[440px] flex-col items-center overflow-hidden rounded-[26px] border border-blue-900/40 bg-white p-7 sm:p-9 text-center shadow-[0_24px_70px_rgba(8,20,43,0.5)]">
+              {/* Top Accent Gradient Bar */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-950 via-orange-500 to-blue-950" />
+
+              {/* Logo with pulsing effect */}
+              <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
+                <div className="absolute inset-0 rounded-3xl bg-blue-100/80 animate-ping opacity-30" />
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/90 p-2.5 shadow-md">
+                  <img src={Logo} alt="Paradip Port Authority Logo" className="h-full w-full object-contain" />
+                </div>
+              </div>
+
+              {/* Animated Spinner */}
+              <div className="mb-4 flex items-center justify-center">
+                <div className="relative h-11 w-11">
+                  <div className="absolute inset-0 rounded-full border-4 border-blue-100" />
+                  <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-950 border-r-orange-500 animate-spin" />
+                </div>
+              </div>
+
+              {/* Title & Subtitle */}
+              <h2
+                className="m-0 text-[20px] font-bold text-slate-900 sm:text-[23px]"
+                style={{ fontFamily: "Georgia, serif" }}
+              >
+                Redirecting to Outsider Portal
+              </h2>
+              <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600">
+                Please wait while we connect you to the official Paradip Port Authority Outsider Portal...
+              </p>
+
+              {/* Progress animation bar */}
+              <div className="mt-5 w-full overflow-hidden rounded-full bg-slate-100 h-2 border border-slate-200">
+                <div className="h-full w-full bg-gradient-to-r from-blue-950 via-orange-500 to-blue-950 rounded-full animate-[progressSweep_1.4s_ease-in-out_infinite]" />
+              </div>
+
+              {/* Destination badge */}
+              <div className="mt-4 flex items-center gap-2 rounded-full bg-slate-50 border border-slate-200 px-3.5 py-1 text-[11.5px] font-medium text-slate-600">
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>ppa-lms.in/outsider</span>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
       
   return (
     <>
@@ -337,6 +398,12 @@ export default function TopNavbar({
         @keyframes brandShimmerSweep {
           0% { transform: translate(-68%, -68%) rotate(18deg); }
           100% { transform: translate(68%, 68%) rotate(18deg); }
+        }
+
+        @keyframes progressSweep {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(0%); }
+          100% { transform: translateX(100%); }
         }
 
         .scroll-fade-wrap { position: relative; }
@@ -481,6 +548,21 @@ export default function TopNavbar({
                   );
                 }
 
+                if (label === "Outsiders" || to?.startsWith("http")) {
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={handleOutsiderClick}
+                      className={`rounded-full px-3.5 py-1.5 text-sm font-semibold transition-all border-0 bg-transparent cursor-pointer ${
+                        isDarkText ? "text-slate-700 hover:text-slate-950" : "text-white/85 hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                }
+
                 const isActive = location.pathname === to && !isDropdownActive;
                 return (
                   <Link
@@ -548,6 +630,19 @@ export default function TopNavbar({
                     </div>
                   );
                 }
+                if (label === "Outsiders" || to?.startsWith("http")) {
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={handleOutsiderClick}
+                      className="flex min-h-[38px] w-full items-center rounded-[18px] px-3 py-2 text-left text-xs lg:text-sm font-semibold transition-all border-0 bg-slate-50 text-slate-700 hover:bg-orange-100 cursor-pointer"
+                    >
+                      {label}
+                    </button>
+                  );
+                }
+
                 const isActive = location.pathname === to && !isDropdownActive;
                 return (
                   <Link
@@ -574,6 +669,7 @@ export default function TopNavbar({
       </header>
 
       {termsModal}
+      {outsiderLoaderModal}
     </>
   );
 }

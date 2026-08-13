@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import AgGridTable from "../../Components/Table";
 import EmployeeLayout from "./EmployeeUI/EmployeeLayout";
+import Popup from "../../Components/Popup";
 import { request, API_BASE, getLatestPublication } from "../../api";
 import { getUser } from "../../auth";
 
@@ -255,12 +256,17 @@ export default function CheckApproval() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const [showBanner, setShowBanner] = useState(!!state?.successMessage);
   const [viewMode, setViewMode] = useState("current");
   const [currentPublication, setCurrentPublication] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const user = getUser();
+
+  const showToast = (message, title = "Notice", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   useEffect(() => {
     let isActive = true;
@@ -269,7 +275,11 @@ export default function CheckApproval() {
         if (isActive) setRows(Array.isArray(data?.items) ? data.items : []);
       })
       .catch((fetchError) => {
-        if (isActive) setError(fetchError?.message || "Failed to load approval statuses.");
+        const msg = fetchError?.message || "Failed to load approval statuses.";
+        if (isActive) {
+          setError(msg);
+          showToast(msg, "Error Loading Statuses");
+        }
       })
       .finally(() => {
         if (isActive) setLoading(false);
@@ -425,6 +435,14 @@ export default function CheckApproval() {
           setDeleteTarget(null);
         }}
         onConfirm={confirmDelete}
+      />
+
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
       />
     </EmployeeLayout>
   );

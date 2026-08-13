@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
+import Popup from "../Components/Popup";
 import Image2 from "../assets/image8.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
@@ -23,19 +24,28 @@ export default function StaffLogin() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const navigate = useNavigate();
+
+  const showToast = (message, title = "Login Error", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
     setError("");
 
     if (!username || !password) {
-      setError("Enter username and password.");
+      const msg = "Enter username and password.";
+      setError(msg);
+      showToast(msg, "Validation Error");
       return;
     }
 
     if (role !== "Admin") {
-      setError("Only Admin access is allowed here.");
+      const msg = "Only Admin access is allowed here.";
+      setError(msg);
+      showToast(msg, "Access Restricted");
       return;
     }
 
@@ -43,14 +53,18 @@ export default function StaffLogin() {
     try {
       const data = await login(username.trim(), password);
       if (data?.user?.role !== "admin") {
-        setError("This account is not an admin.");
+        const msg = "This account is not an admin.";
+        setError(msg);
+        showToast(msg, "Access Denied");
         return;
       }
 
       setAuth({ token: data.token, user: data.user });
       navigate("/admin/dashboard", { replace: true });
     } catch (e2) {
-      setError(e2?.message || "Login failed.");
+      const msg = e2?.message || "Login failed.";
+      setError(msg);
+      showToast(msg, "Login Failed");
     } finally {
       setLoading(false);
     }
@@ -300,6 +314,14 @@ export default function StaffLogin() {
         </div>
         <Footer sticky={false} />
       </div>
+
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
     </div>
   );
 }

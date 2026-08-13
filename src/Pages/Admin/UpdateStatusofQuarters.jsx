@@ -527,7 +527,7 @@ export default function UpdateStatusofQuarters({
                 {fetchState === "not-found" && (
                   <div className="flex h-14 w-full items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4">
                     <Info size={17} className="shrink-0 text-red-400" />
-                    <span className="text-sm font-medium text-red-500">Quarter not found in database</span>
+                    <span className="text-sm font-medium text-red-500">Enter valid Quarter Details</span>
                   </div>
                 )}
                 {(fetchState === "idle" || fetchState === "found") && (

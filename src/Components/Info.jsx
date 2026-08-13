@@ -41,8 +41,8 @@ export default function Info({
   const roleLabels = {
     admin: "Authorized Admin",
     manager: "Authorized Manager",
-    user: "Registered User",
-    newuser: "Temporary User",  
+    user: "Registered Employee",
+    newuser: "Registered Employee",  
   };
 
   const roleColor = roleStyles[roleKey] || roleStyles.user;
