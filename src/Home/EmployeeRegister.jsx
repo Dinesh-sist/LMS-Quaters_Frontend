@@ -169,7 +169,7 @@ export default function EmployeeRegister() {
       <TopNavbar navTextColor="light" />
 
       <div className="flex min-h-0 flex-1 items-stretch px-4 py-4 sm:px-6 lg:px-10">
-        <div className="mx-auto grid w-full max-w-[1440px] min-h-0 items-stretch gap-6 lg:grid-cols-[1fr_2fr]">
+        <div className="mx-auto grid w-full max-w-[100%] min-h-0 items-stretch gap-6 lg:grid-cols-[1fr_2fr]">
 
           {/* Left — illustration */} 
           <section className="hidden min-h-0 lg:flex lg:items-center lg:justify-center">
