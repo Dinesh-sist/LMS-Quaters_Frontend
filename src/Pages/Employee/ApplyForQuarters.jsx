@@ -73,6 +73,77 @@ function allowedHodSetForCategory(category) {
   if (c.includes("railway") && c.includes("maintain"))
     return allow(["Chief Engineer PPT (Engg.Dept)", "Traffic Manager PPT (Traffic Dept)"]);
   if (c.includes("co op") || c.includes("cooperative") || c.includes("societies"))
+import { request } from "../../api";
+import { getUser } from "../../auth";
+
+const QUARTER_TYPES = [
+  { key: "a_type", label: "A TYPE" },
+  { key: "b_type_iiir", label: "B TYPE IIIR" },
+  { key: "c_type", label: "C TYPE" },
+  { key: "d_type", label: "D TYPE" },
+  { key: "e_type", label: "E TYPE" },
+  { key: "c_type_modified", label: "C TYPE (MODIFIED)" },
+  { key: "one_room", label: "1 ROOM" },
+  { key: "b_type", label: "B TYPE" },
+];
+
+const CATEGORIES = [
+  "Category A - Central Govt. Undertaking",
+  "Category B - State Govt. Undertaking",
+  "Category C - Private / Others",
+];
+
+const HODS = [
+  "HOD - Civil Engineering",
+  "HOD - Mechanical Engineering",
+  "HOD - Electrical Engineering",
+  "HOD - Finance & Accounts",
+  "HOD - Human Resources",
+  "HOD - Operations",
+  "HOD - Security",
+];
+
+const HOD_DEPTS_FALLBACK = HODS.map((h) =>
+  String(h)
+    .replace(/^HOD\s*/i, "")
+    .replace(/^[\s:–—-]+/g, "")
+    .trim()
+);
+
+const norm = (val) =>
+  String(val || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+function allowedHodSetForCategory(category) {
+  const c = norm(category);
+  if (!c) return null;
+
+  if (c.includes("contractors")) return null;
+  if (c.includes("management trainees")) return null;
+  if (c.includes("press") || c.includes("print") || c.includes("media") || c.includes("news agencies"))
+    return null;
+
+  const allow = (arr) => new Set(arr.map(norm));
+
+  if (c.includes("union") && c.includes("federation")) return allow(["Secretary PPT (Adm Dept)"]);
+  if (c.includes("port users"))
+    return allow([
+      "Chief Engineer PPT (Engg.Dept)",
+      "Dy.Conservator (Marine Dept)",
+      "Traffic Manager PPT (Traffic Dept)",
+    ]);
+  if (c.includes("state") && c.includes("central") && c.includes("gov")) return allow(["Secretary PPT (Adm Dept)"]);
+  if (c.includes("school") || c.includes("college") || c.includes("educational"))
+    return allow(["Secretary PPT (Adm Dept)"]);
+  if (c.includes("bank") || c.includes("tax") || c.includes("consultants") || c.includes("auditors"))
+    return allow(["F.A & C.A.O PPT (Finance Dept)"]);
+  if (c.includes("legal consultant")) return allow(["Secretary PPT (Adm Dept)"]);
+  if (c.includes("muck") && c.includes("cleaning")) return allow(["C.M.E PPT (Electrical & Mech Dept)"]);
+  if (c.includes("railway") && c.includes("maintain"))
+    return allow(["Chief Engineer PPT (Engg.Dept)", "Traffic Manager PPT (Traffic Dept)"]);
+  if (c.includes("co op") || c.includes("cooperative") || c.includes("societies"))
     return allow(["Secretary PPT (Adm Dept)"]);
   if (c.includes("ngo") || c.includes("welfare")) return allow(["Secretary PPT (Adm Dept)"]);
   if (c.includes("trade centres") || (c.includes("trade") && c.includes("centres")))
@@ -95,6 +166,7 @@ const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 export default function ApplyForQuarters() {
   const user = getUser();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [form, setForm] = useState({
     firmName: "",
     appliedFor: "fresh",
@@ -167,9 +239,12 @@ export default function ApplyForQuarters() {
               .map((r) => r?.ALLOT_HOD_DEPT)
               .filter((v) => typeof v === "string" && v.trim() !== "")
           : [];
-        if (!cancelled) setHodDepts(depts);
+        if (!cancelled) setHodDepts(depts.length > 0 ? depts : HOD_DEPTS_FALLBACK);
       } catch (err) {
-        if (!cancelled) setHodDeptsError(err?.message || "Failed to load HOD departments");
+        if (!cancelled) {
+          setHodDepts(HOD_DEPTS_FALLBACK);
+          setHodDeptsError("Failed to load HOD departments");
+        }
       }
     }
 
@@ -196,10 +271,29 @@ export default function ApplyForQuarters() {
           welcomeName={user?.name || user?.username || "Employee"}
           showNotifications={false}
           logoutTo="/QuartersApplyLogin"
+          onOpenMenu={() => setSidebarOpen(true)}
         />
 
         <div className="flex-1 flex overflow-hidden min-h-0">
-          <Sidebar />
+          {/* Desktop sidebar */}
+          <div className="hidden shrink-0 h-full lg:flex">
+            <Sidebar />
+          </div>
+
+          {/* Mobile/tablet sidebar drawer */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <button
+                type="button"
+                className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px]"
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Close sidebar overlay"
+              />
+              <div className="relative h-full w-[260px] bg-white shadow-xl animate-in slide-in-from-left duration-200">
+                <Sidebar forceExpanded onNavigate={() => setSidebarOpen(false)} />
+              </div>
+            </div>
+          )}
 
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
             <main className="flex-1 overflow-y-auto px-9 py-7">

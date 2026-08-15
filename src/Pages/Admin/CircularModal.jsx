@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { X, FileText, ChevronDown, Check, Info, Plus, Trash2, Edit } from "lucide-react";
 import UpdateStatusofQuarters from "./UpdateStatusofQuarters";
+import Popup from "../../Components/Popup";
 import { 
   getQuarterTypes, 
   getAreaTypesByQuarterType, 
@@ -138,12 +139,22 @@ function SingleSelectDropdown({ label, options, selected, onChange, disabled, pl
 // Premium custom multi-select dropdown with scrolling, checkmarks & selection badges
 
 // Premium custom multi-select dropdown with scrolling and search
-function MultiSelectDropdown({ label, options, selected, onChange, disabled, placeholder }) {
+function MultiSelectDropdown({
+  label,
+  options = [],
+  selected = [],
+  onChange,
+  disabled,
+  placeholder,
+  disabledOptions = [],
+  disabledLabel = "Already selected"
+}) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const safeSelected = Array.isArray(selected) ? selected : [];
 
   const handleToggle = (opt) => {
+    if (disabledOptions.includes(opt)) return;
     if (safeSelected.includes(opt)) {
       onChange(safeSelected.filter((s) => s !== opt));
     } else {
@@ -197,14 +208,31 @@ function MultiSelectDropdown({ label, options, selected, onChange, disabled, pla
                   <p className="px-4 py-3 text-xs text-slate-400 text-center">No options found</p>
                 )}
                 {filteredOptions.map((opt) => {
+                  const isAlreadySelected = disabledOptions.includes(opt);
                   const active = safeSelected.includes(opt);
+
+                  if (isAlreadySelected) {
+                    return (
+                      <div
+                        key={opt}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium bg-slate-50 text-slate-400 cursor-not-allowed select-none my-0.5 border border-transparent"
+                        title="This quarter is already selected in assignments"
+                      >
+                        <span className="truncate">{opt}</span>
+                        <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 rounded-md px-2 py-0.5 shrink-0 ml-2">
+                          Already selected
+                        </span>
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={opt}
                       type="button"
                       onClick={() => handleToggle(opt)}
-                      className={"w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all " +
-                        (active ? "bg-blue-50 text-blue-700" : "hover:bg-slate-50 text-slate-700 hover:text-slate-900")
+                      className={"w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer my-0.5 " +
+                        (active ? "bg-blue-50 text-blue-700 font-semibold" : "hover:bg-slate-50 text-slate-700 hover:text-slate-900")
                       }
                     >
                       <span className="truncate">{opt}</span>
@@ -236,6 +264,8 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
     areaTypes: [], // kept for legacy
     quarterNos: [], // kept for legacy
     appFromDate: "",
+    quarterNos: [], // kept for legacy
+    appFromDate: "",
     appToDate: "",
     openingTime: "",
     verifyFromDate: "",
@@ -249,6 +279,11 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [showUpdateStatusModal, setShowUpdateStatusModal] = useState(false);
   const [prefillQuarter, setPrefillQuarter] = useState(null);
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "error" });
+
+  const showToast = (message, title = "Validation Error", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   const refreshAllAssignmentStatuses = async () => {
     if (!form.assignments || form.assignments.length === 0) return;
@@ -323,6 +358,32 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
                 quarterNos: parsedData.quarterNos || []
             });
         }
+      } else if (Array.isArray(parsedData.assignments) && parsedData.assignments.length > 0) {
+        // Deduplicate assignments by Category + Area
+        const mergedMap = new Map();
+        for (const a of parsedData.assignments) {
+          const cat = (a.category || "").trim();
+          const ar = (a.area || "").trim();
+          const key = `${cat.toLowerCase()}___${ar.toLowerCase()}`;
+          if (!mergedMap.has(key)) {
+            mergedMap.set(key, {
+              id: a.id || (Date.now().toString() + Math.random().toString(36).substr(2, 5)),
+              category: cat,
+              area: ar,
+              quarterNos: [...new Set(a.quarterNos || [])],
+              quarterStatuses: { ...(a.quarterStatuses || {}) },
+            });
+          } else {
+            const existing = mergedMap.get(key);
+            const combinedNos = [...new Set([...(existing.quarterNos || []), ...(a.quarterNos || [])])];
+            existing.quarterNos = combinedNos;
+            existing.quarterStatuses = {
+              ...(existing.quarterStatuses || {}),
+              ...(a.quarterStatuses || {}),
+            };
+          }
+        }
+        parsedData.assignments = Array.from(mergedMap.values());
       }
       setForm(parsedData);
 
@@ -368,7 +429,13 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
       .catch(() => setQtypes([]));
   }, [open]);
 
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const set = (key) => (e) => {
+    let val = e.target.value;
+    if (key === "contactNumber") {
+      val = val.replace(/\D/g, "").slice(0, 10);
+    }
+    setForm((f) => ({ ...f, [key]: val }));
+  };
 
   // Dropdown change handlers
   const handleQuarterTypeChange = (vals) => {
@@ -427,21 +494,72 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
     }
   };
 
+  const alreadyAssignedQuarterNos = useMemo(() => {
+    if (!draftCategory || !draftArea) return [];
+    return (form.assignments || [])
+      .filter(
+        (a) =>
+          (a.category || "").trim().toLowerCase() === draftCategory.trim().toLowerCase() &&
+          (a.area || "").trim().toLowerCase() === draftArea.trim().toLowerCase()
+      )
+      .flatMap((a) => a.quarterNos || []);
+  }, [form.assignments, draftCategory, draftArea]);
+
   const handleAddAssignment = () => {
     if (!draftCategory || !draftArea || draftQuarterNos.length === 0) return;
     
-    const newAssignment = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-      category: draftCategory,
-      area: draftArea,
-      quarterNos: draftQuarterNos,
-      quarterStatuses: draftQuarterNos.reduce((acc, no) => ({ ...acc, [no]: currentStatusMap[no] }), {}),
-    };
-    
-    setForm(f => ({
-      ...f,
-      assignments: [...(f.assignments || []), newAssignment]
-    }));
+    // Filter out any quarters that are already assigned
+    const cleanQuarterNos = draftQuarterNos.filter(
+      (no) => !alreadyAssignedQuarterNos.includes(no)
+    );
+
+    if (cleanQuarterNos.length === 0) {
+      showToast("The selected quarter(s) have already been added to assignments.", "Already Selected", "info");
+      return;
+    }
+
+    const existingIndex = (form.assignments || []).findIndex(
+      (a) =>
+        (a.category || "").trim().toLowerCase() === draftCategory.trim().toLowerCase() &&
+        (a.area || "").trim().toLowerCase() === draftArea.trim().toLowerCase()
+    );
+
+    if (existingIndex !== -1) {
+      const existing = form.assignments[existingIndex];
+      const mergedNos = [...new Set([...(existing.quarterNos || []), ...cleanQuarterNos])];
+      const mergedStatuses = {
+        ...(existing.quarterStatuses || {}),
+        ...cleanQuarterNos.reduce((acc, no) => ({ ...acc, [no]: currentStatusMap[no] || "UNKNOWN" }), {})
+      };
+
+      const updatedAssignments = [...form.assignments];
+      updatedAssignments[existingIndex] = {
+        ...existing,
+        quarterNos: mergedNos,
+        quarterStatuses: mergedStatuses,
+      };
+
+      setForm((f) => ({
+        ...f,
+        assignments: updatedAssignments,
+      }));
+    } else {
+      const newAssignment = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+        category: draftCategory,
+        area: draftArea,
+        quarterNos: cleanQuarterNos,
+        quarterStatuses: cleanQuarterNos.reduce(
+          (acc, no) => ({ ...acc, [no]: currentStatusMap[no] || "UNKNOWN" }),
+          {}
+        ),
+      };
+
+      setForm((f) => ({
+        ...f,
+        assignments: [...(f.assignments || []), newAssignment],
+      }));
+    }
     
     setDraftCategory("");
     setDraftArea("");
@@ -486,28 +604,33 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
   };
 
   const handleSave = () => {
-    const required = [
-      "circularNo", 
-      "circularDate", 
-      "appFromDate", 
-      "appToDate", 
-      "openingTime", 
-      "verifyFromDate", 
-      "verifyToDate", 
-      "contactName", 
-      "contactDesignation", 
-      "contactNumber", 
-      "contactArea"
-    ];
+    const fieldLabels = {
+      circularNo: "Circular No.",
+      circularDate: "Circular Date",
+      appFromDate: "Application From Date",
+      appToDate: "Application To Date",
+      openingTime: "Opening Time",
+      verifyFromDate: "Verification From Date",
+      verifyToDate: "Verification To Date",
+      contactName: "Contact Officer Name",
+      contactDesignation: "Contact Designation",
+      contactNumber: "Contact Number",
+      contactArea: "Estate Office / Area"
+    };
     
-    for (const k of required) {
-      if (!form[k]) { 
-        alert(`Please select or fill required field: ${k.replace(/([A-Z])/g, ' $1')}`); 
+    for (const [k, label] of Object.entries(fieldLabels)) {
+      if (!form[k] || (typeof form[k] === "string" && !form[k].trim())) { 
+        showToast(`Please select or fill required field: ${label}`, "Required Field Missing", "error"); 
         return; 
       }
     }
 
-    
+    const contactNum = String(form.contactNumber || "").trim();
+    if (!/^\d{10}$/.test(contactNum)) {
+      showToast("Contact Number must be a valid 10-digit number (numbers only).", "Invalid Contact Number", "error");
+      return;
+    }
+
     // If assignments are provided, derive the types and numbers automatically
     if (form.assignments && form.assignments.length > 0) {
       form.quarterTypes = Array.from(new Set(form.assignments.map(a => a.category)));
@@ -516,16 +639,15 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
     }
 
     if (!form.quarterTypes || form.quarterTypes.length === 0) {
-
-      alert("Please select at least one Quarter Type.");
+      showToast("Please select at least one Quarter Type in Quarter Assignment.", "Selection Required", "error");
       return;
     }
     if (!form.areaTypes || form.areaTypes.length === 0) {
-      alert("Please select at least one Area Type.");
+      showToast("Please select at least one Area Type in Quarter Assignment.", "Selection Required", "error");
       return;
     }
     if (!form.quarterNos || form.quarterNos.length === 0) {
-      alert("Please select at least one Quarter Number.");
+      showToast("Please select at least one Quarter Number in Quarter Assignment.", "Selection Required", "error");
       return;
     }
     
@@ -568,7 +690,6 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
 
         {/* Form body */}
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 bg-slate-50/30 custom-scrollbar">
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Section title="Document Details" color="orange">
               <div className="space-y-5">
@@ -648,7 +769,21 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
                 <input className={inputCls} placeholder="e.g. Site Supervisor (Civil)" value={form?.contactDesignation || ""} onChange={set("contactDesignation")} />
               </FormField>
               <FormField label="Contact Number" icon={Info}>
-                <input className={inputCls} placeholder="e.g. 9776437561" value={form?.contactNumber || ""} onChange={set("contactNumber")} />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={10}
+                  className={inputCls}
+                  placeholder="e.g. 9776437561 (10 digits)"
+                  value={form?.contactNumber || ""}
+                  onChange={set("contactNumber")}
+                />
+                {form?.contactNumber && form.contactNumber.length > 0 && form.contactNumber.length < 10 && (
+                  <p className="mt-1 text-[11px] font-medium text-amber-600">
+                    {form.contactNumber.length}/10 digits entered
+                  </p>
+                )}
               </FormField>
               <FormField label="Area Assignment" icon={Info}>
                 <input className={inputCls} placeholder="e.g. Madhuban area" value={form?.contactArea || ""} onChange={set("contactArea")} />
@@ -734,11 +869,19 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
                 <MultiSelectDropdown
                   label="Quarter Numbers *"
                   options={quarterNumbers}
+                  disabledOptions={alreadyAssignedQuarterNos}
                   selected={draftQuarterNos}
                   onChange={setDraftQuarterNos}
                   disabled={!draftArea}
                   placeholder="Select Quarter Numbers"
                 />
+
+                {draftArea && quarterNumbers.length > 0 && quarterNumbers.every(q => alreadyAssignedQuarterNos.includes(q)) && (
+                  <p className="mt-2 text-xs text-amber-600 font-medium flex items-center gap-1.5 bg-amber-50 p-2.5 rounded-xl border border-amber-200/60">
+                    <Info size={14} className="shrink-0 text-amber-600" />
+                    All available quarters for {draftCategory} ({draftArea}) are already selected.
+                  </p>
+                )}
                 
                 <div className="flex justify-end pt-5">
                   <button 
@@ -870,6 +1013,14 @@ export default function CircularModal({ open, onClose, onSave, initialData }) {
           }}
         />
       )}
+
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
 
       </div>
     </div>

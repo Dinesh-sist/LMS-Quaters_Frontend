@@ -62,6 +62,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
   });
   const [showRegPass, setShowRegPass] = useState(false);
   const [showRegConfirmPass, setShowRegConfirmPass] = useState(false);
+  const [isRegEmailReadOnly, setIsRegEmailReadOnly] = useState(true);
   const [successOpen, setSuccessOpen] = useState(false);
 
   const [classOptions, setClassOptions] = useState([]);
@@ -556,10 +557,17 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
       password: "",
       confirmPassword: "",
     }));
+    setIsRegEmailReadOnly(true);
 
     setIsLoading(true);
     try {
       const data = await lookupEmployee(reg.employeeId.trim(), reg.dateOfBirth);
+      const rawEmail = data?.email;
+      const fetchedEmail =
+        rawEmail && typeof rawEmail === "string" && rawEmail.trim() !== "null"
+          ? rawEmail.trim()
+          : "";
+
       setReg((r) => ({
         ...r,
         employeeName: data?.employeeName || "",
@@ -567,8 +575,9 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         className: data?.className || "",
         classChoice: data?.classChoice || data?.className || "",
         mobile: data?.mobile || "",
-        email: data?.email || "",
+        email: fetchedEmail,
       }));
+      setIsRegEmailReadOnly(Boolean(fetchedEmail));
       showToast("Employee details fetched successfully.", "Employee Found", "success");
     } catch (e2) {
       // Ensure all fields remain cleared on lookup failure
@@ -583,6 +592,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
         password: "",
         confirmPassword: "",
       }));
+      setIsRegEmailReadOnly(true);
       const msg = e2?.message || "Employee lookup failed.";
       setError(msg);
       showToast(msg, "Lookup Failed");
@@ -771,7 +781,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                       value={reg.email}
                       onChange={(e) => setReg((r) => ({ ...r, email: e.target.value }))}
                       placeholder="name@domain.com"
-                      readOnly
+                      readOnly={isRegEmailReadOnly}
                     />
                   </div>
                 </div>
@@ -942,9 +952,17 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
           outline: none;
           box-shadow: 0 0 0 3px rgba(30,58,138,.12);
         }
-        @media (max-width: 1024px) {
+        @media (max-width: 640px) {
           .employee-login-title {
-            font-size: 24px;
+            font-size: 16px !important;
+          }
+          .employee-login-card {
+            padding: 14px !important;
+          }
+        }
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .employee-login-title {
+            font-size: 22px;
           }
           .employee-login-copy {
             font-size: 12px;
@@ -1024,36 +1042,36 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
             {/* Main Interactive Card Container */}
             <div className="employee-login-card relative mt-3 sm:mt-5 xl:mt-6 flex w-full max-w-[min(100%,480px)] flex-col gap-[clamp(10px,1.5vh,16px)] rounded-[22px] border border-blue-950/70 bg-white px-5 py-6 shadow-[0_6px_28px_rgba(30,58,138,0.32)] sm:px-6">
 
-              {/* Back to Home Button - Top Right */}
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-                className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer sm:right-4 sm:top-4"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Home
-              </button>
-
-
               {/* MODE 1: LOGIN */}
               {mode === "login" && (
                 <>
                   <div>
-                    <div className="employee-login-heading mb-3 flex items-center gap-3.5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
-                        <User className="h-6 w-6" />
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                          <User className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h1
+                            className="employee-login-title m-0 text-[16px] sm:text-[22px] lg:text-[24px] font-bold text-slate-900 whitespace-nowrap leading-tight"
+                            style={{ fontFamily: "Georgia, serif" }}
+                          >
+                            Employee Login
+                          </h1>
+                          <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-blue-800 whitespace-nowrap">
+                            Quarters Portal
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h1
-                          className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
-                          style={{ fontFamily: "Georgia, serif" }}
-                        >
-                          Employee Login
-                        </h1>
-                        <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
-                          Quarters Portal
-                        </p>
-                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className="flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer shrink-0 whitespace-nowrap"
+                      >
+                        <ArrowLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        Home
+                      </button>
                     </div>
 
                     <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
@@ -1165,7 +1183,7 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                         navigate("/EmployeeRegister");
                       }}
                     >
-                      New Register
+                      Create Account
                     </button>
 
 
@@ -1177,21 +1195,32 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
               {mode === "forgot-username" && (
                 <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleForgotUsername}>
                   <div>
-                    <div className="employee-login-heading mb-3 flex items-center gap-3.5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
-                        <UserCheck className="h-6 w-6" />
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                          <UserCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <h1
+                            className="employee-login-title m-0 text-[16px] sm:text-[22px] lg:text-[24px] font-bold text-slate-900 whitespace-nowrap leading-tight"
+                            style={{ fontFamily: "Georgia, serif" }}
+                          >
+                            Forgot Username
+                          </h1>
+                          <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-blue-800 whitespace-nowrap">
+                            Account Recovery
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h1
-                          className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
-                          style={{ fontFamily: "Georgia, serif" }}
-                        >
-                          Forgot Username
-                        </h1>
-                        <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
-                          Account Recovery
-                        </p>
-                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className="flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer shrink-0 whitespace-nowrap"
+                      >
+                        <ArrowLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        Home
+                      </button>
                     </div>
 
                     <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
@@ -1339,21 +1368,32 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   {forgotStep === "request" && (
                     <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleRequestOtp}>
                       <div>
-                        <div className="employee-login-heading mb-3 flex items-center gap-3.5">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
-                            <Mail className="h-6 w-6" />
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                              <Mail className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <h1
+                                className="employee-login-title m-0 text-[16px] sm:text-[22px] lg:text-[24px] font-bold text-slate-900 whitespace-nowrap leading-tight"
+                                style={{ fontFamily: "Georgia, serif" }}
+                              >
+                                Forgot Password
+                              </h1>
+                              <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-blue-800 whitespace-nowrap">
+                                Account Recovery
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h1
-                              className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
-                              style={{ fontFamily: "Georgia, serif" }}
-                            >
-                              Forgot Password
-                            </h1>
-                            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
-                              Account Recovery
-                            </p>
-                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className="flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer shrink-0 whitespace-nowrap"
+                          >
+                            <ArrowLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            Home
+                          </button>
                         </div>
 
                         <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
@@ -1433,21 +1473,32 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   {forgotStep === "verify" && (
                     <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleVerifyOtp}>
                       <div>
-                        <div className="employee-login-heading mb-3 flex items-center gap-3.5">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-600 shadow-sm">
-                            <ShieldCheck className="h-6 w-6" />
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 border border-amber-200/80 text-amber-600 shadow-sm">
+                              <ShieldCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <h1
+                                className="employee-login-title m-0 text-[16px] sm:text-[22px] lg:text-[24px] font-bold text-slate-900 whitespace-nowrap leading-tight"
+                                style={{ fontFamily: "Georgia, serif" }}
+                              >
+                                Enter OTP
+                              </h1>
+                              <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-amber-600 whitespace-nowrap">
+                                Identity Verification
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h1
-                              className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
-                              style={{ fontFamily: "Georgia, serif" }}
-                            >
-                              Enter OTP
-                            </h1>
-                            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-600">
-                              Identity Verification
-                            </p>
-                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className="flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer shrink-0 whitespace-nowrap"
+                          >
+                            <ArrowLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            Home
+                          </button>
                         </div>
 
                         <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">
@@ -1562,21 +1613,32 @@ export default function QuartersApplyLogin({ initialMode = "login" }) {
                   {forgotStep === "reset" && (
                     <form className="employee-login-form flex flex-1 flex-col" onSubmit={handleResetPassword}>
                       <div>
-                        <div className="employee-login-heading mb-3 flex items-center gap-3.5">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 shadow-sm">
-                            <KeyRound className="h-6 w-6" />
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 shadow-sm">
+                              <KeyRound className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <h1
+                                className="employee-login-title m-0 text-[16px] sm:text-[22px] lg:text-[24px] font-bold text-slate-900 whitespace-nowrap leading-tight"
+                                style={{ fontFamily: "Georgia, serif" }}
+                              >
+                                Reset Password
+                              </h1>
+                              <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-600 whitespace-nowrap">
+                                Secure New Password
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h1
-                              className="employee-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
-                              style={{ fontFamily: "Georgia, serif" }}
-                            >
-                              Reset Password
-                            </h1>
-                            <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-600">
-                              Secure New Password
-                            </p>
-                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className="flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer shrink-0 whitespace-nowrap"
+                          >
+                            <ArrowLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            Home
+                          </button>
                         </div>
 
                         <p className="employee-login-copy m-0 text-[11px] text-slate-700 sm:text-[13px]">

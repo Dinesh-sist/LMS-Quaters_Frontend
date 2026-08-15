@@ -323,10 +323,11 @@ const historyChartOpts = {
       align: "end",
       labels: {
         color: "#334155",
-        font: { size: 12, weight: "600" },
+        font: { size: 11, weight: "600" },
         usePointStyle: true,
         pointStyle: "circle",
-        padding: 16,
+        padding: 12,
+        boxWidth: 8,
       },
     },
     tooltip: {
@@ -360,7 +361,13 @@ const historyChartOpts = {
   scales: {
     x: {
       grid: { display: false },
-      ticks: { color: "#1e293b", font: { size: 11, weight: "600" } },
+      ticks: {
+        color: "#1e293b",
+        font: { size: 11, weight: "600" },
+        autoSkip: false,
+        maxRotation: 45,
+        minRotation: 0,
+      },
     },
     y: {
       min: 0,
@@ -382,6 +389,57 @@ const CUSTOM_CATEGORY_ORDER = [
   "D TYPE",
   "E TYPE",
 ];
+
+const getClassRank = (className) => {
+  if (!className) return 999;
+  const c = String(className).toUpperCase().replace(/[\s._-]+/g, " ").trim();
+  if (
+    c.includes("SR CLASS") ||
+    c.includes("SENIOR CLASS") ||
+    c.includes("SR CLASS I") ||
+    c.includes("SR CLASS 1") ||
+    c.includes("CLASS I SENIOR") ||
+    c.includes("CLASS 1 SENIOR") ||
+    c === "SR CLASS" ||
+    c === "SENIOR CLASS"
+  ) {
+    return 1;
+  }
+  if (
+    c.includes("JR CLASS") ||
+    c.includes("JUNIOR CLASS") ||
+    c.includes("JR CLASS I") ||
+    c.includes("JR CLASS 1") ||
+    c.includes("CLASS I JUNIOR") ||
+    c.includes("CLASS 1 JUNIOR") ||
+    c === "JR CLASS" ||
+    c === "JUNIOR CLASS"
+  ) {
+    return 2;
+  }
+  if (
+    c.includes("CLASS II") ||
+    c.includes("CLASS 2") ||
+    c.includes("CLASS 02")
+  ) {
+    return 3;
+  }
+  if (
+    c.includes("CLASS III") ||
+    c.includes("CLASS 3") ||
+    c.includes("CLASS 03")
+  ) {
+    return 4;
+  }
+  if (
+    c.includes("CLASS IV") ||
+    c.includes("CLASS 4") ||
+    c.includes("CLASS 04")
+  ) {
+    return 5;
+  }
+  return 999;
+};
 
 const TYPE_BAR_COLORS = [
   "#1ba0b5ff", // Blue
@@ -621,12 +679,18 @@ export default function AdminDashboard() {
     request("/api/dashboard/employees/count-by-class", { auth: true })
       .then((d) => {
         if (!Array.isArray(d)) return;
-        const colors = d.map((_, idx) => TYPE_BAR_COLORS[idx % TYPE_BAR_COLORS.length]);
+        const sorted = [...d].sort((a, b) => {
+          const rankA = getClassRank(a.className);
+          const rankB = getClassRank(b.className);
+          if (rankA !== rankB) return rankA - rankB;
+          return String(a.className || "").localeCompare(String(b.className || ""));
+        });
+        const colors = sorted.map((_, idx) => TYPE_BAR_COLORS[idx % TYPE_BAR_COLORS.length]);
         setClassChart({
-          labels: d.map((i) => i.className),
+          labels: sorted.map((i) => i.className),
           datasets: [{
             label: "Employees",
-            data: d.map((i) => i.count),
+            data: sorted.map((i) => i.count),
             backgroundColor: colors,
             borderColor: "#ffffff",
             borderWidth: 2,
@@ -765,13 +829,21 @@ export default function AdminDashboard() {
             </select>
           }
         >
-          <div className="w-full min-w-0" style={{ height: "clamp(300px, 38vh, 440px)" }}>
-            <Bar
-              key={`hist-${selectedYear}-${historyChart.datasets[0].data.length}`}
-              data={historyChart}
-              options={historyChartOpts}
-              plugins={[topVerticalBarLabelsPlugin]}
-            />
+          <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden pb-2" style={{ scrollbarWidth: "thin" }}>
+            <div
+              style={{
+                height: "clamp(300px, 38vh, 440px)",
+                minWidth: `${Math.max((historyChart?.labels?.length || 0) * 95, 600)}px`,
+                width: "100%",
+              }}
+            >
+              <Bar
+                key={`hist-${selectedYear}-${historyChart.datasets[0].data.length}`}
+                data={historyChart}
+                options={historyChartOpts}
+                plugins={[topVerticalBarLabelsPlugin]}
+              />
+            </div>
           </div>
         </Card>
       </div>
@@ -832,8 +904,10 @@ export default function AdminDashboard() {
 
           <Card title="Number of Employees by Quarter Type" className="flex-1">
             <div className="flex flex-col gap-3">
-              <div className="w-full min-w-0" style={{ height: "clamp(180px, 22vh, 260px)" }}>
-                <Bar key={`type-${typeChart.labels.length}`} data={typeChart} options={typeChartOpts} plugins={[topVerticalBarLabelsPlugin]} />
+              <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden pb-1" style={{ scrollbarWidth: "thin" }}>
+                <div style={{ height: "clamp(180px, 22vh, 260px)", minWidth: `${Math.max((typeChart?.labels?.length || 0) * 60, 480)}px`, width: "100%" }}>
+                  <Bar key={`type-${typeChart.labels.length}`} data={typeChart} options={typeChartOpts} plugins={[topVerticalBarLabelsPlugin]} />
+                </div>
               </div>
               {typeChart.labels.length > 0 && (
                 <div className="grid grid-cols-3 gap-x-6 gap-y-2 pt-2.5 border-t border-slate-100 text-[11px] font-semibold text-slate-700">

@@ -7,11 +7,12 @@ import {
   ShieldCheck,
   Loader2,
   AlertTriangle,
+  Ban,
 } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import AgGridTable from "../../Components/Table";
 import Popup from "../../Components/Popup";
-import { getEmployeeClasses, updateEmployeeClass } from "../../api";
+import { getEmployeeClasses, updateEmployeeClass, request } from "../../api";
 
 // ─── Class config ─────────────────────────────────────────────────────────────
 
@@ -49,6 +50,59 @@ const CLASS_BADGE = {
 const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E")`;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatDate(value) {
+  if (!value) return "—";
+  const str = String(value).trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(str);
+  if (match) {
+    return `${match[3]}-${match[2]}-${match[1]}`;
+  }
+  const date = new Date(value);
+  if (!Number.isNaN(date.getTime())) {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+  return str || "—";
+}
+
+function isCurrentlyDebarred(fromDateStr, toDateStr) {
+  if (!fromDateStr || !toDateStr) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const from = new Date(fromDateStr);
+  const to = new Date(toDateStr);
+  if (isNaN(from.getTime()) || isNaN(to.getTime())) return false;
+
+  from.setHours(0, 0, 0, 0);
+  to.setHours(23, 59, 59, 999);
+
+  return today >= from && today <= to;
+}
+
+function getDebarmentStatus(fromDateStr, toDateStr) {
+  if (!fromDateStr || !toDateStr) return { status: "none", active: false, label: "" };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const from = new Date(fromDateStr);
+  const to = new Date(toDateStr);
+  if (isNaN(from.getTime()) || isNaN(to.getTime())) return { status: "none", active: false, label: "" };
+
+  from.setHours(0, 0, 0, 0);
+  to.setHours(23, 59, 59, 999);
+
+  if (today >= from && today <= to) {
+    return { status: "active", active: true, label: "Currently Debarred:" };
+  }
+  if (today > to) {
+    return { status: "expired", active: false, label: "Previous Debarment (Expired):" };
+  }
+  return { status: "scheduled", active: false, label: "Scheduled Debarment:" };
+}
 
 function normalizeEmployeesResponse(payload) {
   if (Array.isArray(payload)) return payload;
@@ -190,10 +244,12 @@ function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
           {/* Body */}
           <div className="p-6">
             <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {[
                   { label: "Employee Name", value: employee.empName },
                   { label: "Employee ID", value: employee.empId, mono: true },
+                  { label: "Date of Birth", value: formatDate(employee.dob || employee.dateOfBirth) },
+                  { label: "Date of Joining", value: formatDate(employee.doj || employee.dateOfJoining) },
                   { label: "Department", value: employee.department },
                 ].map(({ label, value, mono }) => (
                   <div key={label}>
@@ -286,6 +342,227 @@ function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
   );
 }
 
+// ─── Debar Modal ─────────────────────────────────────────────────────────────
+
+function DebarModal({ employee, onClose, onConfirm, onWarning, submitting }) {
+  const isCurrentActive = isCurrentlyDebarred(employee?.debarredFromDate, employee?.debarredToDate);
+  const [fromDate, setFromDate] = useState(isCurrentActive ? (employee?.debarredFromDate || "") : "");
+  const [toDate, setToDate] = useState(isCurrentActive ? (employee?.debarredToDate || "") : "");
+  const [error, setError] = useState("");
+
+  if (!employee) return null;
+
+  const isDatesModified = isCurrentActive
+    ? fromDate !== (employee?.debarredFromDate || "") || toDate !== (employee?.debarredToDate || "")
+    : Boolean(fromDate || toDate);
+
+  const handleFromDateChange = (val) => {
+    setFromDate(val);
+    setError("");
+    if (toDate && val && new Date(toDate) < new Date(val)) {
+      const msg = "To Date must be a future date after From Date.";
+      setError(msg);
+      onWarning?.(msg, "Invalid Date Range");
+    }
+  };
+
+  const handleToDateChange = (val) => {
+    setToDate(val);
+    setError("");
+    if (fromDate && val && new Date(val) < new Date(fromDate)) {
+      const msg = "To Date must be a future date after From Date.";
+      setError(msg);
+      onWarning?.(msg, "Invalid Date Range");
+    }
+  };
+
+  const handleSave = () => {
+    if (!fromDate || !toDate) {
+      const msg = "Please select both From Date and To Date.";
+      setError(msg);
+      onWarning?.(msg, "Missing Date Range");
+      return;
+    }
+    if (new Date(fromDate) > new Date(toDate)) {
+      const msg = "To Date must be a future date after From Date.";
+      setError(msg);
+      onWarning?.(msg, "Invalid Date Range");
+      return;
+    }
+    onConfirm(employee, fromDate, toDate, false);
+  };
+
+  const handleCancelDebar = () => {
+    onConfirm(employee, null, null, true);
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 backdrop-blur-sm bg-slate-900/40" onClick={!submitting ? onClose : undefined} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className="w-full max-w-lg rounded-3xl bg-white shadow-[0_32px_64px_rgba(15,23,42,0.22)] border border-slate-200 overflow-hidden"
+          style={{ animation: "ecsModalIn 0.18s ease-out" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4 border-b bg-gradient-to-r from-rose-50 to-red-50 border-rose-100">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-rose-100 text-rose-600">
+                <Ban size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-400 truncate">
+                  Employee Restriction
+                </p>
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 truncate">Debar Employee</h3>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="shrink-0 flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-4 sm:p-6">
+            <div className="mb-4 sm:mb-5 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4 space-y-2.5">
+              <div>
+                <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400">Employee Name</p>
+                <p className="mt-0.5 text-[13.5px] sm:text-[14px] font-bold text-slate-900 leading-snug break-words">{employee.empName}</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-200/70">
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">Emp ID</p>
+                  <p className="mt-0.5 text-xs sm:text-[13px] font-semibold font-mono text-slate-800 truncate">{employee.empId}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">DOB / DOJ</p>
+                  <p className="mt-0.5 text-xs sm:text-[12px] font-semibold text-slate-800 truncate" title={`DOB: ${formatDate(employee.dob || employee.dateOfBirth)}, DOJ: ${formatDate(employee.doj || employee.dateOfJoining)}`}>
+                    {formatDate(employee.dob || employee.dateOfBirth)} / {formatDate(employee.doj || employee.dateOfJoining)}
+                  </p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">Department</p>
+                  <p className="mt-0.5 text-xs sm:text-[13px] font-semibold text-slate-800 truncate">{employee.department || "—"}</p>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">Class</p>
+                  <p className="mt-0.5 text-xs sm:text-[13px] font-semibold text-slate-800 truncate">{employee.currentClass || "—"}</p>
+                </div>
+              </div>
+            </div>
+
+            {employee.debarredFromDate && employee.debarredToDate ? (() => {
+              const debarInfo = getDebarmentStatus(employee.debarredFromDate, employee.debarredToDate);
+              const isFuture = debarInfo.status === "scheduled";
+              return (
+                <div className={`mb-4 rounded-xl border px-3.5 py-2 text-xs font-semibold flex flex-wrap items-center justify-between gap-1 ${
+                  debarInfo.active
+                    ? "border-rose-200 bg-rose-50 text-rose-700"
+                    : isFuture
+                    ? "border-amber-200 bg-amber-50 text-amber-700"
+                    : "border-slate-200 bg-slate-100/90 text-slate-600"
+                }`}>
+                  <span>{debarInfo.label}</span>
+                  <span className="font-bold whitespace-nowrap">{employee.debarredFromDate} to {employee.debarredToDate}</span>
+                </div>
+              );
+            })() : null}
+
+            <p className="mb-2.5 sm:mb-3 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider text-slate-500">
+              Debarment Period
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-2">
+              <div className="flex flex-col gap-1 sm:gap-1.5">
+                <label className="text-[11px] font-bold text-slate-600">From Date</label>
+                <input
+                  type="date"
+                  value={fromDate}
+                  disabled={submitting}
+                  onChange={(e) => handleFromDateChange(e.target.value)}
+                  className="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                />
+              </div>
+              <div className="flex flex-col gap-1 sm:gap-1.5">
+                <label className="text-[11px] font-bold text-slate-600">To Date</label>
+                <input
+                  type="date"
+                  value={toDate}
+                  disabled={submitting}
+                  onChange={(e) => handleToDateChange(e.target.value)}
+                  className="w-full min-w-0 rounded-xl border border-slate-300 px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-800 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                />
+              </div>
+            </div>
+
+            {error && <p className="mt-3 text-[12px] font-semibold text-rose-600">{error}</p>}
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-2.5 sm:gap-3 border-t border-slate-100 bg-slate-50 px-4 py-3 sm:px-6 sm:py-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs sm:text-[13px] font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Cancel
+            </button>
+
+            {isCurrentActive && !isDatesModified ? (
+              <button
+                type="button"
+                onClick={handleCancelDebar}
+                disabled={submitting}
+                className="flex items-center gap-1.5 sm:gap-2 px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-[13px] font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-[0_4px_12px_rgba(239,68,68,0.25)] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                {submitting ? "Cancelling…" : "Cancel Debarment"}
+              </button>
+            ) : isCurrentActive && isDatesModified ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleCancelDebar}
+                  disabled={submitting}
+                  className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs sm:text-[13px] font-bold hover:bg-rose-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Cancel Debarment
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={submitting}
+                  className="flex items-center gap-1.5 sm:gap-2 px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-[13px] font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-[0_4px_12px_rgba(239,68,68,0.25)] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {submitting && <Loader2 size={14} className="animate-spin" />}
+                  {submitting ? "Updating…" : "Update Debarment"}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={submitting}
+                className="flex items-center gap-1.5 sm:gap-2 px-5 py-2 sm:px-6 sm:py-2.5 rounded-xl text-xs sm:text-[13px] font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-[0_4px_12px_rgba(239,68,68,0.25)] transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {submitting && <Loader2 size={14} className="animate-spin" />}
+                {submitting ? "Saving…" : "Save Debarment"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function EmployeeClassUpdation() {
@@ -294,9 +571,20 @@ export default function EmployeeClassUpdation() {
   const [loadError, setLoadError] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [modal, setModal] = useState({ open: false, employee: null, mode: null });
+  const [debarModal, setDebarModal] = useState({ open: false, employee: null });
   const [submitting, setSubmitting] = useState(false);
+  const [debarSubmitting, setDebarSubmitting] = useState(false);
   const [busyEmpId, setBusyEmpId] = useState(null);
   const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
+
+  const showWarningToast = useCallback((message, title = "Warning") => {
+    setPopup({
+      open: true,
+      variant: "warning",
+      title,
+      message,
+    });
+  }, []);
 
   const fetchEmployees = useCallback(async () => {
     setLoading(true); setLoadError("");
@@ -322,6 +610,9 @@ export default function EmployeeClassUpdation() {
   const openDemote = useCallback((emp) => setModal({ open: true, employee: emp, mode: "demote" }), []);
   const closeModal = () => { if (submitting) return; setModal({ open: false, employee: null, mode: null }); };
 
+  const openDebar = useCallback((emp) => setDebarModal({ open: true, employee: emp }), []);
+  const closeDebar = () => { if (debarSubmitting) return; setDebarModal({ open: false, employee: null }); };
+
   const handleConfirm = async (empId, newClass, isPromote) => {
     const emp = employees.find((e) => e.empId === empId);
     setSubmitting(true); setBusyEmpId(empId);
@@ -342,6 +633,79 @@ export default function EmployeeClassUpdation() {
     }
   };
 
+  const handleDebarConfirm = async (emp, fromDate, toDate, isCancel = false) => {
+    setDebarSubmitting(true);
+    try {
+      if (isCancel || (!fromDate && !toDate)) {
+        const res = await request("/api/admin/debar-user", {
+          method: "POST",
+          body: {
+            empId: emp.empId,
+            userId: emp.userId,
+            cancel: true,
+          },
+          auth: true,
+        });
+
+        const updatedFromDate = res?.debarredFromDate || emp.debarredFromDate;
+        const updatedToDate = res?.debarredToDate || (() => {
+          const d = new Date();
+          d.setDate(d.getDate() - 1);
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        })();
+
+        setEmployees((prev) =>
+          prev.map((e) =>
+            e.empId === emp.empId
+              ? { ...e, debarredFromDate: updatedFromDate, debarredToDate: updatedToDate }
+              : e
+          )
+        );
+        setDebarModal({ open: false, employee: null });
+        setPopup({
+          open: true,
+          variant: "success",
+          title: "Debarment Cancelled",
+          message: `Debarment for ${emp.empName} (ID: ${emp.empId}) has been cancelled and marked as previous debarment.`,
+        });
+      } else {
+        await request("/api/admin/debar-user", {
+          method: "POST",
+          body: {
+            empId: emp.empId,
+            userId: emp.userId,
+            fromDate,
+            toDate,
+          },
+          auth: true,
+        });
+        setEmployees((prev) =>
+          prev.map((e) =>
+            e.empId === emp.empId
+              ? { ...e, debarredFromDate: fromDate, debarredToDate: toDate }
+              : e
+          )
+        );
+        setDebarModal({ open: false, employee: null });
+        setPopup({
+          open: true,
+          variant: "success",
+          title: "Employee Debarred",
+          message: `${emp.empName} (ID: ${emp.empId}) has been debarred from ${fromDate} to ${toDate}.`,
+        });
+      }
+    } catch (err) {
+      setPopup({
+        open: true,
+        variant: "error",
+        title: isCancel ? "Cancel Debarment Failed" : "Debar Failed",
+        message: err?.message || "Failed to update debarment.",
+      });
+    } finally {
+      setDebarSubmitting(false);
+    }
+  };
+
   const ActionRenderer = useCallback(
     makeActionRenderer(openPromote, openDemote, busyEmpId),
     [openPromote, openDemote, busyEmpId]
@@ -349,26 +713,64 @@ export default function EmployeeClassUpdation() {
 
   const columns = [
     {
-      key: "empId", header: "Employee ID", field: "empId", minWidth: 140,
+      key: "empId", header: "Employee ID", field: "empId", width: 150, minWidth: 150,
       render: (value) => (
         <span style={{ padding: "2px 8px", background: "#ede9fe", color: "#6d28d9", borderRadius: 6, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>
           {value}
         </span>
       ),
     },
-    { key: "empName", header: "Employee Name", field: "empName", minWidth: 180 },
-    { key: "department", header: "Department", field: "department", minWidth: 160 },
-    { key: "category", header: "Quarter Type", field: "category", minWidth: 150 },
-    { key: "areaType", header: "Area Type", field: "areaType", minWidth: 160 },
-    { key: "quarterNo", header: "Quarter No", field: "quarterNo", minWidth: 140 },
+    { key: "empName", header: "Employee Name", field: "empName", width: 190, minWidth: 190 },
     {
-      key: "currentClass", header: "Current Class", field: "currentClass", minWidth: 150,
+      key: "dob",
+      header: "Date of Birth",
+      field: "dob",
+      width: 180,
+      minWidth: 180,
+      render: (val, row) => formatDate(val || row?.dateOfBirth),
+    },
+    {
+      key: "doj",
+      header: "Date of Joining",
+      field: "doj",
+      width: 190,
+      minWidth: 190,
+      render: (val, row) => formatDate(val || row?.dateOfJoining),
+    },
+    { key: "department", header: "Department", field: "department", width: 170, minWidth: 170 },
+    { key: "category", header: "Quarter Type", field: "category", width: 160, minWidth: 160 },
+    { key: "areaType", header: "Area Type", field: "areaType", width: 160, minWidth: 160 },
+    { key: "quarterNo", header: "Quarter No", field: "quarterNo", width: 150, minWidth: 150 },
+    {
+      key: "currentClass", header: "Current Class", field: "currentClass", width: 160, minWidth: 160,
       render: (value) => <ClassBadgeRenderer value={value} />,
     },
     {
-      key: "action", header: "Action", field: "action",
-      sortable: false, filterable: false, width: 260, minWidth: 260, flex: 0,
+      key: "action", header: "Class Updation", field: "action",
+      sortable: false, filterable: false, width: 230, minWidth: 230, flex: 0,
       render: (_, row) => <ActionRenderer data={row} />,
+    },
+    {
+      key: "debarred", header: "Debar Action", field: "debarred",
+      sortable: false, filterable: false, width: 140, minWidth: 140, flex: 0,
+      render: (_, row) => {
+        const isDebarred = isCurrentlyDebarred(row?.debarredFromDate, row?.debarredToDate);
+        return (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", height: "100%" }}>
+            <button
+              type="button"
+              onClick={() => openDebar(row)}
+              className={`inline-flex items-center justify-center rounded-lg px-3 py-1 text-[11px] font-bold transition-colors cursor-pointer border ${
+                isDebarred
+                  ? "bg-rose-600 text-white border-rose-600 hover:bg-rose-700 shadow-xs"
+                  : "bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-300"
+              }`}
+            >
+              {isDebarred ? "Debarred" : "Debar"}
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -535,6 +937,17 @@ export default function EmployeeClassUpdation() {
           onClose={closeModal}
           onConfirm={handleConfirm}
           submitting={submitting}
+        />
+      )}
+
+      {/* ── Debar Modal ── */}
+      {debarModal.open && (
+        <DebarModal
+          employee={debarModal.employee}
+          onClose={closeDebar}
+          onConfirm={handleDebarConfirm}
+          onWarning={showWarningToast}
+          submitting={debarSubmitting}
         />
       )}
 

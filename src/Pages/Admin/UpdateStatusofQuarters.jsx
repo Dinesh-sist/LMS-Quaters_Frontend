@@ -240,6 +240,7 @@ export default function UpdateStatusofQuarters({
   const [allotmentDate, setAllotmentDate] = useState("");
   const [isNonEmployeeOccupant, setIsNonEmployeeOccupant] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showMoveConfirmModal, setShowMoveConfirmModal] = useState(false);
 
   const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "success" });
   const [isSaving, setIsSaving] = useState(false);
@@ -400,6 +401,26 @@ export default function UpdateStatusofQuarters({
   const areOccupiedFieldsFilled = occupantType && employeeId && employeeName && (occupantType === "Outsider" || employeeClass) && allotmentId && allotmentDate;
   const isFormComplete = area && quarterNumber && status && status !== dbStatus && (!isOccupiedSelected || areOccupiedFieldsFilled);
 
+  const isMovingToDifferentQuarter = () => {
+    if (status.toUpperCase() !== "OCCUPIED" || occupantType !== "Employee" || !employeeCurrentQuarter) {
+      return false;
+    }
+    const hasExistingQuarter = Boolean(
+      employeeCurrentQuarter.quarterNo ||
+      employeeCurrentQuarter.category ||
+      employeeCurrentQuarter.areaType
+    );
+    if (!hasExistingQuarter) return false;
+
+    const norm = (s) => (s || "").toString().trim().toUpperCase();
+    const isSameQuarter =
+      (!category || norm(category) === norm(employeeCurrentQuarter.category)) &&
+      norm(area) === norm(employeeCurrentQuarter.areaType) &&
+      norm(quarterNumber) === norm(employeeCurrentQuarter.quarterNo);
+
+    return !isSameQuarter;
+  };
+
   const handleSave = async () => {
     if (!isFormComplete) {
       setFormError("Please fill in all fields before saving.");
@@ -412,6 +433,11 @@ export default function UpdateStatusofQuarters({
       return;
     }
 
+    if (isMovingToDifferentQuarter()) {
+      setShowMoveConfirmModal(true);
+      return;
+    }
+
     await executeSave();
   };
 
@@ -419,6 +445,7 @@ export default function UpdateStatusofQuarters({
     try {
       setIsSaving(true);
       setShowConfirmModal(false);
+      setShowMoveConfirmModal(false);
       await updateQuarterStatus({
         area,
         quarterNumber,
@@ -448,6 +475,7 @@ export default function UpdateStatusofQuarters({
       setEmployeeName("");
       setEmployeeClass("");
       setOccupantType("");
+      setEmployeeCurrentQuarter(null);
       setAllotmentId("");
       setAllotmentDate("");
     } catch (error) {
@@ -715,33 +743,118 @@ export default function UpdateStatusofQuarters({
   );
 
   const confirmModalJSX = showConfirmModal && (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 px-4 backdrop-blur-sm">
-      <div className="w-full max-w-md scale-100 overflow-hidden rounded-[24px] bg-white p-6 shadow-2xl opacity-100 transition-all">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
-            <AlertTriangle size={24} />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150">
+      <div className="w-full max-w-md my-auto max-h-[92vh] flex flex-col overflow-hidden rounded-2xl sm:rounded-[24px] bg-white p-4 sm:p-6 shadow-2xl border border-slate-200 animate-in zoom-in-[0.98] duration-200">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-red-100 text-red-600">
+            <AlertTriangle size={20} className="sm:hidden" />
+            <AlertTriangle size={24} className="hidden sm:block" />
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Clear Occupant Data?</h3>
-            <p className="mt-1 text-sm text-slate-500">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">Clear Occupant Data?</h3>
+            <p className="mt-1 text-xs sm:text-sm text-slate-500 leading-relaxed">
               Changing the status from <strong>OCCUPIED</strong> to <strong>{status}</strong> will permanently clear the current occupant's details from this quarter.
             </p>
           </div>
         </div>
-        <div className="mt-8 flex gap-3 sm:justify-end">
+        <div className="mt-5 sm:mt-6 flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
           <button
             type="button"
             onClick={() => setShowConfirmModal(false)}
-            className="w-full rounded-xl bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:w-auto"
+            className="w-full sm:w-auto h-10 sm:h-11 rounded-xl bg-slate-100 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-slate-700 transition hover:bg-slate-200 cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={executeSave}
-            className="w-full rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 sm:w-auto"
+            className="w-full sm:w-auto h-10 sm:h-11 rounded-xl bg-red-600 px-4 sm:px-5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-red-600/20 transition hover:bg-red-700 cursor-pointer"
           >
             Yes, clear data
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const moveConfirmModalJSX = showMoveConfirmModal && employeeCurrentQuarter && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/50 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-150">
+      <div className="w-full max-w-lg my-auto max-h-[92vh] flex flex-col overflow-hidden rounded-2xl sm:rounded-[28px] bg-white shadow-2xl border border-slate-200 animate-in zoom-in-[0.98] duration-200">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 p-4 sm:p-6 pb-0 sm:pb-0">
+          <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-amber-100 text-amber-600 shadow-xs">
+              <AlertTriangle size={20} className="sm:hidden" />
+              <AlertTriangle size={24} className="hidden sm:block" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-600">Reassignment Warning</p>
+              <h3 className="text-sm sm:text-lg font-bold text-slate-900 leading-tight">Employee Already Occupies a Quarter</h3>
+              <p className="mt-1 text-xs sm:text-sm text-slate-600 leading-snug break-words">
+                <strong className="text-slate-900">{employeeName || "This employee"}</strong> (ID: <span className="font-mono font-semibold text-slate-800">{employeeId}</span>) is currently staying in a quarter.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowMoveConfirmModal(false)}
+            className="shrink-0 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4 custom-scrollbar">
+          {/* Current vs New Quarter comparison */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            {/* Current Quarter */}
+            <div className="rounded-xl sm:rounded-2xl border border-blue-200 bg-blue-50/70 p-2.5 sm:p-3.5 text-[11px] sm:text-xs">
+              <span className="inline-block rounded-md bg-blue-200/80 px-1.5 py-0.5 sm:px-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-blue-800">
+                Current Quarter
+              </span>
+              <div className="mt-2 space-y-1 font-medium text-slate-700">
+                <p className="truncate"><span className="text-slate-400 font-normal">Cat:</span> <span className="font-bold text-slate-800">{employeeCurrentQuarter.category || "—"}</span></p>
+                <p className="truncate"><span className="text-slate-400 font-normal">Area:</span> <span className="font-bold text-slate-800">{employeeCurrentQuarter.areaType || "—"}</span></p>
+                <p className="truncate"><span className="text-slate-400 font-normal">Qtr No:</span> <span className="font-bold text-slate-800">#{employeeCurrentQuarter.quarterNo || "—"}</span></p>
+              </div>
+            </div>
+
+            {/* New Quarter */}
+            <div className="rounded-xl sm:rounded-2xl border border-orange-200 bg-orange-50/70 p-2.5 sm:p-3.5 text-[11px] sm:text-xs">
+              <span className="inline-block rounded-md bg-orange-200/80 px-1.5 py-0.5 sm:px-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-[#e87722]">
+                New Quarter
+              </span>
+              <div className="mt-2 space-y-1 font-medium text-slate-700">
+                <p className="truncate"><span className="text-slate-400 font-normal">Cat:</span> <span className="font-bold text-slate-800">{category || "—"}</span></p>
+                <p className="truncate"><span className="text-slate-400 font-normal">Area:</span> <span className="font-bold text-slate-800">{area || "—"}</span></p>
+                <p className="truncate"><span className="text-slate-400 font-normal">Qtr No:</span> <span className="font-bold text-slate-800">#{quarterNumber || "—"}</span></p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-amber-200/80 bg-amber-50/80 p-2.5 sm:p-3 text-[11px] sm:text-xs text-amber-800 font-medium leading-relaxed">
+            Are you sure you want to move this employee to Quarter <strong>#{quarterNumber}</strong> ({area})? Their previous quarter (#{employeeCurrentQuarter.quarterNo}) will automatically be freed.
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-2.5 p-4 sm:p-6 pt-3 sm:pt-4 border-t border-slate-100 bg-slate-50/60 sm:justify-end">
+          <button
+            type="button"
+            onClick={() => setShowMoveConfirmModal(false)}
+            disabled={isSaving}
+            className="w-full sm:w-auto h-10 sm:h-11 rounded-xl border border-slate-200 bg-white px-4 sm:px-5 text-xs sm:text-sm font-semibold text-slate-700 transition hover:bg-slate-50 cursor-pointer"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={executeSave}
+            disabled={isSaving}
+            className="w-full sm:w-auto h-10 sm:h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-[#e87722] px-4 sm:px-5 text-xs sm:text-sm font-bold text-white shadow-md shadow-orange-500/20 transition hover:bg-[#d76516] disabled:opacity-60 cursor-pointer"
+          >
+            {isSaving ? "Moving..." : "Yes, Move to This Quarter"}
           </button>
         </div>
       </div>
@@ -799,6 +912,7 @@ export default function UpdateStatusofQuarters({
         </div>
 
         {confirmModalJSX}
+        {moveConfirmModalJSX}
         {popupJSX}
       </div>
     );
@@ -811,6 +925,7 @@ export default function UpdateStatusofQuarters({
     >
       {mainContent}
       {confirmModalJSX}
+      {moveConfirmModalJSX}
       {popupJSX}
     </AdminLayout>
   );

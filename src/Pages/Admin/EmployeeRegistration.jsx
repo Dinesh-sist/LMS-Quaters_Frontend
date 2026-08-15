@@ -1,9 +1,6 @@
 import { useState } from "react";
 import {
   UserPlus,
-  CheckCircle2,
-  AlertTriangle,
-  Sparkles
 } from "lucide-react";
 import AdminLayout from "./AdminUI/AdminLayout";
 import Popup from "../../Components/Popup";
@@ -78,6 +75,11 @@ const normalizeDepartment = (dept) => {
   return matched || "Administration & HR";
 };
 
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(String(email || "").trim());
+};
+
 export default function EmployeeRegistration() {
   // Registration form states
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -93,6 +95,9 @@ export default function EmployeeRegistration() {
   const handleInputChange = (field, value) => {
     if (field === "employeeId") {
       setIsPopulated(false);
+    }
+    if (field === "mobile") {
+      value = value.replace(/\D/g, "").slice(0, 10);
     }
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -166,7 +171,13 @@ export default function EmployeeRegistration() {
     if (!employeeName.trim()) return showToast("Employee Name is required.", "Validation Error");
     if (!dateOfBirth) return showToast("Date of Birth is required.", "Validation Error");
     if (!mobile.trim()) return showToast("Mobile Number is required.", "Validation Error");
+    if (!/^\d{10}$/.test(mobile.trim())) {
+      return showToast("Mobile Number must be a valid 10-digit number (numbers only).", "Validation Error");
+    }
     if (!email.trim()) return showToast("Email Address is required.", "Validation Error");
+    if (!isValidEmail(email)) {
+      return showToast("Please enter a valid email address (e.g. name@example.com).", "Validation Error");
+    }
     if (!dateOfJoining) return showToast("Date of Joining is required.", "Validation Error");
     if (!gradDate) return showToast("Grade Date is required.", "Validation Error");
     if (!classOfEmployee) return showToast("Class of Employee is required.", "Validation Error");
@@ -198,7 +209,7 @@ export default function EmployeeRegistration() {
       />
       <div className="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles size={18} className="text-orange-500" />
+          < UserPlus size={18} className="text-orange-500" />
           <h2 className="text-lg font-bold text-slate-900 font-semibold">New Employee Registration Form</h2>
         </div>
 
@@ -259,26 +270,49 @@ export default function EmployeeRegistration() {
                   </label>
                   <input
                     type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
                     value={formData.mobile}
                     onChange={(e) => handleInputChange("mobile", e.target.value)}
                     disabled={isLoading}
-                    placeholder="e.g. 9876543210"
+                    placeholder="e.g. 9876543210 (10 digits)"
                     className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
                   />
+                  {formData.mobile && formData.mobile.length > 0 && formData.mobile.length < 10 && (
+                    <p className="mt-1 text-[11px] text-amber-600">
+                      {formData.mobile.length}/10 digits entered
+                    </p>
+                  )}
                 </div>
 
                 <div className="col-span-1 sm:col-span-2">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">
-                    Email Address *
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Email Address *
+                    </label>
+                    {formData.email && !isValidEmail(formData.email) && (
+                      <span className="text-[11px] font-semibold text-rose-500">
+                        Invalid email format
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     disabled={isLoading}
                     placeholder="e.g. name@example.com"
-                    className="w-full min-h-[44px] rounded-xl border border-orange-200 bg-white px-3.5 text-[13px] text-slate-900 shadow-[0_0_0_3px_rgba(232,119,34,0.08)] outline-none transition-all hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)] disabled:opacity-50"
+                    className={`w-full min-h-[44px] rounded-xl border px-3.5 text-[13px] text-slate-900 outline-none transition-all disabled:opacity-50 ${formData.email && !isValidEmail(formData.email)
+                        ? "border-rose-300 bg-rose-50/20 text-rose-900 shadow-[0_0_0_3px_rgba(244,63,94,0.1)] focus:border-rose-500 focus:shadow-[0_0_0_4px_rgba(244,63,94,0.15)]"
+                        : "border-orange-200 bg-white shadow-[0_0_0_3px_rgba(232,119,34,0.08)] hover:border-[#e87722] hover:shadow-[0_0_0_4px_rgba(232,119,34,0.12)] focus:border-[#e87722] focus:shadow-[0_0_0_4px_rgba(232,119,34,0.16)]"
+                      }`}
                   />
+                  {formData.email && !isValidEmail(formData.email) && (
+                    <p className="mt-1 text-[11px] text-rose-500">
+                      Please enter a valid email address (e.g. name@example.com)
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -380,7 +414,7 @@ export default function EmployeeRegistration() {
                 setIsPopulated(false);
               }}
               disabled={isLoading}
-              className="min-h-[38px] rounded-xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+              className="min-h-[38px] rounded-xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-slate-600 transition hover:bg-red-700 hover:text-white cursor-pointer disabled:opacity-50"
             >
               Clear Fields
             </button>

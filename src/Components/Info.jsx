@@ -7,6 +7,7 @@ export default function Info({
   initial,
   role,
   description,
+  welcomeName,
   collapsed = false,
   showNotifications = true,
   notifications,
@@ -56,7 +57,7 @@ export default function Info({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-1 rounded-xl border border-transparent px-2 py-1.5 max-sm:px-0 max-sm:py-0"
+        className="flex items-center gap-1 rounded-xl border border-transparent px-2 py-1.5 max-sm:px-0 max-sm:py-0 cursor-pointer"
       >
         <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-orange-400 text-sm font-bold text-white shadow-sm lg:h-9 lg:w-9">
           {initial}
@@ -73,13 +74,20 @@ export default function Info({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-[99999] mt-2 w-[20rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-gray-200 bg-white py-2 shadow-xl">
-          <div className="px-4 py-2 border-b border-gray-100 mb-1">
-            <p className={`text-[10px] font-medium uppercase tracking-wider ${roleColor}`}>
+        <div className="absolute right-0 z-[99999] mt-2 w-[20rem] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-gray-200 bg-white py-2 shadow-xl animate-in fade-in zoom-in-95 duration-150">
+          <div className="px-4 py-2.5 border-b border-gray-100 mb-1 bg-gradient-to-r from-orange-50/50 to-transparent">
+            {/* Mobile welcome label */}
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium sm:hidden mb-1">
+              <span>Welcome</span>
+              <span className="font-bold text-[#e87722] truncate text-[13px]">
+                {welcomeName || description || "User"}
+              </span>
+            </div>
+            <p className={`text-[10px] font-bold uppercase tracking-wider ${roleColor}`}>
               {roleLabels[roleKey] || roleLabels.user}
             </p>
-            <p className="tinos-regular truncate text-sm font-semibold text-gray-800">
-              {description || "..."}
+            <p className="truncate text-sm font-bold text-gray-800">
+              {welcomeName || description || "..."}
             </p>
           </div>
 

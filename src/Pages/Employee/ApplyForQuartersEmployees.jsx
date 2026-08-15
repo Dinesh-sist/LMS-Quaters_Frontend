@@ -48,14 +48,15 @@ function getNameSizeClass(name = "") {
 
 function InfoField({ label, value, placeholder = "-" }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <p className="text-[10px] xl:text-[12px] font-semibold text-slate-400 uppercase tracking-wider">
+    <div className="flex min-w-0 flex-col gap-1 p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-100 transition-all hover:bg-slate-100/60">
+      <p className="text-[10.5px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider leading-snug">
         {label}
       </p>
       <p
-        className={`min-w-0 text-[12px] font-semibold leading-relaxed xl:text-[13px] ${value ? "text-slate-900" : "text-slate-300"
-          }`}
-        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
+        className={`min-w-0 text-[12px] sm:text-[13px] font-bold leading-normal break-words ${
+          value ? "text-slate-900" : "text-slate-400"
+        }`}
+        title={value || placeholder}
       >
         {value || placeholder}
       </p>
@@ -179,6 +180,7 @@ export default function ApplyForQuartersEmployees() {
 
   const [focused, setFocused] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [popupState, setPopupState] = useState({
     open: false,
@@ -598,26 +600,47 @@ export default function ApplyForQuartersEmployees() {
   if (emp.debarredFromDate && emp.debarredToDate) {
     const from = new Date(emp.debarredFromDate);
     const to = new Date(emp.debarredToDate);
-    from.setHours(0, 0, 0, 0);
-    to.setHours(0, 0, 0, 0);
-    if (today >= from && today <= to) {
-      isBanned = true;
+    if (!isNaN(from.getTime()) && !isNaN(to.getTime())) {
+      from.setHours(0, 0, 0, 0);
+      to.setHours(23, 59, 59, 999);
+      if (today >= from && today <= to) {
+        isBanned = true;
+      }
     }
   }
 
   return (
-    <div className="font-['Segoe_UI',system-ui,sans-serif] bg-[#EEF2FF] flex flex-col lg:h-screen lg:overflow-hidden">
-      <div className="bg-[#EEF2FF] flex flex-col lg:h-full lg:overflow-hidden">
+    <div className="font-['Segoe_UI',system-ui,sans-serif] bg-[#EEF2FF] flex flex-col h-screen overflow-hidden">
+      <div className="bg-[#EEF2FF] flex flex-col h-full overflow-hidden">
         <TopHeader
           role="newuser"
           description="Employee Services"
           welcomeName={user?.name || user?.username || "Employee"}
           showNotifications={false}
           logoutTo="/QuartersApplyLogin"
+          onOpenMenu={() => setSidebarOpen(true)}
         />
 
-        <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
-          <Sidebar />
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* Desktop sidebar */}
+          <div className="hidden shrink-0 h-full lg:flex">
+            <Sidebar />
+          </div>
+
+          {/* Mobile/tablet sidebar drawer */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <button
+                type="button"
+                className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px]"
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Close sidebar overlay"
+              />
+              <div className="relative h-full w-[260px] bg-white shadow-xl animate-in slide-in-from-left duration-200">
+                <Sidebar forceExpanded onNavigate={() => setSidebarOpen(false)} />
+              </div>
+            </div>
+          )}
 
           <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
             {isBanned && (
@@ -642,7 +665,7 @@ export default function ApplyForQuartersEmployees() {
               </div>
             )}
 
-            <main className="relative flex-1 overflow-y-auto bg-[#EEF2FF] px-8 py-7">
+            <main className="relative flex-1 overflow-y-auto bg-[#EEF2FF] px-4 sm:px-6 lg:px-8 py-5 sm:py-7">
 
               {/* ── Page heading ── */}
               <div className="mb-[22px]">
@@ -680,45 +703,45 @@ export default function ApplyForQuartersEmployees() {
               <div className="max-w-8xl mx-auto flex flex-col gap-6">
 
                 {/* ── Profile card + form details ── */}
-                <div className="flex flex-col md:flex-row md:items-center xl:items-start gap-6 shrink-0">
+                <div className="flex flex-col md:flex-row items-stretch md:items-start gap-4 lg:gap-6 shrink-0">
 
                   {/* Profile card */}
-                  <div className="lg:w-64 lg:h-full shrink-0">
-                    <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-6 py-6">
-                      <div className="flex flex-col items-center lg:text-center gap-4 lg:gap-0">
-                        <div className="flex flex-row md:flex-col items-center md:items-center gap-3 md:gap-0 shrink-0 w-full md:w-auto">
+                  <div className="w-full md:w-56 lg:w-64 xl:w-72 shrink-0">
+                    <div className="lms-data-transition lms-profile-card rounded-2xl shadow-lg px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+                      <div className="flex flex-col items-center text-center gap-2.5">
+                        <div className="flex flex-col items-center justify-center gap-2 sm:gap-2.5 shrink-0 w-full">
                           {/* Avatar */}
-                          <div className="w-16 h-16 md:w-28 md:h-28 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-xl md:text-3xl lg:text-5xl font-bold text-[#1a2e5a] shrink-0">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 xl:w-28 xl:h-28 rounded-full bg-white border-4 border-white shadow-md flex items-center justify-center text-xl sm:text-2xl lg:text-3xl xl:text-5xl font-bold text-[#1a2e5a] shrink-0">
                             {initials}
                           </div>
 
-                          <div className="flex flex-col items-start md:items-center gap-1 md:gap-0 min-w-0 flex-1 md:flex-none">
+                          <div className="flex flex-col items-center gap-1 min-w-0 w-full px-1">
                             <h2
-                              className={`font-bold leading-tight md:mt-2 text-slate-800 w-full md:text-center ${nameSizeClass}`}
+                              className={`font-bold leading-tight mt-1 text-slate-800 text-center ${nameSizeClass}`}
                               style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
                             >
                               {displayName}
                             </h2>
-                            <span className="text-[9px] md:text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 mt-0.5 md:mt-2 md:px-3 rounded-full whitespace-nowrap">
+                            <span className="text-[9px] md:text-[11px] font-bold bg-emerald-100 text-emerald-700 px-2.5 py-0.5 mt-0.5 rounded-full whitespace-nowrap">
                               Active
                             </span>
                           </div>
                         </div>
 
-                        <div className="w-full h-px bg-white/65 my-1 md:my-3 lg:my-5" />
+                        <div className="w-full h-px bg-white/65 my-1.5 sm:my-2 lg:my-3" />
 
-                        <div className="flex flex-col gap-3 text-left w-full min-w-0">
+                        <div className="flex flex-col gap-2.5 text-left w-full min-w-0">
                           <div className="flex items-center gap-2 text-xs text-slate-700">
                             <Hash size={13} className="text-slate-600 shrink-0" />
-                            <span className="break-words min-w-0">{emp.employeeId || "-"}</span>
+                            <span className="break-words min-w-0 font-medium">{emp.employeeId || "-"}</span>
                           </div>
                           <div className="flex items-center gap-2 text-xs text-slate-700">
                             <BadgeCheck size={13} className="text-slate-600 shrink-0" />
-                            <span className="break-words min-w-0">{emp.classOfEmployee || "Class pending"}</span>
+                            <span className="break-words min-w-0 font-medium">{emp.classOfEmployee || "Class pending"}</span>
                           </div>
                           <div className="flex items-start gap-2 text-xs text-slate-700">
                             <Building2 size={13} className="text-slate-600 shrink-0 mt-0.5" />
-                            <span className="break-words min-w-0 leading-relaxed">
+                            <span className="break-words min-w-0 leading-relaxed font-medium">
                               {emp.department || "Department not selected"}
                             </span>
                           </div>
@@ -732,17 +755,17 @@ export default function ApplyForQuartersEmployees() {
                   <div className="flex-1 flex flex-col gap-5 min-w-0">
 
                     {/* Employee information card */}
-                    <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)]">
-                      <div className="flex items-center justify-between px-6 py-3 border-b border-[#e2e8f0]">
+                    <div className="lms-data-transition bg-white rounded-2xl border border-[#e2e8f0] shadow-[0_2px_12px_rgba(26,46,90,0.07)] overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5 border-b border-[#e2e8f0] bg-slate-50/70">
                         <div className="flex items-center gap-2">
                           <User size={16} className="text-[#1a2e5a]" />
-                          <h3 className="font-semibold text-md text-slate-900">
+                          <h3 className="font-bold text-sm sm:text-base text-slate-900">
                             Employee Information
                           </h3>
                         </div>
                         <StatusPill value={approvedQuarter?.Status} />
                       </div>
-                      <div className="flex inline-flex px-4 py-4 xl:px-6 xl:py-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-y-5 sm:gap-x-6">
+                      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4 p-3.5 sm:p-4 lg:p-5 bg-slate-50/30">
                         <InfoField
                           label="Name of the Employee"
                           value={emp.employeeName}
@@ -774,15 +797,15 @@ export default function ApplyForQuartersEmployees() {
                         />
 
                       </div>
-                      <div className="border-t border-dashed border-slate-200 pt-3 pb-5 xl:px-6">
-                        <div className="mb-3 flex items-center gap-2">
+                      <div className="border-t border-slate-100 p-3.5 sm:p-4 lg:p-5">
+                        <div className="mb-2.5 sm:mb-3 flex items-center gap-2">
                           <FileText size={16} className="text-[#1a2e5a]" />
-                          <p className="font-semibold text-md text-slate-900">
+                          <p className="font-bold text-sm sm:text-base text-slate-900">
                             Current Approved Quarter
                           </p>
                         </div>
                         {approvedQuarter ? (
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4">
                             <InfoField label="Application Number" value={approvedQuarter.AppNo} />
                             <InfoField label="Quarter Number" value={approvedQuarter.QtrRequested} />
                             <InfoField label="Quarter Type" value={approvedQuarter.QtrType} />

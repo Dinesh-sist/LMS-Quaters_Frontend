@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
@@ -25,9 +25,7 @@ const sidebarNav = [
       </svg>
     ),
   },
-   
 ];
-
 
 function getStoredCollapsed() {
   if (typeof window === "undefined") return false;
@@ -37,20 +35,7 @@ function getStoredCollapsed() {
 export default function Sidebar({ onNavigate, forceExpanded = false }) {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(getStoredCollapsed);
-  const [isLargeScreen, setIsLargeScreen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return window.matchMedia("(min-width: 1024px)").matches;
-  });
-  const isCollapsed = forceExpanded ? false : isLargeScreen && collapsed;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    const media = window.matchMedia("(min-width: 1024px)");
-    const handleChange = () => setIsLargeScreen(media.matches);
-    handleChange();
-    media.addEventListener("change", handleChange);
-    return () => media.removeEventListener("change", handleChange);
-  }, []);
+  const isCollapsed = forceExpanded ? false : collapsed;
 
   const toggleCollapsed = () => {
     setCollapsed((current) => {
@@ -68,68 +53,63 @@ export default function Sidebar({ onNavigate, forceExpanded = false }) {
         isCollapsed ? "lg:w-[76px]" : "lg:w-[252px]"
       }`}
     >
-
-        {/* Meta label */}
-        <div className={`flex items-center px-3 pt-[18px] pb-2 ${isCollapsed ? "justify-center" : "justify-between"}`}>
-          {!isCollapsed ? (
-            <div className="text-[13px] font-bold text-blue-900 uppercase tracking-[0.5px]">
-              EMPLOYEE MANAGEMENT
-            </div>
-          ) : null}
-          {!forceExpanded ? (
-            <button
-              type="button"
-              onClick={toggleCollapsed}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#e87722]"
-              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
-            </button>
-          ) : null}
+      {/* Meta label & toggle */}
+      <div className={`flex items-center px-3 pt-[14px] lg:pt-[18px] pb-2 ${isCollapsed ? "justify-between lg:justify-center" : "justify-between"}`}>
+        <div className={`text-[13px] font-bold text-blue-900 uppercase tracking-[0.5px] ${isCollapsed ? "lg:hidden" : "block"}`}>
+          EMPLOYEE MANAGEMENT
         </div>
+        {!forceExpanded ? (
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#e87722] cursor-pointer"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+          </button>
+        ) : null}
+      </div>
 
-        {/* Section heading */}
+      {/* Nav items */}
+      <nav className={`px-2.5 flex-1 transition-all ${isCollapsed ? "hidden lg:block" : "block"}`}>
+        {sidebarNav.map((item) => {
+          const active =
+            item.key === "applyEmp"
+              ? location.pathname === "/Quarters/ApplyEmployees"
+              : location.pathname === item.to;
 
-        {/* Nav items */}
-        <nav className="px-2.5 flex-1">
-          {sidebarNav.map((item) => {
-            const active =
-              item.key === "applyEmp"
-                ? location.pathname === "/Quarters/ApplyEmployees"
-                : location.pathname === item.to;
+          const className = `group relative flex w-full items-center ${
+            isCollapsed ? "lg:justify-center lg:px-0 gap-[11px] px-[13px]" : "gap-[11px] px-[13px]"
+          } py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] text-left transition-all duration-150 ${
+            active
+              ? "font-medium text-[#e87722] bg-[rgba(232,119,34,0.09)]"
+              : "font-medium text-gray-700 bg-transparent hover:bg-slate-100 hover:text-slate-800"
+          }`;
 
-            const className = `group relative flex w-full items-center ${isCollapsed ? "justify-center px-0" : "gap-[11px] px-[13px]"} py-2.5 rounded-lg mb-[3px] no-underline text-[13.5px] text-left transition-all duration-150 ${              
-              active
-          
-                ? "font-medium text-[#e87722] bg-[rgba(232,119,34,0.09)]"
-                : "font-medium text-gray-700 bg-transparent hover:bg-slate-100 hover:text-slate-800"
-            }`;
-
-            return (
-              <Link
-                key={item.key}
-                to={item.to}
-                onClick={onNavigate}
-                title={isCollapsed ? item.label : undefined}
-                className={className}
-              >
-                <span className={`flex items-center shrink-0 ${active ? "text-[#e87722]" : "text-slate-500"}`}>
-                  {item.icon}
+          return (
+            <Link
+              key={item.key}
+              to={item.to}
+              onClick={onNavigate}
+              title={isCollapsed ? item.label : undefined}
+              className={className}
+            >
+              <span className={`flex items-center shrink-0 ${active ? "text-[#e87722]" : "text-slate-500"}`}>
+                {item.icon}
+              </span>
+              <span className={isCollapsed ? "lg:hidden" : "block"}>
+                {item.label}
+              </span>
+              {isCollapsed ? (
+                <span className="hidden lg:group-hover:opacity-100 pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity">
+                  {item.label}
                 </span>
-                {!isCollapsed ? item.label : null}
-                {isCollapsed ? (
-                  <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
-                    {item.label}
-                  </span>
-                ) : null}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Divider */}
-        
-      </aside>
+              ) : null}
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
   );
 }

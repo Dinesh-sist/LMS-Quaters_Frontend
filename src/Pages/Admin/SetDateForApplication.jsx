@@ -297,6 +297,8 @@ export default function SetDateForApplication() {
     variant: "success",
   });
   const [isAltering, setIsAltering] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isStopping, setIsStopping] = useState(false);
   const [circularData, setCircularData] = useState(null);
   const [showCircularModal, setShowCircularModal] = useState(false);
 
@@ -306,7 +308,7 @@ export default function SetDateForApplication() {
   };
 
   const isPublished = currentWindow?.Current_State === "Published";
-  const isStopDisabled = !isPublished || isAltering;
+  const isStopDisabled = !isPublished || isAltering || isPublishing || isStopping;
   const hasCircular = !!circularData;
   const loadCurrentWindow = async () => {
     try {
@@ -385,6 +387,7 @@ export default function SetDateForApplication() {
       }
     }
 
+    setIsPublishing(true);
     try {
       if (isAltering) {
         await updatePublication({ toDate: formatDateForApi(toDate) });
@@ -396,10 +399,10 @@ export default function SetDateForApplication() {
         // Store which quarter types are published so the employee page can filter
         if (circularData?.quarterTypes?.length > 0) {
           payload.append("quarterTypes", JSON.stringify(circularData.quarterTypes));
-          }
-          if (circularData?.assignments?.length > 0) {
-            payload.append("assignments", JSON.stringify(circularData.assignments));
-          }
+        }
+        if (circularData?.assignments?.length > 0) {
+          payload.append("assignments", JSON.stringify(circularData.assignments));
+        }
         await publishApplication(payload);
 
         // Generate & email circular if data is filled
@@ -438,6 +441,8 @@ export default function SetDateForApplication() {
     } catch (error) {
       console.error("Publish Error:", error);
       setPopup({ open: true, title: isAltering ? "Update Failed" : "Publish Failed", message: error?.message || "Something went wrong.", variant: "error" });
+    } finally {
+      setIsPublishing(false);
     }
   };
   useEffect(() => {
@@ -458,7 +463,8 @@ export default function SetDateForApplication() {
   }, []);
 
   const handleStopPublication = async () => {
-    if (isStopDisabled) return;
+    if (isStopDisabled || isStopping) return;
+    setIsStopping(true);
     try {
       await stopPublication();
 
@@ -478,18 +484,21 @@ export default function SetDateForApplication() {
         message: error?.message || "Unable to stop publication.",
         variant: "error",
       });
+    } finally {
+      setIsStopping(false);
     }
   };
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const handleUpdatePublication = async () => {
-    try {
-      if (!toDate) {
-        setDateError("Please select a To Date.");
-        return;
-      }
+    if (!toDate) {
+      setDateError("Please select a To Date.");
+      return;
+    }
 
+    setIsPublishing(true);
+    try {
       await updatePublication({
         toDate: `${toDate.getFullYear()}-${String(
           toDate.getMonth() + 1
@@ -514,6 +523,8 @@ export default function SetDateForApplication() {
         message: error?.message || "Failed to update publication.",
         variant: "error",
       });
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -629,8 +640,8 @@ export default function SetDateForApplication() {
               <button
                 type="button"
                 onClick={() => setShowCircularModal(true)}
-                disabled={isPublished && !isAltering}
-                className="inline-flex h-10 sm:h-11 w-full sm:w-auto max-w-xs items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isPublishing || (isPublished && !isAltering)}
+                className="inline-flex h-10 sm:h-11 w-full sm:w-auto max-w-xs items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-orange-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <FileText size={17} className="shrink-0" />
                 <span className="truncate">Create Circular</span>
@@ -640,15 +651,26 @@ export default function SetDateForApplication() {
             <button
               type="button"
               onClick={isAltering ? handleUpdatePublication : handlePublish}
-              disabled={(isPublished && !isAltering) || (!hasCircular && !isAltering && !isPublished)}
-              className={`inline-flex h-10 sm:h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition
-                ${(isPublished && !isAltering) || (!hasCircular && !isAltering && !isPublished)
+              disabled={isPublishing || (isPublished && !isAltering) || (!hasCircular && !isAltering && !isPublished)}
+              className={`inline-flex h-10 sm:h-11 w-full sm:w-auto items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition-all
+                ${isPublishing
+                  ? "cursor-wait bg-[#e87722]/85 shadow-none pointer-events-none"
+                  : (isPublished && !isAltering) || (!hasCircular && !isAltering && !isPublished)
                   ? "cursor-not-allowed bg-slate-400 shadow-none"
-                  : "bg-[#e87722] shadow-[0_10px_24px_rgba(232,119,34,0.24)] hover:bg-[#d76516]"
+                  : "bg-[#e87722] shadow-[0_10px_24px_rgba(232,119,34,0.24)] hover:bg-[#d76516] cursor-pointer"
                 }`}
             >
-              <Save size={17} />
-              {isAltering ? "Update Publication" : isPublished ? "Published" : "Publish"}
+              {isPublishing ? (
+                <>
+                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                  <span>{isAltering ? "Updating..." : "Publishing..."}</span>
+                </>
+              ) : (
+                <>
+                  <Save size={17} className="shrink-0" />
+                  <span>{isAltering ? "Update Publication" : isPublished ? "Published" : "Publish"}</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -719,10 +741,10 @@ export default function SetDateForApplication() {
                   });
                 }
               }}
-              disabled={!isPublished}
+              disabled={!isPublished || isPublishing || isStopping}
               className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold transition
-                ${isPublished
-                  ? "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                ${isPublished && !isPublishing && !isStopping
+                  ? "border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 cursor-pointer"
                   : "border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
                 }`}
             >
@@ -733,13 +755,20 @@ export default function SetDateForApplication() {
               type="button"
               onClick={handleStopPublication}
               disabled={isStopDisabled}
-              className={`inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white transition
+              className={`inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-white transition-all
                 ${isStopDisabled
                   ? "bg-slate-400 cursor-not-allowed"
-                  : "bg-red-600 hover:bg-red-700"
+                  : "bg-red-600 hover:bg-red-700 cursor-pointer"
                 }`}
             >
-              Stop Publication
+              {isStopping ? (
+                <>
+                  <span className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                  <span>Stopping...</span>
+                </>
+              ) : (
+                <span>Stop Publication</span>
+              )}
             </button>
           </div>
           <div className="mt-4 flex items-center gap-2">

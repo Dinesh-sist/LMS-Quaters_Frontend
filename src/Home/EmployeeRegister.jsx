@@ -39,6 +39,7 @@ export default function EmployeeRegister() {
   const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isEmailReadOnly, setIsEmailReadOnly] = useState(true);
 
   const showToast = (message, title = "Error", variant = "error") => {
     setPopup({ open: true, title, message, variant });
@@ -57,8 +58,13 @@ export default function EmployeeRegister() {
         password: "",
         confirmPassword: "",
       }));
+      setIsEmailReadOnly(true);
     } else {
-      setReg((current) => ({ ...current, [key]: value }));
+      let finalValue = value;
+      if (key === "mobile") {
+        finalValue = String(value || "").replace(/\D/g, "").slice(0, 10);
+      }
+      setReg((current) => ({ ...current, [key]: finalValue }));
     }
   };
 
@@ -79,18 +85,28 @@ export default function EmployeeRegister() {
       password: "",
       confirmPassword: "",
     }));
+    setIsEmailReadOnly(true);
 
     setIsLoading(true);
     try {
       const data = await lookupEmployee(reg.employeeId.trim(), reg.dateOfBirth);
+      const rawEmail = data?.email;
+      const fetchedEmail =
+        rawEmail && typeof rawEmail === "string" && rawEmail.trim() !== "null"
+          ? rawEmail.trim()
+          : "";
+
       setReg((current) => ({
         ...current,
         employeeName: data?.employeeName || "",
         dateOfJoining: data?.dateOfJoining || "",
         className: data?.className || "",
         mobile: data?.mobile || "",
-        email: data?.email || "",
+        email: fetchedEmail,
       }));
+
+      // If email exists in DB record, lock it; if null/empty, allow the user to type and edit it
+      setIsEmailReadOnly(Boolean(fetchedEmail));
       showToast("Employee details fetched successfully.", "Employee Found", "success");
     } catch (lookupError) {
       // Ensure all fields remain cleared on lookup failure
@@ -104,6 +120,7 @@ export default function EmployeeRegister() {
         password: "",
         confirmPassword: "",
       }));
+      setIsEmailReadOnly(true);
       showToast(lookupError?.message || "Employee lookup failed.", "Lookup Failed");
     } finally {
       setIsLoading(false);
@@ -114,6 +131,10 @@ export default function EmployeeRegister() {
     event.preventDefault();
 
     if (!reg.email.trim()) return showToast("Email is required.", "Validation Error");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(reg.email.trim())) {
+      return showToast("Please enter a valid email address.", "Validation Error");
+    }
     if (!reg.password) return showToast("Password is required.", "Validation Error");
     if (reg.password !== reg.confirmPassword) return showToast("Passwords do not match.", "Validation Error");
 
@@ -144,11 +165,11 @@ export default function EmployeeRegister() {
   };
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden">
+    <div className="flex min-h-screen w-full flex-col bg-[#fcfefd]">
       <TopNavbar navTextColor="light" />
 
-      <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-3 sm:px-6 lg:px-10 xl:px-16">
-        <div className="mx-auto grid w-full max-w-[1360px] min-h-0 items-center justify-center gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(400px,560px)] lg:gap-10 xl:gap-14">
+      <div className="flex flex-1 items-center justify-center px-3 py-4 sm:px-6 lg:px-10 xl:px-16">
+        <div className="mx-auto grid w-full max-w-[1360px] items-center justify-center gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(400px,560px)] lg:gap-10 xl:gap-14">
 
           {/* Left — illustration */} 
           <section className="hidden min-h-0 lg:flex lg:items-center lg:justify-center">
@@ -160,37 +181,37 @@ export default function EmployeeRegister() {
           </section>
 
           {/* Right — form panel */}
-          <section className="flex max-h-[calc(100vh-140px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[22px] border border-blue-950/30 bg-white shadow-[0_4px_24px_rgba(30,58,138,0.28)] lg:ml-auto">
+          <section className="flex max-h-[calc(100vh-120px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[22px] border border-blue-950/30 bg-white shadow-[0_4px_24px_rgba(30,58,138,0.28)] lg:ml-auto">
 
             {/* Panel header */}
-            <div className="shrink-0 border-b border-slate-200 px-5 py-2.5 lg:px-6">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
+            <div className="shrink-0 border-b border-slate-200 px-4 py-3 sm:px-6">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-50 p-1.5 shadow-sm">
                     <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
                   </div>
-                  <div>
-                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.15em] text-orange-500">
+                  <div className="min-w-0">
+                    <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-orange-500 truncate">
                       Paradip Port Authority
                     </p>
                     <h1
-                      className="m-0 mt-0.5 text-[19px] font-bold leading-tight text-slate-900 lg:text-[22px]"
+                      className="m-0 mt-0.5 text-[16px] sm:text-[20px] lg:text-[22px] font-bold leading-tight text-slate-900 whitespace-nowrap"
                       style={{ fontFamily: "Georgia, serif" }}
                     >
-                      Employee Registration
+                      Create Account
                     </h1>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => navigate("/QuartersApplyLogin")}
-                  className="shrink-0 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer"
+                  className="shrink-0 flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer whitespace-nowrap"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
-                  Back to Login
+                  <span className="hidden sm:inline">Back to </span>Login
                 </button>
               </div>
-              <p className="mt-1 text-[11px] leading-4 text-slate-500">
+              <p className="mt-1.5 text-[11px] leading-4 text-slate-500">
                 Fill in your official employee details to create access for the quarters application portal.
               </p>
             </div>
@@ -199,11 +220,11 @@ export default function EmployeeRegister() {
             <form onSubmit={handleRegister} className="flex min-h-0 flex-1 flex-col">
 
               {/* Scrollable fields area */}
-              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 lg:px-8">
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
 
               {/* Fetch section */}
-              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 sm:px-4 sm:py-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Field label="Employee ID">
                     <input
                       type="text"
@@ -214,10 +235,10 @@ export default function EmployeeRegister() {
                     />
                   </Field>
                   <Field label="Date of Birth">
-                    <div className="grid grid-cols-[1fr_80px] gap-2">
+                    <div className="flex items-center gap-2">
                       <input
                         type="date"
-                        className={inputClass}
+                        className={`${inputClass} flex-1 min-w-0`}
                         value={reg.dateOfBirth}
                         onChange={(event) => updateReg("dateOfBirth", event.target.value)}
                       />
@@ -225,18 +246,18 @@ export default function EmployeeRegister() {
                         type="button"
                         onClick={handleLookup}
                         disabled={isLoading}
-                        className="min-h-[40px] rounded-xl border border-slate-200 bg-white px-2 text-[12px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-[36px] shrink-0 rounded-xl border border-slate-200 bg-white px-3.5 text-[12px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                       >
-                        Fetch
+                        {isLoading ? "..." : "Fetch"}
                       </button>
                     </div>
                   </Field>
                 </div>
               </div>
 
-              {/* Main fields — 2-col grid */}
-              <div className="grid grid-cols-2 gap-x-5 gap-y-3">
-                <Field label="Name of the Employee" className="col-span-2">
+              {/* Main fields — responsive grid: 1 col on mobile, 2 cols on sm+ */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3 sm:gap-y-3.5">
+                <Field label="Name of the Employee" className="sm:col-span-2">
                   <input
                     type="text"
                     className={inputClass}
@@ -271,10 +292,13 @@ export default function EmployeeRegister() {
                 <Field label="Mobile Number">
                   <input
                     type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
                     className={inputClass}
                     value={reg.mobile}
                     onChange={(event) => updateReg("mobile", event.target.value)}
-                    placeholder="Mobile"
+                    placeholder="Mobile (10 digits)"
                     readOnly
                   />
                 </Field>
@@ -287,7 +311,7 @@ export default function EmployeeRegister() {
                     value={reg.email}
                     onChange={(event) => updateReg("email", event.target.value)}
                     placeholder="name@domain.com"
-                    readOnly
+                    readOnly={isEmailReadOnly}
                   />
                 </Field>
 
@@ -337,20 +361,20 @@ export default function EmployeeRegister() {
               </div>{/* end scrollable area */}
 
               {/* Fixed action bar at bottom */}
-              <div className="shrink-0 border-t border-slate-100 px-6 py-4 lg:px-8 flex items-center justify-end gap-3">
+              <div className="shrink-0 border-t border-slate-100 px-4 py-3 sm:px-6 sm:py-4 lg:px-8 flex items-center justify-end gap-3 bg-white">
                 <button
                   type="button"
                   onClick={() => navigate("/QuartersApplyLogin")}
-                  className="min-h-[40px] rounded-2xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="min-h-[40px] rounded-xl sm:rounded-2xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-100 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="min-h-[40px] rounded-2xl border-0 bg-blue-950 px-7 text-[13px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-[40px] rounded-xl sm:rounded-2xl border-0 bg-blue-950 px-7 text-[13px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                 >
-                  {isLoading ? "Registering..." : "Submit Registration"}
+                  {isLoading ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </form>

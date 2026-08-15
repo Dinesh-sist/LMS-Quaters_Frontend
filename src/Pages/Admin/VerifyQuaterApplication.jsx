@@ -167,7 +167,9 @@ const makeColumns = (onReview) => [
           a.remove();
           URL.revokeObjectURL(objectUrl);
         } catch {
-          alert("Could not download the file.");
+          window.dispatchEvent(new CustomEvent("lms:toast", {
+            detail: { message: "Could not download the file.", title: "Download Error", variant: "error" }
+          }));
         }
       };
       return (
@@ -215,7 +217,7 @@ const makeColumns = (onReview) => [
 ];
 
 /* ─── Summary bar ─────────────────────────────────────────────── */
-function PageSummaryBar({ rows }) {
+function PageSummaryBar({ rows, onShowToast }) {
   const total = rows.length;
   const pending = rows.filter((r) => r.Status?.toLowerCase() === "pending").length;
   const approved = rows.filter((r) => r.Status?.toLowerCase() === "approved").length;
@@ -223,7 +225,13 @@ function PageSummaryBar({ rows }) {
 
   const downloadPDF = () => {
     if (rows.length === 0) {
-      alert("No applications to download.");
+      if (onShowToast) {
+        onShowToast("No applications to download.", "Download Notice", "info");
+      } else {
+        window.dispatchEvent(new CustomEvent("lms:toast", {
+          detail: { message: "No applications to download.", title: "Download Notice", variant: "info" }
+        }));
+      }
       return;
     }
 
@@ -440,7 +448,9 @@ function AttachmentButton({ path }) {
       a.remove();
       URL.revokeObjectURL(objectUrl);
     } catch {
-      alert("Could not download the file.");
+      window.dispatchEvent(new CustomEvent("lms:toast", {
+        detail: { message: "Could not download the file.", title: "Download Error", variant: "error" }
+      }));
     }
   };
 
@@ -629,6 +639,16 @@ export default function VerifyQuarterApplications() {
     setPopup({ open: true, title, message, variant });
   };
 
+  useEffect(() => {
+    const handleToast = (e) => {
+      if (e?.detail) {
+        showToast(e.detail.message, e.detail.title, e.detail.variant);
+      }
+    };
+    window.addEventListener("lms:toast", handleToast);
+    return () => window.removeEventListener("lms:toast", handleToast);
+  }, []);
+
   const load = () => {
     setLoading(true);
     setError("");
@@ -703,11 +723,11 @@ export default function VerifyQuarterApplications() {
       title="Verify Quarter Applications"
       subtitle="Land Data Management System - Staff Review"
       headerRight={
-        <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+        <div className="flex w-full sm:w-auto items-center rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setViewMode("current")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "current"
+            className={`flex-1 sm:flex-initial text-center rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold sm:font-semibold transition-all cursor-pointer whitespace-nowrap ${viewMode === "current"
               ? "bg-[#1b2d69] text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100"
               }`}
@@ -717,7 +737,7 @@ export default function VerifyQuarterApplications() {
           <button
             type="button"
             onClick={() => setViewMode("history")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${viewMode === "history"
+            className={`flex-1 sm:flex-initial text-center rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold sm:font-semibold transition-all cursor-pointer whitespace-nowrap ${viewMode === "history"
               ? "bg-[#1b2d69] text-white shadow-sm"
               : "text-slate-600 hover:bg-slate-100"
               }`}
@@ -728,7 +748,7 @@ export default function VerifyQuarterApplications() {
       }
     >
       <div className="lms-data-transition space-y-6">
-        <PageSummaryBar rows={visibleRows} />
+        <PageSummaryBar rows={visibleRows} onShowToast={showToast} />
 
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 flex items-center justify-between">

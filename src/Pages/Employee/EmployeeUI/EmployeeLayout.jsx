@@ -55,7 +55,7 @@ export default function EmployeeLayout({
                       {title && <h1 className="text-2xl font-bold text-slate-900">{title}</h1>}
                       {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
                     </div>
-                    {headerRight ? <div className="shrink-0">{headerRight}</div> : null}
+                    {headerRight ? <div className="w-full sm:w-auto shrink-0">{headerRight}</div> : null}
                   </div>
                 )}
                 {children}

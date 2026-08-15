@@ -135,6 +135,14 @@ export default function StaffLogin() {
           }
         }
 
+        @media (max-width: 640px) {
+          .staff-login-title {
+            font-size: 16px !important;
+          }
+          .staff-login-card {
+            padding: 14px !important;
+          }
+        }
         @media (max-height: 600px) {
           .staff-login-shell {
             max-width: 460px;
@@ -192,34 +200,35 @@ export default function StaffLogin() {
 
           <div className="staff-login-shell flex items-center justify-center w-full">
             {/* Main Interactive Card Container */}
-            <div className="staff-login-card relative mt-3 sm:mt-5 xl:mt-6 flex w-full max-w-[min(100%,480px)] flex-col gap-[clamp(10px,1.5vh,16px)] rounded-[22px] border border-blue-950/70 bg-white px-5 py-6 shadow-[0_6px_28px_rgba(30,58,138,0.32)] sm:px-6">
-
-              {/* Back to Home Button - Top Right */}
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-                className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer sm:right-4 sm:top-4"
-              >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Home
-              </button>
+            <div className="staff-login-card relative mt-3 sm:mt-5 xl:mt-6 flex w-full max-w-[min(100%,480px)] flex-col gap-[clamp(10px,1.5vh,16px)] rounded-[22px] border border-blue-950/70 bg-white px-3.5 py-4 sm:px-6 sm:py-6 shadow-[0_6px_28px_rgba(30,58,138,0.32)]">
 
               <div>
-                <div className="staff-login-heading mb-3 flex items-center gap-3.5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
-                    <ShieldCheck className="h-6 w-6" />
+                <div className="flex items-center justify-between gap-2 mb-2.5">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 border border-blue-200/80 text-blue-900 shadow-sm">
+                      <ShieldCheck className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h1
+                        className="staff-login-title m-0 text-[16px] sm:text-[22px] lg:text-[24px] font-bold text-slate-900 whitespace-nowrap leading-tight"
+                        style={{ fontFamily: "Georgia, serif" }}
+                      >
+                        Staff Login
+                      </h1>
+                      <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-blue-800 whitespace-nowrap">
+                        Quarters Portal
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h1
-                      className="staff-login-title m-0 text-[22px] font-bold text-slate-900 sm:text-[26px] lg:text-[28px]"
-                      style={{ fontFamily: "Georgia, serif" }}
-                    >
-                      Staff Login
-                    </h1>
-                    <p className="m-0 text-[11px] font-bold uppercase tracking-[0.2em] text-blue-800">
-                      Quarters Portal
-                    </p>
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate("/")}
+                    className="flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer shrink-0 whitespace-nowrap"
+                  >
+                    <ArrowLeft className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    Home
+                  </button>
                 </div>
 
                 <p className="staff-login-copy m-0 text-[12px] text-slate-700 sm:text-[13px]">
