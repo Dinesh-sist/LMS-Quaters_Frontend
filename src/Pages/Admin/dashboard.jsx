@@ -447,7 +447,7 @@ const TYPE_BAR_COLORS = [
   "#F97316", // Orange
   "#cf774eff", // Purple
   "#EAB308", // Yellow
-  "#2eafd7ff", // Light Blue
+  "#1ba0b5ff", // Light Blue
   "#F472B6", // Light Pink
   "#FB923C", // Light Orange
   "#C084FC", // Light Purple
@@ -566,7 +566,7 @@ export default function AdminDashboard() {
       {
         label: "Occupied",
         data: [],
-        backgroundColor: "#3eacbfff",
+        backgroundColor: "#1ba0b5ff",
         borderRadius: 0,
         borderSkipped: false,
         barThickness: 20,
@@ -650,7 +650,7 @@ export default function AdminDashboard() {
             {
               label: "Occupied",
               data: sorted.map((i) => i.occupied),
-              backgroundColor: "#219599ff",
+              backgroundColor: "#1ba0b5ff",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 20,
@@ -744,7 +744,7 @@ export default function AdminDashboard() {
               label: "Total Applications",
               data: comms.map((c) => c.totalApplications),
               committeeMeta: comms,
-              backgroundColor: "#2dbdc7ff",
+              backgroundColor: "#1ba0b5ff",
               borderRadius: 0,
               borderSkipped: false,
               barThickness: 40,
@@ -770,7 +770,7 @@ export default function AdminDashboard() {
   const rowHeight = isStacked ? 70 : 95;
   const categoryChartHeight = Math.max(380, categoryChart.labels.length * rowHeight + 60);
 
-  
+
   return (
     <AdminLayout
       title="Dashboard"
@@ -809,6 +809,8 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+
 
       {/* ══ History of House Allotment Committee (Full Wide Chart) ══ */}
       <div className="mt-6 w-full min-w-0">
