@@ -280,18 +280,18 @@ export default function UpdateStatusofQuarters({
         return;
       }
       try {
-        const res = await getQuarterNumbers(area.trim());
+        const res = await getQuarterNumbers(area.trim(), category.trim());
         setQuarterNumberOptions(res.numbers || []);
       } catch (err) {
         console.error("Failed to fetch quarter numbers", err);
       }
     }
     fetchQuarterNumbers();
-    // Reset quarter number when area changes to avoid invalid combinations
+    // Reset quarter number when area or category changes to avoid invalid combinations
     setQuarterNumber("");
-  }, [area]);
+  }, [area, category]);
 
-  // Auto-fetch current status whenever area + quarterNumber are both filled
+  // Auto-fetch current status whenever category + area + quarterNumber are filled
   useEffect(() => {
     if (!area.trim() || !quarterNumber.trim()) {
       setStatus("");
@@ -303,7 +303,7 @@ export default function UpdateStatusofQuarters({
     setFetchState("loading");
     const timer = setTimeout(async () => {
       try {
-        const res = await getQuarterCurrentStatus(area.trim(), quarterNumber.trim());
+        const res = await getQuarterCurrentStatus(area.trim(), quarterNumber.trim(), category.trim());
         const rawStatus = res.status || "";
         // Normalise to match STATUS_OPTIONS values (capitalise properly)
         const matched = STATUS_OPTIONS.find(
@@ -343,7 +343,7 @@ export default function UpdateStatusofQuarters({
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [area, quarterNumber]);
+  }, [area, quarterNumber, category]);
 
   const handleEmployeeIdBlur = async () => {
     if (occupantType === "Employee" && employeeId.trim() && dbStatus.toUpperCase() !== "OCCUPIED") {
@@ -447,6 +447,7 @@ export default function UpdateStatusofQuarters({
       setShowConfirmModal(false);
       setShowMoveConfirmModal(false);
       await updateQuarterStatus({
+        category,
         area,
         quarterNumber,
         status,

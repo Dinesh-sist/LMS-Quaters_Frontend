@@ -76,6 +76,7 @@ function isCurrentlyDebarred(fromDateStr, toDateStr) {
   const from = new Date(fromDateStr);
   const to = new Date(toDateStr);
   if (isNaN(from.getTime()) || isNaN(to.getTime())) return false;
+  if (from > to) return false;
 
   from.setHours(0, 0, 0, 0);
   to.setHours(23, 59, 59, 999);
@@ -94,6 +95,10 @@ function getDebarmentStatus(fromDateStr, toDateStr) {
 
   from.setHours(0, 0, 0, 0);
   to.setHours(23, 59, 59, 999);
+
+  if (from > to) {
+    return { status: "none", active: false, label: "" };
+  }
 
   if (today >= from && today <= to) {
     return { status: "active", active: true, label: "Currently Debarred:" };
@@ -435,16 +440,10 @@ function DebarModal({ employee, onClose, onConfirm, onWarning, submitting }) {
                 <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400">Employee Name</p>
                 <p className="mt-0.5 text-[13.5px] sm:text-[14px] font-bold text-slate-900 leading-snug break-words">{employee.empName}</p>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2.5 border-t border-slate-200/70">
+              <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-200/70">
                 <div className="min-w-0">
                   <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">Emp ID</p>
                   <p className="mt-0.5 text-xs sm:text-[13px] font-semibold font-mono text-slate-800 truncate">{employee.empId}</p>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">DOB / DOJ</p>
-                  <p className="mt-0.5 text-xs sm:text-[12px] font-semibold text-slate-800 truncate" title={`DOB: ${formatDate(employee.dob || employee.dateOfBirth)}, DOJ: ${formatDate(employee.doj || employee.dateOfJoining)}`}>
-                    {formatDate(employee.dob || employee.dateOfBirth)} / {formatDate(employee.doj || employee.dateOfJoining)}
-                  </p>
                 </div>
                 <div className="min-w-0">
                   <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">Department</p>
@@ -457,7 +456,7 @@ function DebarModal({ employee, onClose, onConfirm, onWarning, submitting }) {
               </div>
             </div>
 
-            {employee.debarredFromDate && employee.debarredToDate ? (() => {
+            {employee.debarredFromDate && employee.debarredToDate && getDebarmentStatus(employee.debarredFromDate, employee.debarredToDate).status !== "none" ? (() => {
               const debarInfo = getDebarmentStatus(employee.debarredFromDate, employee.debarredToDate);
               const isFuture = debarInfo.status === "scheduled";
               return (
@@ -647,12 +646,8 @@ export default function EmployeeClassUpdation() {
           auth: true,
         });
 
-        const updatedFromDate = res?.debarredFromDate || emp.debarredFromDate;
-        const updatedToDate = res?.debarredToDate || (() => {
-          const d = new Date();
-          d.setDate(d.getDate() - 1);
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-        })();
+        const updatedFromDate = res?.debarredFromDate ?? null;
+        const updatedToDate = res?.debarredToDate ?? null;
 
         setEmployees((prev) =>
           prev.map((e) =>
@@ -666,10 +661,10 @@ export default function EmployeeClassUpdation() {
           open: true,
           variant: "success",
           title: "Debarment Cancelled",
-          message: `Debarment for ${emp.empName} (ID: ${emp.empId}) has been cancelled and marked as previous debarment.`,
+          message: `Debarment for ${emp.empName} (ID: ${emp.empId}) has been cancelled.`,
         });
       } else {
-        await request("/api/admin/debar-user", {
+        const res = await request("/api/admin/debar-user", {
           method: "POST",
           body: {
             empId: emp.empId,
@@ -679,10 +674,12 @@ export default function EmployeeClassUpdation() {
           },
           auth: true,
         });
+        const updatedFromDate = res?.debarredFromDate || fromDate;
+        const updatedToDate = res?.debarredToDate || toDate;
         setEmployees((prev) =>
           prev.map((e) =>
             e.empId === emp.empId
-              ? { ...e, debarredFromDate: fromDate, debarredToDate: toDate }
+              ? { ...e, debarredFromDate: updatedFromDate, debarredToDate: updatedToDate }
               : e
           )
         );

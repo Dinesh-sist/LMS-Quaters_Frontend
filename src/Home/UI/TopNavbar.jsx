@@ -426,11 +426,6 @@ export default function TopNavbar({
 
           {/* Desktop Controls & Navigation (Remains consistent from 1024px through 1440px) */}
           <div className="hidden xl:flex items-center gap-2 xl:gap-4">
-            <div className="flex items-center gap-1.5  shrink-0">
-              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} onReset={resetFontSize} />
-              <TranslateButton showPopup={!hideTranslatePopup} />
-            </div>
-
             <nav className="flex items-center gap-1">
               {NAV_ITEMS.map(({ label, to, dropdown }) => {
                 if (dropdown) {
@@ -495,6 +490,11 @@ export default function TopNavbar({
                 );
               })}
             </nav>
+
+            <div className="flex items-center gap-1.5 shrink-0 pl-1">
+              <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} onReset={resetFontSize} />
+              <TranslateButton showPopup={!hideTranslatePopup} />
+            </div>
           </div>
         </div>
 

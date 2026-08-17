@@ -561,7 +561,7 @@ export default function ApplyForQuartersEmployees() {
       // Step 2 — If the employee selected a file, upload it now
       if (emp.attachment && data?.id) {
         try {
-          console.log("[Upload] Starting file upload for application id:", data.id);
+          //console.log("[Upload] Starting file upload for application id:", data.id);
           const fd = new FormData();
           fd.append("attachment", emp.attachment);
           const uploadResult = await request(`/api/admin/upload-attachment/${data.id}`, {
@@ -569,7 +569,7 @@ export default function ApplyForQuartersEmployees() {
             body: fd,
             auth: true,
           });
-          console.log("[Upload] Success:", uploadResult);
+          //console.log("[Upload] Success:", uploadResult);
         } catch (uploadErr) {
           console.error("[Upload] FAILED:", uploadErr.message, uploadErr);
           setSubmitError(`Application submitted (${data.appNo}), but file upload failed: ${uploadErr.message}. You can retry the upload later.`);

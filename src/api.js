@@ -4,7 +4,7 @@ const API_BASE = (import.meta.env?.VITE_API_URL || "http://localhost:5000").repl
 
 async function request(path, { method = "GET", body, auth = false, redirectOnUnauthorized } = {}) {
   const isFormData = body instanceof FormData || (body && typeof body.append === 'function') || (body && body.toString() === '[object FormData]');
-  console.log("API request:", path, "isFormData:", isFormData, "body:", body);
+  //console.log("API request:", path, "isFormData:", isFormData, "body:", body);
   const headers = isFormData ? {} : { "Content-Type": "application/json" };
   const token = auth ? getToken() : "";
   if (auth) {
@@ -186,8 +186,11 @@ export function getQuarterAreas(category = "") {
   });
 }
 
-export function getQuarterNumbers(areaType) {
-  return request(`/api/estate-quarters/numbers?areaType=${encodeURIComponent(areaType)}`, {
+export function getQuarterNumbers(areaType, category = "") {
+  const params = new URLSearchParams();
+  if (areaType) params.append("areaType", areaType);
+  if (category) params.append("category", category);
+  return request(`/api/estate-quarters/numbers?${params.toString()}`, {
     method: "GET",
     auth: true,
   });
@@ -200,9 +203,13 @@ export function lookupQuarterEmployee(employeeId) {
   });
 }
 
-export function getQuarterCurrentStatus(area, quarterNumber) {
+export function getQuarterCurrentStatus(area, quarterNumber, category = "") {
+  const params = new URLSearchParams();
+  if (area) params.append("area", area);
+  if (quarterNumber) params.append("quarterNumber", quarterNumber);
+  if (category) params.append("category", category);
   return request(
-    `/api/estate-quarters/current-status?area=${encodeURIComponent(area)}&quarterNumber=${encodeURIComponent(quarterNumber)}`,
+    `/api/estate-quarters/current-status?${params.toString()}`,
     { method: "GET", auth: true }
   );
 }
