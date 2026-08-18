@@ -11,7 +11,7 @@ import {
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
 import Popup from "../Components/Popup";
-import Image2 from "../assets/image8.png";
+import Image2 from "../assets/Image8.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
 
@@ -191,11 +191,11 @@ export default function StaffLogin() {
 
         <div className="staff-login-stage flex flex-1 items-center justify-center px-4 py-6 sm:px-6 sm:py-8 xl:grid xl:grid-cols-[minmax(0,1.45fr)_minmax(400px,500px)] xl:gap-10 xl:px-12 xl:py-8 2xl:grid-cols-[minmax(0,1.65fr)_minmax(420px,520px)]">
           <div className="hidden items-center justify-center xl:flex xl:self-stretch">
-            <img
+            {/* <img
               src={Image2}
               alt="Staff at desk"
               className="h-auto max-h-[calc(100vh-190px)] w-full max-w-[min(56vw,720px)] object-contain"
-            />
+            /> */}
           </div>
 
           <div className="staff-login-shell flex items-center justify-center w-full">
