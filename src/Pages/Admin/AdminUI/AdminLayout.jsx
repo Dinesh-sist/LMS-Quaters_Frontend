@@ -66,7 +66,7 @@ export default function AdminLayout({ title, subtitle, headerRight = null, child
                         <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
                       )}
                     </div>
-                    {headerRight && <div className="shrink-0">{headerRight}</div>}
+                    {headerRight && <div className="w-full sm:w-auto shrink-0">{headerRight}</div>}
                   </div>
                 )}
                 {children}

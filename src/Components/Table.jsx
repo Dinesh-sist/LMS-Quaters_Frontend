@@ -327,6 +327,18 @@ export default function AgGridTable({
     }, {});
   }, [normalizedColumns, rows]);
 
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const serialValueGetter = useCallback(
     (params) => {
       const idx = typeof params?.node?.rowIndex === "number" ? params.node.rowIndex : 0;
@@ -352,7 +364,7 @@ export default function AgGridTable({
         suppressMenu: true,
         resizable: false,
         valueGetter: serialValueGetter,
-        pinned: "left",
+        pinned: isMobile ? null : "left",
       },
       ...normalizedColumns.map((col) => {
         const isAction = col.__fieldKey === "action" || col.renderer === "action";
@@ -401,12 +413,12 @@ export default function AgGridTable({
           };
         }
 
-        if (col.pinned) def.pinned = col.pinned;
+        if (col.pinned) def.pinned = isMobile ? null : col.pinned;
 
         return def;
       }),
     ],
-    [computedColumnWidths, contentAutoWidth, normalizedColumns, serialValueGetter, showFilter]
+    [computedColumnWidths, contentAutoWidth, isMobile, normalizedColumns, serialValueGetter, showFilter]
   );
 
   const defaultColDef = useMemo(

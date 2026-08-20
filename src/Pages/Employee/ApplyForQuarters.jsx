@@ -22,6 +22,7 @@ const CATEGORIES = [
   "Category C - Private / Others",
 ];
 
+
 const HODS = [
   "HOD - Civil Engineering",
   "HOD - Mechanical Engineering",
@@ -95,6 +96,7 @@ const SELECT_ARROW = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/20
 
 export default function ApplyForQuarters() {
   const user = getUser();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [form, setForm] = useState({
     firmName: "",
     appliedFor: "fresh",
@@ -167,9 +169,12 @@ export default function ApplyForQuarters() {
               .map((r) => r?.ALLOT_HOD_DEPT)
               .filter((v) => typeof v === "string" && v.trim() !== "")
           : [];
-        if (!cancelled) setHodDepts(depts);
+        if (!cancelled) setHodDepts(depts.length > 0 ? depts : HOD_DEPTS_FALLBACK);
       } catch (err) {
-        if (!cancelled) setHodDeptsError(err?.message || "Failed to load HOD departments");
+        if (!cancelled) {
+          setHodDepts(HOD_DEPTS_FALLBACK);
+          setHodDeptsError("Failed to load HOD departments");
+        }
       }
     }
 
@@ -196,10 +201,29 @@ export default function ApplyForQuarters() {
           welcomeName={user?.name || user?.username || "Employee"}
           showNotifications={false}
           logoutTo="/QuartersApplyLogin"
+          onOpenMenu={() => setSidebarOpen(true)}
         />
 
         <div className="flex-1 flex overflow-hidden min-h-0">
-          <Sidebar />
+          {/* Desktop sidebar */}
+          <div className="hidden shrink-0 h-full lg:flex">
+            <Sidebar />
+          </div>
+
+          {/* Mobile/tablet sidebar drawer */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <button
+                type="button"
+                className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px]"
+                onClick={() => setSidebarOpen(false)}
+                aria-label="Close sidebar overlay"
+              />
+              <div className="relative h-full w-[260px] bg-white shadow-xl animate-in slide-in-from-left duration-200">
+                <Sidebar forceExpanded onNavigate={() => setSidebarOpen(false)} />
+              </div>
+            </div>
+          )}
 
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#EEF2FF]">
             <main className="flex-1 overflow-y-auto px-9 py-7">

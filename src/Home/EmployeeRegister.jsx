@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
+import Popup from "../Components/Popup";
 import Image from "../assets/Image13.png";
 import Logo from "../assets/Logo.png";
-import { getEmployeeClasses, lookupEmployee, registerEmployee } from "../api";
+import { lookupEmployee, registerEmployee } from "../api";
 
 const emptyRegistration = {
   employeeId: "",
@@ -13,53 +14,11 @@ const emptyRegistration = {
   employeeName: "",
   dateOfJoining: "",
   className: "",
-  classChoice: "",
   mobile: "",
   email: "",
   password: "",
   confirmPassword: "",
 };
-
-function normalizeClassOptions(classOptions) {
-  const items = Array.isArray(classOptions) ? classOptions : [];
-
-  const options = items
-    .map((item) => ({
-      priority: item?.Class_PRIORITY,
-      className: item?.class_name,
-      classValue: item?.Class,
-    }))
-    .filter((item) => {
-      const className = typeof item.className === "string" ? item.className.trim() : "";
-      const classValue = typeof item.classValue === "string" ? item.classValue.trim() : "";
-      if (!className && !classValue) return false;
-      if (className && className.toLowerCase() === "none") return false;
-      if (classValue && classValue.toLowerCase() === "none") return false;
-      return true;
-    })
-    .map((item) => {
-      const className = typeof item.className === "string" ? item.className.trim() : "";
-      const classValue = typeof item.classValue === "string" ? item.classValue.trim() : "";
-      const priority = Number(item.priority);
-      const value = classValue || className;
-
-      if (className.toUpperCase() === "CLASS-I" || classValue.toUpperCase().includes("CLASS-I")) {
-        if (priority === 1) return { value, label: `${value} (Senior)` };
-        if (priority === 2) return { value, label: `${value} (Junior)` };
-      }
-
-      return { value, label: value };
-    });
-
-  return options.length
-    ? options
-    : [
-        { value: "Class I", label: "Class I" },
-        { value: "Class II", label: "Class II" },
-        { value: "Class III", label: "Class III" },
-        { value: "Class IV", label: "Class IV" },
-      ];
-}
 
 function Field({ label, children, className = "" }) {
   return (
@@ -71,59 +30,98 @@ function Field({ label, children, className = "" }) {
 }
 
 const inputClass =
-  "min-h-[40px] w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3 text-[13px] text-blue-950 outline-none transition-all duration-200 placeholder:text-slate-300 focus:border-blue-900 focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,58,138,0.12)] disabled:cursor-not-allowed";
+  "min-h-[36px] w-full rounded-xl border-2 border-slate-200 bg-blue-50 px-3 py-1 text-[12.5px] text-blue-950 outline-none transition-all duration-200 placeholder:text-slate-300 focus:border-blue-900 focus:bg-white focus:shadow-[0_0_0_3px_rgba(30,58,138,0.12)] disabled:cursor-not-allowed";
 
 export default function EmployeeRegister() {
   const navigate = useNavigate();
   const [reg, setReg] = useState(emptyRegistration);
-  const [classOptions, setClassOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [successOpen, setSuccessOpen] = useState(false);
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isEmailReadOnly, setIsEmailReadOnly] = useState(true);
 
-  const normalizedClassOptions = useMemo(() => normalizeClassOptions(classOptions), [classOptions]);
-
-  useEffect(() => {
-    let isActive = true;
-
-    getEmployeeClasses()
-      .then((data) => {
-        if (isActive) setClassOptions(Array.isArray(data?.items) ? data.items : []);
-      })
-      .catch(() => {
-        if (isActive) setClassOptions([]);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
+  const showToast = (message, title = "Error", variant = "error") => {
+    setPopup({ open: true, title, message, variant });
+  };
 
   const updateReg = (key, value) => {
-    setReg((current) => ({ ...current, [key]: value }));
+    if (key === "employeeId" || key === "dateOfBirth") {
+      setReg((current) => ({
+        ...current,
+        [key]: value,
+        employeeName: "",
+        dateOfJoining: "",
+        className: "",
+        mobile: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      }));
+      setIsEmailReadOnly(true);
+    } else {
+      let finalValue = value;
+      if (key === "mobile") {
+        finalValue = String(value || "").replace(/\D/g, "").slice(0, 10);
+      }
+      setReg((current) => ({ ...current, [key]: finalValue }));
+    }
   };
 
   const handleLookup = async () => {
-    setError("");
     if (!reg.employeeId.trim() || !reg.dateOfBirth) {
-      setError("Enter Employee ID and Date of Birth to fetch details.");
+      showToast("Enter Employee ID and Date of Birth to fetch details.", "Lookup Failed");
       return;
     }
+
+    // Clear previous fetched data & passwords immediately before fetching new details
+    setReg((current) => ({
+      ...current,
+      employeeName: "",
+      dateOfJoining: "",
+      className: "",
+      mobile: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    }));
+    setIsEmailReadOnly(true);
 
     setIsLoading(true);
     try {
       const data = await lookupEmployee(reg.employeeId.trim(), reg.dateOfBirth);
+      const rawEmail = data?.email;
+      const fetchedEmail =
+        rawEmail && typeof rawEmail === "string" && rawEmail.trim() !== "null"
+          ? rawEmail.trim()
+          : "";
+
       setReg((current) => ({
         ...current,
-        employeeName: data?.employeeName || current.employeeName,
-        dateOfJoining: data?.dateOfJoining || current.dateOfJoining,
-        className: data?.className || current.className,
-        classChoice: data?.classChoice || current.classChoice,
+        employeeName: data?.employeeName || "",
+        dateOfJoining: data?.dateOfJoining || "",
+        className: data?.className || "",
+        mobile: data?.mobile || "",
+        email: fetchedEmail,
       }));
+
+      // If email exists in DB record, lock it; if null/empty, allow the user to type and edit it
+      setIsEmailReadOnly(Boolean(fetchedEmail));
+      showToast("Employee details fetched successfully.", "Employee Found", "success");
     } catch (lookupError) {
-      setError(lookupError?.message || "Employee lookup failed.");
+      // Ensure all fields remain cleared on lookup failure
+      setReg((current) => ({
+        ...current,
+        employeeName: "",
+        dateOfJoining: "",
+        className: "",
+        mobile: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      }));
+      setIsEmailReadOnly(true);
+      showToast(lookupError?.message || "Employee lookup failed.", "Lookup Failed");
     } finally {
       setIsLoading(false);
     }
@@ -131,11 +129,14 @@ export default function EmployeeRegister() {
 
   const handleRegister = async (event) => {
     event.preventDefault();
-    setError("");
 
-    if (!reg.email.trim()) return setError("Email is required.");
-    if (!reg.password) return setError("Password is required.");
-    if (reg.password !== reg.confirmPassword) return setError("Passwords do not match.");
+    if (!reg.email.trim()) return showToast("Email is required.", "Validation Error");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(reg.email.trim())) {
+      return showToast("Please enter a valid email address.", "Validation Error");
+    }
+    if (!reg.password) return showToast("Password is required.", "Validation Error");
+    if (reg.password !== reg.confirmPassword) return showToast("Passwords do not match.", "Validation Error");
 
     setIsLoading(true);
     try {
@@ -145,69 +146,69 @@ export default function EmployeeRegister() {
         employeeName: reg.employeeName.trim(),
         dateOfJoining: reg.dateOfJoining,
         className: reg.className.trim(),
-        classChoice: reg.classChoice,
+        classChoice: reg.className.trim(),
         mobile: reg.mobile.trim(),
         email: reg.email.trim(),
         password: reg.password,
       });
 
-      setSuccessOpen(true);
+      showToast("Registered successfully! Redirecting to login...", "Success", "success");
       window.setTimeout(() => {
-        setSuccessOpen(false);
         setReg(emptyRegistration);
         navigate("/QuartersApplyLogin", { replace: true });
-      }, 1200);
+      }, 1500);
     } catch (registerError) {
-      setError(registerError?.message || "Registration failed.");
+      showToast(registerError?.message || "Registration failed.", "Registration Error");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden">
+    <div className="flex min-h-screen w-full flex-col bg-[#fcfefd]">
       <TopNavbar navTextColor="light" />
 
-      <div className="flex min-h-0 flex-1 items-stretch px-4 py-4 sm:px-6 lg:px-10">
-        <div className="mx-auto grid w-full max-w-[100%] min-h-0 items-stretch gap-6 lg:grid-cols-[1fr_2fr]">
+      <div className="flex flex-1 items-center justify-center px-3 py-4 sm:px-6 lg:px-10 xl:px-16">
+        <div className="mx-auto grid w-full max-w-[1360px] items-center justify-center gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(400px,560px)] lg:gap-10 xl:gap-14">
 
           {/* Left — illustration */} 
           <section className="hidden min-h-0 lg:flex lg:items-center lg:justify-center">
             <img
               src={Image}
               alt="Paradip Port Authority building"
-              className="h-auto max-h-full w-full object-contain"
+              className="h-auto max-h-[calc(100vh-170px)] w-full max-w-[520px] object-contain"
             />
           </section>
 
           {/* Right — form panel */}
-          <section className="flex min-h-0 flex-col overflow-hidden rounded-[22px] border border-blue-950/30 bg-white shadow-[0_4px_24px_rgba(30,58,138,0.28)]">
+          <section className="flex max-h-[calc(100vh-120px)] w-full max-w-[560px] flex-col overflow-hidden rounded-[22px] border border-blue-950/30 bg-white shadow-[0_4px_24px_rgba(30,58,138,0.28)] lg:ml-auto">
 
             {/* Panel header */}
-            <div className="shrink-0 border-b border-slate-200 px-5 py-3 lg:px-7">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 p-2 shadow-sm">
+            <div className="shrink-0 border-b border-slate-200 px-4 py-3 sm:px-6">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <div className="flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl bg-blue-50 p-1.5 shadow-sm">
                     <img src={Logo} alt="Paradip Port Authority logo" className="h-full w-full object-contain" />
                   </div>
-                  <div>
-                    <p className="m-0 text-[10px] font-bold uppercase tracking-[0.24em] text-orange-500">
+                  <div className="min-w-0">
+                    <p className="m-0 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-orange-500 truncate">
                       Paradip Port Authority
                     </p>
                     <h1
-                      className="m-0 mt-0.5 text-[20px] font-bold leading-tight text-slate-900 lg:text-[24px]"
+                      className="m-0 mt-0.5 text-[16px] sm:text-[20px] lg:text-[22px] font-bold leading-tight text-slate-900 whitespace-nowrap"
                       style={{ fontFamily: "Georgia, serif" }}
                     >
-                      Employee Registration
+                      Create Account
                     </h1>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => navigate("/QuartersApplyLogin")}
-                  className="shrink-0 min-h-[36px] rounded-2xl border border-slate-200 bg-white px-4 text-[12px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="shrink-0 flex items-center gap-1 sm:gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 sm:px-2.5 py-1.5 text-[11px] font-semibold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white hover:shadow-md cursor-pointer whitespace-nowrap"
                 >
-                  Back to Login
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Back to </span>Login
                 </button>
               </div>
               <p className="mt-1.5 text-[11px] leading-4 text-slate-500">
@@ -219,17 +220,11 @@ export default function EmployeeRegister() {
             <form onSubmit={handleRegister} className="flex min-h-0 flex-1 flex-col">
 
               {/* Scrollable fields area */}
-              <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 lg:px-8">
-
-              {error ? (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-[12px] font-semibold text-red-700">
-                  {error}
-                </div>
-              ) : null}
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
 
               {/* Fetch section */}
-              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 px-4 py-3">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/70 p-3 sm:px-4 sm:py-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <Field label="Employee ID">
                     <input
                       type="text"
@@ -240,10 +235,10 @@ export default function EmployeeRegister() {
                     />
                   </Field>
                   <Field label="Date of Birth">
-                    <div className="grid grid-cols-[1fr_80px] gap-2">
+                    <div className="flex items-center gap-2">
                       <input
                         type="date"
-                        className={inputClass}
+                        className={`${inputClass} flex-1 min-w-0`}
                         value={reg.dateOfBirth}
                         onChange={(event) => updateReg("dateOfBirth", event.target.value)}
                       />
@@ -251,18 +246,18 @@ export default function EmployeeRegister() {
                         type="button"
                         onClick={handleLookup}
                         disabled={isLoading}
-                        className="min-h-[40px] rounded-xl border border-slate-200 bg-white px-2 text-[12px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="h-[36px] shrink-0 rounded-xl border border-slate-200 bg-white px-3.5 text-[12px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:bg-blue-950 hover:text-white disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                       >
-                        Fetch
+                        {isLoading ? "..." : "Fetch"}
                       </button>
                     </div>
                   </Field>
                 </div>
               </div>
 
-              {/* Main fields — 2-col grid */}
-              <div className="grid grid-cols-2 gap-x-5 gap-y-3">
-                <Field label="Name of the Employee" className="col-span-2">
+              {/* Main fields — responsive grid: 1 col on mobile, 2 cols on sm+ */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-3 sm:gap-y-3.5">
+                <Field label="Name of the Employee" className="sm:col-span-2">
                   <input
                     type="text"
                     className={inputClass}
@@ -294,28 +289,17 @@ export default function EmployeeRegister() {
                   />
                 </Field>
 
-                <Field label="Choose a Class" className="col-span-2">
-                  <select
-                    className={`${inputClass} appearance-auto`}
-                    value={reg.classChoice}
-                    onChange={(event) => updateReg("classChoice", event.target.value)}
-                  >
-                    <option value="">Choose a class</option>
-                    {normalizedClassOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
                 <Field label="Mobile Number">
                   <input
                     type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={10}
                     className={inputClass}
                     value={reg.mobile}
                     onChange={(event) => updateReg("mobile", event.target.value)}
-                    placeholder="Mobile"
+                    placeholder="Mobile (10 digits)"
+                    readOnly
                   />
                 </Field>
 
@@ -327,6 +311,7 @@ export default function EmployeeRegister() {
                     value={reg.email}
                     onChange={(event) => updateReg("email", event.target.value)}
                     placeholder="name@domain.com"
+                    readOnly={isEmailReadOnly}
                   />
                 </Field>
 
@@ -376,20 +361,20 @@ export default function EmployeeRegister() {
               </div>{/* end scrollable area */}
 
               {/* Fixed action bar at bottom */}
-              <div className="shrink-0 border-t border-slate-100 px-6 py-4 lg:px-8 flex items-center justify-end gap-3">
+              <div className="shrink-0 border-t border-slate-100 px-4 py-3 sm:px-6 sm:py-4 lg:px-8 flex items-center justify-end gap-3 bg-white">
                 <button
                   type="button"
                   onClick={() => navigate("/QuartersApplyLogin")}
-                  className="min-h-[40px] rounded-2xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-50"
+                  className="min-h-[40px] rounded-xl sm:rounded-2xl border border-slate-200 bg-white px-5 text-[13px] font-bold text-blue-950 transition-all duration-200 hover:bg-slate-100 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="min-h-[40px] rounded-2xl border-0 bg-blue-950 px-7 text-[13px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-h-[40px] rounded-xl sm:rounded-2xl border-0 bg-blue-950 px-7 text-[13px] font-bold text-white shadow-[0_4px_18px_rgba(30,58,138,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                 >
-                  {isLoading ? "Registering..." : "Submit Registration"}
+                  {isLoading ? "Submitting..." : "Submit"}
                 </button>
               </div>
             </form>
@@ -400,14 +385,13 @@ export default function EmployeeRegister() {
 
       <Footer sticky={false} />
 
-      {successOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-[420px] rounded-2xl bg-white p-6 shadow-2xl">
-            <div className="text-[15px] font-bold text-slate-900">Successfully registered</div>
-            <div className="mt-1 text-[13px] text-slate-500">Redirecting back to Employee Login...</div>
-          </div>
-        </div>
-      ) : null}
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
     </div>
   );
 }

@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { label: "About", to: "/about", dropdown: false },
   { label: "Apply Online", to: null, dropdown: true },
   { label: "Staff Login", to: "/StaffLogin", dropdown: false },
-  { label: "Outsiders", to: "/OutsidersLogin", dropdown: false },
+  { label: "Outsiders", to: "http://ppa-lms.in/outsider/", dropdown: false },
   { label: "REMS", to: "/REMSLogin", dropdown: false },
 
 ];
@@ -387,7 +387,7 @@ export default function TopNavbar({
           }`}
       >
         {/* Maximum width container to unify sizes across 1024px up to 1440px+ */}
-        <div className="flex max-w-[100%] items-center justify-between gap-2">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2">
 
           {/* Brand/Logo Section */}
           <div className="flex min-w-0 shrink-0 items-center gap-3">
@@ -490,7 +490,8 @@ export default function TopNavbar({
                 );
               })}
             </nav>
-            <div className="flex items-center gap-1.5 shrink-0">
+
+            <div className="flex items-center gap-1.5 shrink-0 pl-1">
               <FontSizeControls onDecrease={decreaseFontSize} onIncrease={increaseFontSize} onReset={resetFontSize} />
               <TranslateButton showPopup={!hideTranslatePopup} />
             </div>

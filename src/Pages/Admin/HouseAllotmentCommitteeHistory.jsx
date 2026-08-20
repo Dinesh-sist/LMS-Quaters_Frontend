@@ -1,12 +1,38 @@
 import { useEffect, useRef, useState } from "react";
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Info } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Info, Trash2, X, Loader2 } from "lucide-react";
 import AgGridTable from "../../Components/Table";
 import AdminLayout from "./AdminUI/AdminLayout";
+import Popup from "../../Components/Popup";
 import { API_BASE, getHouseAllotmentCommitteeHistory, saveHouseAllotmentCommitteeHistory, deleteHouseAllotmentCommitteeHistory } from "../../api";
+
+function parseLocalISODate(dateStr) {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return dateStr;
+  const str = String(dateStr).split("T")[0];
+  const parts = str.split("-");
+  if (parts.length === 3) {
+    const [year, month, day] = parts.map(Number);
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      return new Date(year, month - 1, day);
+    }
+  }
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function toLocalISODate(date) {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
 function formatDate(dateStr) {
   if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("en-IN", {
+  const date = parseLocalISODate(dateStr);
+  if (!date || isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -73,6 +99,12 @@ function DatePickerCard({ label, selectedDate, onSelect, disabled = false }) {
     setVisibleMonth(new Date(year, visibleMonth.getMonth(), 1));
     setShowYearPanel(false);
   };
+
+  useEffect(() => {
+    if (selectedDate) {
+      setVisibleMonth(startOfMonth(selectedDate));
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -414,26 +446,141 @@ function PageSummaryBar({ rows }) {
   );
 }
 
+function DeleteConfirmModal({ isOpen, row, isDeleting, onCancel, onConfirm }) {
+  if (!isOpen || !row) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[1100] flex items-center justify-center p-4"
+      style={{
+        background: "rgba(15, 23, 42, 0.6)",
+        backdropFilter: "blur(4px)",
+      }}
+      onClick={!isDeleting ? onCancel : undefined}
+    >
+      <div
+        className="relative w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_25px_60px_rgba(0,0,0,0.25)] animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header decoration */}
+        <div className="flex items-start justify-between p-6 pb-0">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 shadow-sm ring-8 ring-rose-50">
+            <Trash2 size={22} strokeWidth={2.2} />
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isDeleting}
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition disabled:opacity-40"
+            title="Close"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 pt-4 pb-6">
+          <h3 className="text-lg font-bold text-slate-900">
+            Delete Committee Record?
+          </h3>
+          <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">
+            Are you sure you want to delete this committee record? This action will permanently remove the record and cannot be undone.
+          </p>
+
+          {/* Record details badge */}
+          <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/90 p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <CalendarDays size={16} className="text-[#185FA5]" />
+              <span className="text-xs font-semibold text-slate-700">Committee Date</span>
+            </div>
+            <span className="rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-slate-900 border border-slate-200 shadow-sm">
+              {formatDate(row.committeeHeld)}
+            </span>
+          </div>
+
+          {/* Action buttons */}
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isDeleting}
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_12px_rgba(225,29,72,0.25)] hover:bg-rose-700 hover:shadow-[0_6px_16px_rgba(225,29,72,0.35)] active:scale-95 transition disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <Trash2 size={15} />
+                  <span>Delete Record</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HistoryOfHouseAllotmentCommittee() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [committeeHeld, setCommitteeHeld] = useState("");
+  const [committeeHeld, setCommitteeHeld] = useState(null);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [deleteModal, setDeleteModal] = useState({ open: false, row: null });
+  const [deleting, setDeleting] = useState(false);
+  const [popup, setPopup] = useState({ open: false, title: "", message: "", variant: "info" });
 
-  const handleDelete = async (row) => {
-    if (!window.confirm("Are you sure you want to delete this committee record?")) {
-      return;
-    }
+  const formatDateForApi = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+  const handleDelete = (row) => {
+    setDeleteModal({ open: true, row });
+  };
+
+  const handleCancelDelete = () => {
+    if (deleting) return;
+    setDeleteModal({ open: false, row: null });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.row) return;
+    setDeleting(true);
     try {
-      await deleteHouseAllotmentCommitteeHistory(row.Id);
+      await deleteHouseAllotmentCommitteeHistory(deleteModal.row.Id);
       const data = await getHouseAllotmentCommitteeHistory();
       setRows(Array.isArray(data?.items) ? data.items : []);
+      setDeleteModal({ open: false, row: null });
+      setPopup({
+        open: true,
+        title: "Record Deleted",
+        message: "Committee record has been deleted successfully.",
+        variant: "success",
+      });
     } catch (err) {
-      alert(err.message || "Failed to delete record.");
+      setPopup({
+        open: true,
+        title: "Delete Failed",
+        message: err?.message || "Failed to delete record.",
+        variant: "error",
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -475,16 +622,22 @@ export default function HistoryOfHouseAllotmentCommittee() {
     try {
       setUploading(true);
       const payload = new FormData();
-      payload.append("committeeHeld", committeeHeld);
+      payload.append("committeeHeld", formatDateForApi(committeeHeld));
       payload.append("file", file);
 
       await saveHouseAllotmentCommitteeHistory(payload);
 
-      setCommitteeHeld("");
+      setCommitteeHeld(null);
       setFile(null);
       setUploadOpen(false);
       await getHouseAllotmentCommitteeHistory().then((data) => {
         setRows(Array.isArray(data?.items) ? data.items : []);
+      });
+      setPopup({
+        open: true,
+        title: "Record Uploaded",
+        message: "Committee record has been uploaded successfully.",
+        variant: "success",
       });
     } catch (err) {
       setUploadError(err?.message || "Failed to upload committee record.");
@@ -492,8 +645,6 @@ export default function HistoryOfHouseAllotmentCommittee() {
       setUploading(false);
     }
   };
-
-  const selectedCommitteeDate = committeeHeld ? new Date(`${committeeHeld}T00:00:00`) : null;
 
   return (
     <AdminLayout
@@ -580,7 +731,7 @@ export default function HistoryOfHouseAllotmentCommittee() {
               <button
                 onClick={() => {
                     setUploadOpen(false);
-                    setCommitteeHeld("");
+                    setCommitteeHeld(null);
                     setFile(null);
                     setUploadError("");
                 }}
@@ -605,8 +756,8 @@ export default function HistoryOfHouseAllotmentCommittee() {
                 <div style={{ zIndex: 10 }}>
                   <DatePickerCard
                     label="Committee Held Date"
-                    selectedDate={selectedCommitteeDate}
-                    onSelect={(date) => setCommitteeHeld(date.toISOString().slice(0, 10))}
+                    selectedDate={committeeHeld}
+                    onSelect={setCommitteeHeld}
                   />
                 </div>
 
@@ -700,6 +851,24 @@ export default function HistoryOfHouseAllotmentCommittee() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.open}
+        row={deleteModal.row}
+        isDeleting={deleting}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+      />
+
+      {/* Toast Notification Popup */}
+      <Popup
+        open={popup.open}
+        title={popup.title}
+        message={popup.message}
+        variant={popup.variant}
+        onClose={() => setPopup((p) => ({ ...p, open: false }))}
+      />
     </AdminLayout>
   );
 }
