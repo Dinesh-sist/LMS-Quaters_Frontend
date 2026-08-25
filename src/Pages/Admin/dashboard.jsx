@@ -373,7 +373,7 @@ const historyChartOpts = {
       min: 0,
       max: 100,
       grid: { color: "rgba(0,0,0,0.05)" },
-      ticks: { color: "#64748b", font: { size: 11 }, stepSize: 10 },
+      ticks: { color: "#64748b", font: { size: 11 }, stepSize: 5, autoSkip: false, maxTicksLimit: 25 },
       beginAtZero: true,
     },
   },
@@ -525,11 +525,8 @@ function Card({ title, action, children, className = "" }) {
 
 export default function AdminDashboard() {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-  const yearsList = useMemo(
-    () => [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4],
-    [currentYear]
-  );
   const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [yStepSize, setYStepSize] = useState(5);
 
   const [counts, setCounts] = useState({
     total: "—", occupied: "—", vacant: "—", beyondRepair: "—",
@@ -547,7 +544,7 @@ export default function AdminDashboard() {
         backgroundColor: "#3B82F6",
         borderRadius: 0,
         borderSkipped: false,
-        barThickness: 30,
+        barThickness: 24,
       },
       {
         label: "Approved Applications",
@@ -555,7 +552,7 @@ export default function AdminDashboard() {
         backgroundColor: "#EC4899",
         borderRadius: 0,
         borderSkipped: false,
-        barThickness: 30,
+        barThickness: 24,
       },
     ],
   });
@@ -732,7 +729,10 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    request(`/api/dashboard/allotment-committee/history?year=${selectedYear}`, { auth: true })
+    const yr = parseInt(selectedYear, 10);
+    if (isNaN(yr) || yr < 1000 || yr > 9999) return;
+
+    request(`/api/dashboard/allotment-committee/history?year=${yr}`, { auth: true })
       .then((d) => {
         if (!d || !Array.isArray(d.committees)) return;
         const comms = d.committees;
@@ -747,7 +747,7 @@ export default function AdminDashboard() {
               backgroundColor: "#1ba0b5ff",
               borderRadius: 0,
               borderSkipped: false,
-              barThickness: 40,
+              barThickness: 24,
             },
             {
               label: "Approved Applications",
@@ -756,7 +756,7 @@ export default function AdminDashboard() {
               backgroundColor: "#EC4899",
               borderRadius: 0,
               borderSkipped: false,
-              barThickness: 40,
+              barThickness: 24,
             },
           ],
         });
@@ -817,32 +817,75 @@ export default function AdminDashboard() {
         <Card
           title="History of House Allotment Committee"
           action={
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              aria-label="Select Year"
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-            >
-              {yearsList.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-3.5 text-xs font-semibold text-slate-600">
+              <div className="flex items-center gap-1.5">
+                <span>Year:</span>
+                <input
+                  type="text"
+                  pattern="\d*"
+                  maxLength={4}
+                  value={selectedYear}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    setSelectedYear(val);
+                  }}
+                  placeholder="Year"
+                  aria-label="Enter Year"
+                  className="w-20 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <span>Step Size:</span>
+                <select
+                  value={yStepSize}
+                  onChange={(e) => setYStepSize(Number(e.target.value))}
+                  aria-label="Select Step Size"
+                  className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
           }
         >
-          <div className="w-full min-w-0 overflow-x-auto overflow-y-hidden pb-2" style={{ scrollbarWidth: "thin" }}>
+          <div 
+            className="w-full min-w-0 overflow-x-auto overflow-y-auto pb-2" 
+            style={{ 
+              scrollbarWidth: "thin",
+              height: "clamp(300px, 38vh, 440px)",
+            }}
+          >
             <div
               style={{
-                height: "clamp(300px, 38vh, 440px)",
-                minWidth: `${Math.max((historyChart?.labels?.length || 0) * 95, 600)}px`,
+                height: yStepSize === 5 ? "850px" : yStepSize === 10 ? "550px" : "380px",
+                minWidth: `${Math.max((historyChart?.labels?.length || 0) * 70, 480)}px`,
                 width: "100%",
               }}
             >
               <Bar
-                key={`hist-${selectedYear}-${historyChart.datasets[0].data.length}`}
+                key={`hist-${selectedYear}-${yStepSize}-${historyChart.datasets[0].data.length}`}
                 data={historyChart}
-                options={historyChartOpts}
+                options={{
+                  ...historyChartOpts,
+                  scales: {
+                    ...historyChartOpts.scales,
+                    y: {
+                      ...historyChartOpts.scales.y,
+                      ticks: {
+                        ...historyChartOpts.scales.y.ticks,
+                        stepSize: yStepSize,
+                        autoSkip: false,
+                        maxTicksLimit: 25,
+                      },
+                    },
+                  },
+                }}
                 plugins={[topVerticalBarLabelsPlugin]}
               />
             </div>
