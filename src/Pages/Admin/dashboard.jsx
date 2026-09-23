@@ -629,6 +629,7 @@ export default function AdminDashboard() {
       })))
       .catch(console.error);
 
+
     request("/api/dashboard/estate-quarters/category-status-counts", { auth: true })
       .then((d) => {
         if (!Array.isArray(d)) return;
@@ -676,7 +677,7 @@ export default function AdminDashboard() {
       })
       .catch(console.error);
 
-      
+
     request("/api/dashboard/employees/count-by-class", { auth: true })
       .then((d) => {
         if (!Array.isArray(d)) return;
