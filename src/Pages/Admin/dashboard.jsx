@@ -733,6 +733,7 @@ export default function AdminDashboard() {
       .catch(console.error);
   }, []);
 
+
   useEffect(() => {
     request(`/api/dashboard/allotment-committee/history?year=${selectedYear}`, { auth: true })
       .then((d) => {
