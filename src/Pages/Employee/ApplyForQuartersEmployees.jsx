@@ -947,25 +947,19 @@ export default function ApplyForQuartersEmployees() {
                           </FieldShell>
 
                           {/* Attachment */}
-                          <FieldShell label="Attachment" required={isExchange}>
+                          <FieldShell label="Attachment / Proof File" required={isExchange}>
                             <label
-                              className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 ${validationErrors.attachment
+                              className={`h-10 rounded-[7px] border-[1.5px] px-3 text-[13px] font-semibold flex items-center justify-between gap-3 transition-all duration-200 cursor-pointer ${validationErrors.attachment
                                 ? "border-rose-500 bg-white text-rose-600 shadow-[0_0_0_3px_rgba(244,63,94,0.12)]"
-                                : isExchange
-                                  ? "border-[#e2e8f0] bg-white text-[#1d4ed8] cursor-pointer"
-                                  : "border-[#e2e8f0] bg-slate-100 text-slate-400 cursor-not-allowed"
+                                : "border-[#e2e8f0] bg-white text-[#1d4ed8] hover:bg-slate-50"
                                 }`}
                             >
                               <span className="truncate">
-                                {emp.attachment?.name ||
-                                  (isExchange
-                                    ? "File Upload"
-                                    : "Available when Exchange is selected")}
+                                {emp.attachment?.name || "Upload Proof / Document File"}
                               </span>
                               <Upload size={15} className="shrink-0" />
                               <input
                                 type="file"
-                                disabled={!isExchange}
                                 className="hidden"
                                 onChange={(e) => {
                                   clearValidationError("attachment");

@@ -302,7 +302,7 @@ export default function AgGridTable({
     () => new Set(normalizedColumns.map((col) => col.__colId))
   );
 
-  // ── Content-aware width computation (file 1 replacement) ────
+  // ── Content-aware width computation (determined by header length & cell data) ────
   const computedColumnWidths = useMemo(() => {
     return normalizedColumns.reduce((acc, col) => {
       if (col.__fieldKey === "action" || col.renderer === "action") {
@@ -310,8 +310,8 @@ export default function AgGridTable({
         return acc;
       }
 
-      const baseWidth = col.width || col.minWidth || 140;
-      let widestCell = 0;
+      const headerTextWidth = measureTextWidth(col.__headerName);
+      let widestCell = headerTextWidth;
 
       for (const row of rows) {
         const rawValue = getRowValue(row, col, col.__fieldKey);
@@ -319,9 +319,13 @@ export default function AgGridTable({
         widestCell = Math.max(widestCell, measureTextWidth(text));
       }
 
+      // CELL_PADDING + 24px extra buffer for AG Grid sort/filter icons in the header
+      const requiredWidth = widestCell + CELL_PADDING + 24;
+
       acc[col.__colId] = Math.max(
-        baseWidth,
-        Math.min(MAX_CONTENT_WIDTH, widestCell + CELL_PADDING)
+        col.width || 0,
+        col.minWidth || 0,
+        Math.min(MAX_CONTENT_WIDTH, requiredWidth)
       );
       return acc;
     }, {});
