@@ -19,7 +19,7 @@ function FormField({ label, icon: Icon, children }) {
       </label>
       <div className="relative group">
         {children}
-        {Icon && (
+        {Icon && (                
           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5">
             <Icon size={18} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
           </div>
@@ -30,7 +30,7 @@ function FormField({ label, icon: Icon, children }) {
 }
 
 function Section({ title, children, color = "blue" }) {
-  const colors = {
+  const colors = {   
     blue: "border-blue-100 bg-blue-50/30 text-blue-800",
     orange: "border-orange-100 bg-orange-50/30 text-orange-800",
     green: "border-emerald-100 bg-emerald-50/30 text-emerald-800",

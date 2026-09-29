@@ -120,33 +120,31 @@ function renderClassBadge(val) {
 
 /* ─── Column definitions ──────────────────────────────────────── */
 const makeColumns = (onReview) => [
-  { key: "EmpId", header: "EmpID", renderer: "empId", pinned: "left", width: 75, minWidth: 75 },
-  { key: "EmpName", header: "Emp_Name", minWidth: 200 },
-  { key: "Class", header: "CLASS", render: renderClassBadge, minWidth: 140 },
-  { key: "GradDate", header: "GRAD_Date", minWidth: 140 },
-  { key: "DateOfJoining", header: "Date_of_Join", minWidth: 155 },
-  { key: "Basic", header: "Basic", renderer: "basic", minWidth: 110 },
-  { key: "DateOfBirth", header: "DATE OF BIRTH", minWidth: 150 },
-  { key: "Department", header: "DEPT", minWidth: 150 },
-  { key: "Caste", header: "CASTE_ID", render: renderCasteBadge, minWidth: 120 },
-  { key: "CurrentQuarterType", header: "CURRENT QTY_Type", minWidth: 180 },
+  { key: "EmpId", header: "Employee ID", renderer: "empId", pinned: "left" },
+  { key: "EmpName", header: "Employee Name" },
+  { key: "Class", header: "Class", render: renderClassBadge },
+  { key: "GradDate", header: "Graduation Date" },
+  { key: "DateOfJoining", header: "Date of Joining" },
+  { key: "Basic", header: "Basic Pay", renderer: "basic" },
+  { key: "DateOfBirth", header: "Date of Birth" },
+  { key: "Department", header: "Department" },
+  { key: "Caste", header: "Caste", render: renderCasteBadge },
+  { key: "CurrentQuarterType", header: "Current Quarter Type" },
   {
     key: "CurrentQtr",
-    header: "CURRENT QTR",
-    minWidth: 150,
+    header: "Current Quarter",
     render: (_, row) =>
       row?.CurrentAreaType && row?.CurrentQuarterNo
         ? `${String(row.CurrentAreaType).trim()}/${String(row.CurrentQuarterNo).trim()}`
         : "—",
   },
-  { key: "QtrType", header: "REQ_QTR_Type", render: renderQuarterTypeBadge, minWidth: 180 },
-  { key: "QtrLocation", header: "REQ_QTR_Location", minWidth: 160 },
-  { key: "QtrRequested", header: "REQ_QTR", minWidth: 120 },
-  { key: "ExchangeReason", header: "Exchange", minWidth: 140, render: (val) => val || "—" },
+  { key: "QtrType", header: "Requested Quarter Type", render: renderQuarterTypeBadge },
+  { key: "QtrLocation", header: "Requested Quarter Location" },
+  { key: "QtrRequested", header: "Requested Quarter" },
+  { key: "ExchangeReason", header: "Exchange Reason", render: (val) => val || "—" },
   {
     key: "AttachmentPath",
     header: "Proof File",
-    minWidth: 150,
     render: (value) => {
       if (!value) return <span className="text-slate-400">—</span>;
       const normalised = value.replace(/\\/g, "/").replace(/^.*uploads\//, "");
@@ -194,11 +192,10 @@ const makeColumns = (onReview) => [
       );
     }
   },
-  { key: "ReqDate", header: "REQ_Date", minWidth: 160 },
+  { key: "ReqDate", header: "Request Date" },
   {
     key: "TentativeStatus",
     header: "Allotment Status",
-    minWidth: 160,
     render: (val, row) => (
       <div className="flex flex-col gap-1 items-start">
         {row.TentativeStatus === "Winner" ? (
@@ -271,22 +268,22 @@ function PageSummaryBar({ rows, onShowToast }) {
 
       const tableColumn = [
         "S.NO",
-        "EMP ID",
-        "EMP NAME",
+        "EMPLOYEE ID",
+        "EMPLOYEE NAME",
         "CLASS",
-        "GRAD DATE",
+        "GRADUATION DATE",
         "DATE OF JOINING",
-        "BASIC",
+        "BASIC PAY",
         "DATE OF BIRTH",
         "DEPARTMENT",
         "CASTE",
-        "CURRENT TYPE",
-        "CURRENT QTR",
-        "REQ TYPE",
-        "REQ LOCATION",
-        "REQ QTR",
-        "EXCHANGE",
-        "REQ DATE"
+        "CURRENT QUARTER TYPE",
+        "CURRENT QUARTER",
+        "REQUESTED QUARTER TYPE",
+        "REQUESTED QUARTER LOCATION",
+        "REQUESTED QUARTER",
+        "EXCHANGE REASON",
+        "REQUEST DATE"
       ];
 
       const tableRows = rows.map((row, index) => {
@@ -562,8 +559,9 @@ function ReviewModal({ app, onClose }) {
             <DetailRow label="Department" value={app.Department} />
             <DetailRow label="Email" value={app.EmailId} />
             <DetailRow label="Class" value={app.Class} />
-            <DetailRow label="Basic Pay" value={app.Basic} />
+            <DetailRow label="Basic Pay" value={app.Basic != null ? `₹${Number(app.Basic).toLocaleString("en-IN")}` : "—"} />
             <DetailRow label="Caste" value={app.Caste} />
+            <DetailRow label="Date of Birth" value={app.DateOfBirth} />
             <DetailRow label="Date of Joining" value={app.DateOfJoining} />
             <DetailRow label="Grad Date" value={app.GradDate} />
             <DetailRow label="Current Quarter Type" value={app.CurrentQuarterType} />

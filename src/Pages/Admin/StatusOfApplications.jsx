@@ -53,47 +53,45 @@ function getTodayDateInputValue() {
 const getColumns = (onDeleteClick, isHistory = false) => {
   const cols = [
     // EMP ID
-    { key: "empId", header: "EMP ID", renderer: "empId", pinned: "left", width: 90, minWidth: 90 },
+    { key: "empId", header: "Employee ID", renderer: "empId", pinned: "left" },
     // EMP NAME
-    { key: "empName", header: "EMP NAME", minWidth: 220 },
+    { key: "empName", header: "Employee Name" },
     // CLASS
-    { key: "class", header: "CLASS", renderer: "class", minWidth: 155 },
+    { key: "class", header: "Class", renderer: "class" },
     // GRAD DATE
-    { key: "gradDate", header: "GRAD DATE", minWidth: 135 },
+    { key: "gradDate", header: "Graduation Date" },
     // DEPARTMENT
-    { key: "dept", header: "DEPARTMENT", minWidth: 150 },
+    { key: "dept", header: "Department" },
     // CASTE ID
-    { key: "casteId", header: "CASTE ID", minWidth: 120 },
+    { key: "casteId", header: "Caste" },
     // CURRENT QTR TYPE
-    { key: "currentQtyType", header: "CURRENT QTR TYPE", minWidth: 180 },
+    { key: "currentQtyType", header: "Current Quarter Type" },
     // CURRENT QTR — combined area_type / quarter_no
     {
       key: "currentQtr",
-      header: "CURRENT QTR",
-      minWidth: 160,
+      header: "Current Quarter",
       render: (_, row) =>
         row?.currentAreaType && row?.currentQuarterNo
           ? `${String(row.currentAreaType).trim()}/${String(row.currentQuarterNo).trim()}`
           : "—",
     },
     // REQUEST QUARTER TYPE
-    { key: "reqQtrType", header: "REQUEST QTR TYPE", minWidth: 200 },
+    { key: "reqQtrType", header: "Requested Quarter Type" },
     // REQUEST QUARTER LOCATION (Area Type)
-    { key: "reqQtrLocation", header: "REQUEST QTR LOCATION", minWidth: 220 },
+    { key: "reqQtrLocation", header: "Requested Quarter Location" },
     // REQUEST QUARTER NUMBER
-    { key: "reqQtr", header: "REQUEST QTR NO", minWidth: 145 },
+    { key: "reqQtr", header: "Requested Quarter" },
 
     // EXCHANGE
-    { key: "exchangeReason", header: "EXCHANGE", minWidth: 140, render: (val) => val || "—" },
+    { key: "exchangeReason", header: "Exchange Reason", render: (val) => val || "—" },
 
     // ROSTER NO
-    { key: "rosterNo", header: "ROSTER NO", minWidth: 140 },
+    { key: "rosterNo", header: "Roster Point" },
 
     // STATUS
     {
       key: "result",
-      header: "STATUS",
-      minWidth: 150,
+      header: "Status",
       render: (value) => {
         const normalized = (value || "").toLowerCase();
         const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
