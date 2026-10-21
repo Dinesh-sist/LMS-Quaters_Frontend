@@ -19,6 +19,24 @@ import { getEmployeeClasses, updateEmployeeClass, request } from "../../api";
 const CLASS_OPTIONS = ["Sr.Class 1", "Jr.Class 1", "Class 2", "Class 3", "Class 4"];
 const CLASS_RANK = { "Sr.Class 1": 1, "Jr.Class 1": 2, "Class 2": 3, "Class 3": 4, "Class 4": 5 };
 
+const COMMON_DEPARTMENTS = [
+  "ADMINISTRATIVE",
+  "Administration & HR",
+  "Marine",
+  "Finance",
+  "F & A",
+  "Traffic",
+  "Civil Engineering",
+  "Mechanical Engineering",
+  "Medical & Health Services",
+  "Electrical",
+  "Materials Management",
+  "Estate",
+  "Security",
+  "Vigilance",
+  "Others",
+];
+
 // Class stat cards — one distinct palette per class
 const CLASS_CARD = {
   "Sr.Class 1": {
@@ -201,7 +219,23 @@ function makeActionRenderer(onPromote, onDemote, busyEmpId) {
 
 function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
   const [selectedClass, setSelectedClass] = useState("");
+  const [department, setDepartment] = useState("");
+  const [basic, setBasic] = useState("");
+  const [gradDate, setGradDate] = useState("");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (employee) {
+      setSelectedClass("");
+      setDepartment(employee.department || "");
+      setBasic(employee.basic != null && employee.basic !== "" ? String(employee.basic) : "");
+      const initialGrad = employee.gradDate
+        ? String(employee.gradDate).slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+      setGradDate(initialGrad);
+      setError("");
+    }
+  }, [employee]);
 
   if (!employee) return null;
 
@@ -212,8 +246,26 @@ function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
   );
 
   const handleConfirm = () => {
-    if (!selectedClass) { setError(`Please select a class to ${mode} this employee.`); return; }
-    onConfirm(employee.empId, selectedClass, isPromote);
+    if (!selectedClass) {
+      setError(`Please select a class to ${mode} this employee.`);
+      return;
+    }
+    if (!gradDate || !gradDate.trim()) {
+      setError("Grade Date is a mandatory field. Please select a date.");
+      return;
+    }
+    if (basic !== "" && (isNaN(Number(basic)) || Number(basic) < 0)) {
+      setError("Basic pay must be a valid positive number.");
+      return;
+    }
+    onConfirm({
+      empId: employee.empId,
+      newClass: selectedClass,
+      isPromote,
+      department: department.trim(),
+      basic: basic !== "" ? Number(basic) : null,
+      gradDate: gradDate.trim(),
+    });
   };
 
   return (
@@ -221,12 +273,12 @@ function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
       <div className="fixed inset-0 z-40 backdrop-blur-sm bg-slate-900/40" onClick={!submitting ? onClose : undefined} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="w-full max-w-md rounded-3xl bg-white shadow-[0_32px_64px_rgba(15,23,42,0.22)] border border-slate-200"
+          className="w-full max-w-lg rounded-3xl bg-white shadow-[0_32px_64px_rgba(15,23,42,0.22)] border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
           style={{ animation: "ecsModalIn 0.18s ease-out" }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className={`flex items-center justify-between gap-3 rounded-t-3xl px-6 py-4 border-b ${isPromote ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-100"
+          <div className={`flex items-center justify-between gap-3 shrink-0 px-6 py-4 border-b ${isPromote ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-100"
             : "bg-gradient-to-r from-rose-50 to-red-50 border-rose-100"
             }`}>
             <div className="flex items-center gap-3">
@@ -241,30 +293,33 @@ function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
               </div>
             </div>
             <button type="button" onClick={onClose} disabled={submitting}
-              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
               <X size={15} />
             </button>
           </div>
 
           {/* Body */}
-          <div className="p-6">
-            <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
+            {/* Employee info card */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                 {[
                   { label: "Employee Name", value: employee.empName },
                   { label: "Employee ID", value: employee.empId, mono: true },
                   { label: "Date of Birth", value: formatDate(employee.dob || employee.dateOfBirth) },
                   { label: "Date of Joining", value: formatDate(employee.doj || employee.dateOfJoining) },
-                  { label: "Department", value: employee.department },
+                  { label: "Current Dept", value: employee.department || "—" },
+                  { label: "Current Basic", value: employee.basic != null && employee.basic !== "" ? `₹${Number(employee.basic).toLocaleString("en-IN")}` : "—" },
+                  { label: "Current Grade Date", value: formatDate(employee.gradDate) },
                 ].map(({ label, value, mono }) => (
                   <div key={label}>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
-                    <p className={`mt-1 text-[13px] font-semibold text-slate-800 leading-snug ${mono ? "font-mono" : ""}`}>{value}</p>
+                    <p className={`mt-0.5 text-[13px] font-semibold text-slate-800 leading-snug ${mono ? "font-mono" : ""}`}>{value}</p>
                   </div>
                 ))}
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Current Class</p>
-                  <span className="mt-1 inline-block rounded-lg px-2.5 py-0.5 text-[11px] font-bold"
+                  <span className="mt-0.5 inline-block rounded-lg px-2.5 py-0.5 text-[11px] font-bold"
                     style={{
                       background: CLASS_BADGE[employee.currentClass]?.bg,
                       color: CLASS_BADGE[employee.currentClass]?.color,
@@ -276,59 +331,143 @@ function ActionModal({ employee, mode, onClose, onConfirm, submitting }) {
               </div>
             </div>
 
-            <p className="mb-3 text-[13px] text-slate-600 font-medium">
-              {isPromote ? "Select a class to promote this employee to:" : "Select a class to demote this employee to:"}
-            </p>
+            {/* Class selection */}
+            <div>
+              <p className="mb-2 text-[13px] text-slate-700 font-semibold">
+                {isPromote ? "Select a class to promote this employee to:" : "Select a class to demote this employee to:"} <span className="text-rose-500">*</span>
+              </p>
 
-            <div className="flex flex-wrap gap-2 mb-1">
-              {availableClasses.map((cls) => {
-                const isSelected = selectedClass === cls;
-                const badge = CLASS_BADGE[cls];
-                return (
-                  <button key={cls} type="button" disabled={submitting}
-                    onClick={() => { setSelectedClass(cls); setError(""); }}
-                    className="flex items-center gap-2 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={isSelected
-                      ? { background: badge.bg, color: badge.color, borderColor: badge.border, boxShadow: `0 0 0 3px ${badge.bg}` }
-                      : { background: "#fff", color: "#475569", borderColor: "#e2e8f0" }}>
-                    <span className="h-2 w-2 rounded-full" style={{ background: isSelected ? badge.color : "#cbd5e1" }} />
-                    {cls}
-                    {CLASS_RANK[cls] === 1 && <span className="text-[9px] font-bold uppercase tracking-wider ml-1" style={{ color: "#7c3aed" }}>Highest</span>}
-                    {CLASS_RANK[cls] === 5 && <span className="text-[9px] font-bold uppercase tracking-wider ml-1 text-slate-400">Lowest</span>}
-                  </button>
-                );
-              })}
+              <div className="flex flex-wrap gap-2 mb-1">
+                {availableClasses.map((cls) => {
+                  const isSelected = selectedClass === cls;
+                  const badge = CLASS_BADGE[cls];
+                  return (
+                    <button key={cls} type="button" disabled={submitting}
+                      onClick={() => { setSelectedClass(cls); setError(""); }}
+                      className="flex items-center gap-2 rounded-xl border px-4 py-2 text-[13px] font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      style={isSelected
+                        ? { background: badge.bg, color: badge.color, borderColor: badge.border, boxShadow: `0 0 0 3px ${badge.bg}` }
+                        : { background: "#fff", color: "#475569", borderColor: "#e2e8f0" }}>
+                      <span className="h-2 w-2 rounded-full" style={{ background: isSelected ? badge.color : "#cbd5e1" }} />
+                      {cls}
+                      {CLASS_RANK[cls] === 1 && <span className="text-[9px] font-bold uppercase tracking-wider ml-1" style={{ color: "#7c3aed" }}>Highest</span>}
+                      {CLASS_RANK[cls] === 5 && <span className="text-[9px] font-bold uppercase tracking-wider ml-1 text-slate-400">Lowest</span>}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedClass && (
+                <div className="mt-2.5 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2">
+                  <span className="rounded-lg px-2.5 py-0.5 text-[11px] font-bold"
+                    style={{ background: CLASS_BADGE[employee.currentClass]?.bg, color: CLASS_BADGE[employee.currentClass]?.color, border: `1px solid ${CLASS_BADGE[employee.currentClass]?.border}` }}>
+                    {employee.currentClass}
+                  </span>
+                  <span className="text-slate-400 font-bold mx-1">→</span>
+                  <span className="rounded-lg px-2.5 py-0.5 text-[11px] font-bold"
+                    style={{ background: CLASS_BADGE[selectedClass]?.bg, color: CLASS_BADGE[selectedClass]?.color, border: `1px solid ${CLASS_BADGE[selectedClass]?.border}` }}>
+                    {selectedClass}
+                  </span>
+                  <span className="ml-auto text-[11px] font-semibold text-slate-400">
+                    {isPromote ? "Promotion" : "Demotion"}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {error && <p className="mt-2 text-[12px] font-semibold text-rose-600">{error}</p>}
+            {/* Department, Basic & Grade Date input fields */}
+            <div className="pt-3.5 border-t border-slate-200/80">
+              <p className="mb-2.5 text-[13px] text-slate-700 font-semibold">
+                Update Employee Details:
+              </p>
 
-            {selectedClass && (
-              <div className="mt-4 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
-                <span className="rounded-lg px-2.5 py-0.5 text-[11px] font-bold"
-                  style={{ background: CLASS_BADGE[employee.currentClass]?.bg, color: CLASS_BADGE[employee.currentClass]?.color, border: `1px solid ${CLASS_BADGE[employee.currentClass]?.border}` }}>
-                  {employee.currentClass}
-                </span>
-                <span className="text-slate-400 font-bold mx-1">→</span>
-                <span className="rounded-lg px-2.5 py-0.5 text-[11px] font-bold"
-                  style={{ background: CLASS_BADGE[selectedClass]?.bg, color: CLASS_BADGE[selectedClass]?.color, border: `1px solid ${CLASS_BADGE[selectedClass]?.border}` }}>
-                  {selectedClass}
-                </span>
-                <span className="ml-auto text-[11px] font-semibold text-slate-400">
-                  {isPromote ? "Promotion" : "Demotion"}
-                </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* Department */}
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-[11px] font-bold text-slate-600 flex items-center justify-between">
+                    <span>Department</span>
+                    <span className="text-[10px] font-normal text-slate-400">Pre-filled</span>
+                  </label>
+                  <input
+                    type="text"
+                    list="action-modal-dept-options"
+                    value={department}
+                    disabled={submitting}
+                    onChange={(e) => { setDepartment(e.target.value); setError(""); }}
+                    placeholder="Enter or select department"
+                    className={`w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs sm:text-[13px] font-medium text-slate-800 outline-none transition-all ${
+                      isPromote
+                        ? "focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        : "focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                    }`}
+                  />
+                  <datalist id="action-modal-dept-options">
+                    {COMMON_DEPARTMENTS.map((dept) => (
+                      <option key={dept} value={dept} />
+                    ))}
+                  </datalist>
+                </div>
+
+                {/* Basic Pay */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-bold text-slate-600 flex items-center justify-between">
+                    <span>Basic Pay (₹)</span>
+                    <span className="text-[10px] font-normal text-slate-400">Pre-filled</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={basic}
+                    disabled={submitting}
+                    onChange={(e) => { setBasic(e.target.value); setError(""); }}
+                    placeholder="e.g. 114400"
+                    className={`w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs sm:text-[13px] font-semibold text-slate-800 font-mono outline-none transition-all ${
+                      isPromote
+                        ? "focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        : "focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                    }`}
+                  />
+                </div>
+
+                {/* Grade Date (Date Picker) */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[11px] font-bold text-slate-600 flex items-center justify-between">
+                    <span>Grade Date <span className="text-rose-500">*</span></span>
+                    <span className="text-[10px] font-bold text-rose-500">Mandatory</span>
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={gradDate}
+                    disabled={submitting}
+                    onChange={(e) => { setGradDate(e.target.value); setError(""); }}
+                    className={`w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-xs sm:text-[13px] font-medium text-slate-800 outline-none transition-all ${
+                      isPromote
+                        ? "focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                        : "focus:border-rose-500 focus:ring-2 focus:ring-rose-100"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-[12px] font-semibold text-rose-700 flex items-center gap-2">
+                <AlertTriangle size={15} className="shrink-0 text-rose-500" />
+                <span>{error}</span>
               </div>
             )}
           </div>
 
-
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 rounded-b-3xl border-t border-slate-100 bg-slate-50 px-6 py-4">
+          <div className="flex items-center justify-end gap-3 shrink-0 rounded-b-3xl border-t border-slate-100 bg-slate-50 px-6 py-4">
             <button type="button" onClick={onClose} disabled={submitting}
-              className="px-5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-[13px] font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              className="px-5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-[13px] font-semibold hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
               Cancel
             </button>
             <button type="button" onClick={handleConfirm} disabled={submitting}
-              className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[13px] font-bold text-white transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed ${isPromote ? "bg-emerald-600 hover:bg-emerald-700 shadow-[0_4px_12px_rgba(16,185,129,0.25)]"
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl text-[13px] font-bold text-white transition-all duration-150 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${isPromote ? "bg-emerald-600 hover:bg-emerald-700 shadow-[0_4px_12px_rgba(16,185,129,0.25)]"
                 : "bg-rose-600 hover:bg-rose-700 shadow-[0_4px_12px_rgba(239,68,68,0.25)]"
                 }`}>
               {submitting && <Loader2 size={14} className="animate-spin" />}
@@ -612,12 +751,30 @@ export default function EmployeeClassUpdation() {
   const openDebar = useCallback((emp) => setDebarModal({ open: true, employee: emp }), []);
   const closeDebar = () => { if (debarSubmitting) return; setDebarModal({ open: false, employee: null }); };
 
-  const handleConfirm = async (empId, newClass, isPromote) => {
+  const handleConfirm = async ({ empId, newClass, isPromote, department, basic, gradDate }) => {
     const emp = employees.find((e) => e.empId === empId);
     setSubmitting(true); setBusyEmpId(empId);
     try {
-      await updateEmployeeClass(empId, newClass);
-      setEmployees((prev) => prev.map((e) => e.empId === empId ? { ...e, currentClass: newClass } : e));
+      const res = await updateEmployeeClass({
+        empId,
+        newClass,
+        department,
+        basic,
+        gradDate,
+      });
+      setEmployees((prev) =>
+        prev.map((e) =>
+          e.empId === empId
+            ? {
+                ...e,
+                currentClass: newClass,
+                department: res?.department ?? department ?? e.department,
+                basic: res?.basic !== undefined ? res.basic : (basic ?? e.basic),
+                gradDate: res?.gradDate ?? gradDate ?? e.gradDate,
+              }
+            : e
+        )
+      );
       setModal({ open: false, employee: null, mode: null });
       setPopup({
         open: true,
@@ -626,7 +783,12 @@ export default function EmployeeClassUpdation() {
         message: `${emp?.empName} has been ${isPromote ? "promoted to" : "demoted to"} ${newClass}.`,
       });
     } catch (err) {
-      setPopup({ open: true, variant: "error", title: "Update Failed", message: err?.message || "Could not update this employee's class. Please try again." });
+      setPopup({
+        open: true,
+        variant: "error",
+        title: "Update Failed",
+        message: err?.message || "Could not update this employee's details. Please try again.",
+      });
     } finally {
       setSubmitting(false); setBusyEmpId(null);
     }
@@ -735,6 +897,22 @@ export default function EmployeeClassUpdation() {
       render: (val, row) => formatDate(val || row?.dateOfJoining),
     },
     { key: "department", header: "Department", field: "department", width: 170, minWidth: 170 },
+    {
+      key: "gradDate",
+      header: "Grade Date",
+      field: "gradDate",
+      width: 160,
+      minWidth: 160,
+      render: (val, row) => formatDate(val || row?.gradDate),
+    },
+    {
+      key: "basic",
+      header: "Basic Pay",
+      field: "basic",
+      width: 140,
+      minWidth: 140,
+      render: (val) => (val != null && val !== "" ? `₹${Number(val).toLocaleString("en-IN")}` : "—"),
+    },
     { key: "category", header: "Quarter Type", field: "category", width: 160, minWidth: 160 },
     { key: "areaType", header: "Area Type", field: "areaType", width: 160, minWidth: 160 },
     { key: "quarterNo", header: "Quarter No", field: "quarterNo", width: 150, minWidth: 150 },

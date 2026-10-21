@@ -387,8 +387,8 @@ export default function StatusOfApplications() {
     if (!appId) return;
     setIsDeleting(true);
     try {
-      await request(`/api/admin/applications/${appId}`, {
-        method: "DELETE",
+      await request(`/api/admin/applications/${appId}/skip`, {
+        method: "POST",
         auth: true,
       });
       showToast("Application skipped successfully.", "Success", "success");
