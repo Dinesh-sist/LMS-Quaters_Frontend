@@ -214,6 +214,8 @@ export default function ApplyForQuartersEmployees() {
     attachment: null,
     selectedQuarterId: "",
     selectedQuarterRowKey: "",
+    selectedQuarterIds: [],
+    selectedQuarterRowKeys: [],
     debarredFromDate: "",
     debarredToDate: "",
     areaType: "",
@@ -271,15 +273,18 @@ export default function ApplyForQuartersEmployees() {
           q?.quarter_number ||
           "-",
         nextRosterNo: q?.NextRosterNo ?? q?.nextRosterNo ?? q?.next_roster_no ?? null,
+        isAlreadyApplied: Boolean(q?.IsAlreadyApplied ?? q?.isAlreadyApplied),
       };
     })
     .filter((row) => row.quarterId != null);
 
   const eligibleVacantQuarterRows = vacantQuarterRows;
 
-  const selectedQuarter = eligibleVacantQuarterRows.find(
-    (q) => String(q.rowKey) === String(emp.selectedQuarterRowKey)
+  const selectedQuarters = eligibleVacantQuarterRows.filter((q) =>
+    (emp.selectedQuarterRowKeys || []).includes(String(q.rowKey))
   );
+
+  const selectedQuarter = selectedQuarters[0] || null;
 
   const displayName =
     emp.employeeName || user?.name || user?.username || "Employee";
@@ -293,24 +298,88 @@ export default function ApplyForQuartersEmployees() {
       .join("")
       .toUpperCase() || "E";
 
+  const handleToggleQuarter = (rowKey, quarterId) => {
+    clearValidationError("selectedQuarter");
+    setEmp((s) => {
+      const currentKeys = s.selectedQuarterRowKeys || [];
+      const currentIds = s.selectedQuarterIds || [];
+      const keyStr = String(rowKey ?? "");
+
+      const isSelected = currentKeys.includes(keyStr);
+      const nextKeys = isSelected
+        ? currentKeys.filter((k) => k !== keyStr)
+        : [...currentKeys, keyStr];
+      const nextIds = isSelected
+        ? currentIds.filter((id) => String(id) !== String(quarterId))
+        : [...currentIds, quarterId];
+
+      return {
+        ...s,
+        selectedQuarterRowKeys: nextKeys,
+        selectedQuarterIds: nextIds,
+        selectedQuarterRowKey: nextKeys[0] || "",
+        selectedQuarterId: nextIds[0] || "",
+      };
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    clearValidationError("selectedQuarter");
+    const selectableRows = eligibleVacantQuarterRows.filter((q) => !q.isAlreadyApplied);
+    setEmp((s) => {
+      const allSelected =
+        selectableRows.length > 0 &&
+        selectableRows.every((q) =>
+          (s.selectedQuarterRowKeys || []).includes(String(q.rowKey))
+        );
+
+      if (allSelected) {
+        return {
+          ...s,
+          selectedQuarterRowKeys: [],
+          selectedQuarterIds: [],
+          selectedQuarterRowKey: "",
+          selectedQuarterId: "",
+        };
+      }
+
+      const allKeys = selectableRows.map((q) => String(q.rowKey));
+      const allIds = selectableRows.map((q) => q.quarterId);
+
+      return {
+        ...s,
+        selectedQuarterRowKeys: allKeys,
+        selectedQuarterIds: allIds,
+        selectedQuarterRowKey: allKeys[0] || "",
+        selectedQuarterId: allIds[0] || "",
+      };
+    });
+  };
+
   const renderQuarterChoice = (value, row) => {
+    if (row?.isAlreadyApplied) {
+      return (
+        <div className="flex items-center justify-center w-full h-full">
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10.5px] font-bold text-slate-500 border border-slate-200">
+            Already Applied
+          </span>
+        </div>
+      );
+    }
+
+    const isChecked = (emp.selectedQuarterRowKeys || []).includes(String(value ?? ""));
     return (
-      <input
-        type="radio"
-        name="chooseQuarter"
-        value={String(value ?? "")}
-        checked={String(emp.selectedQuarterRowKey) === String(value)}
-        onClick={(e) => e.stopPropagation()}
-        onChange={() => {
-          clearValidationError("selectedQuarter");
-          setEmp((s) => ({
-            ...s,
-            selectedQuarterId: row?.quarterId,
-            selectedQuarterRowKey: String(value ?? ""),
-          }));
-        }}
-        className="accent-[#1d4ed8]"
-      />
+      <div className="flex items-center justify-center w-full h-full">
+        <input
+          type="checkbox"
+          name="chooseQuarter"
+          value={String(value ?? "")}
+          checked={isChecked}
+          onClick={(e) => e.stopPropagation()}
+          onChange={() => handleToggleQuarter(value, row?.quarterId)}
+          className="h-4.5 w-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer accent-[#1d4ed8]"
+        />
+      </div>
     );
   };
 
@@ -361,6 +430,21 @@ export default function ApplyForQuartersEmployees() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPublication();
+
+    const savedSuccess = sessionStorage.getItem("quarters_apply_success");
+    if (savedSuccess) {
+      sessionStorage.removeItem("quarters_apply_success");
+      try {
+        const parsed = JSON.parse(savedSuccess);
+        showPopup({
+          title: parsed.title,
+          message: parsed.message,
+          variant: parsed.variant || "success",
+        });
+      } catch (e) {
+        console.error("Failed to parse saved success message:", e);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -408,7 +492,14 @@ export default function ApplyForQuartersEmployees() {
         const data = await request("/api/admin/check-approval", { auth: true });
         if (cancelled) return;
 
-        const items = Array.isArray(data?.items) ? data.items : [];
+        const rawItems = Array.isArray(data?.items) ? data.items : [];
+        const myEmpId = (user?.username || "").trim().toUpperCase();
+        const myUserId = user?.id;
+        const items = rawItems.filter((row) => {
+          if (myUserId && row.UserId && Number(row.UserId) === Number(myUserId)) return true;
+          if (myEmpId && row.EmpId && String(row.EmpId).trim().toUpperCase() === myEmpId) return true;
+          return false;
+        });
         const approved = items.find((row) => String(row?.Status || "").toLowerCase() === "approved") || null;
         setApprovedQuarter(approved);
 
@@ -515,6 +606,8 @@ export default function ApplyForQuartersEmployees() {
       attachment: null,
       selectedQuarterId: "",
       selectedQuarterRowKey: "",
+      selectedQuarterIds: [],
+      selectedQuarterRowKeys: [],
     }));
     setSubmitError("");
     setValidationErrors({});
@@ -534,59 +627,79 @@ export default function ApplyForQuartersEmployees() {
 
     if (!emp.department) { setSubmitError("Please select a department."); return; }
     if (!emp.reason) { setSubmitError("Please select a reason."); return; }
-    if (!emp.selectedQuarterId) { setSubmitError("Please select a quarter."); return; }
-    if (!selectedQuarter) {
-      setSubmitError("Please select an available quarter.");
+    if (selectedQuarters.length === 0) {
+      setSubmitError("Please select at least one available quarter.");
+      setValidationErrors((prev) => ({ ...prev, selectedQuarter: true }));
       return;
     }
 
     try {
       setSubmitting(true);
 
-      // Step 1 — Submit the application as plain JSON
-      const data = await request("/api/admin/checkapprovalsave", {
-        method: "POST",
-        body: {
-          quarterId: parseInt(emp.selectedQuarterId),
-          quarterNo: selectedQuarter.quarterNumber,
-          quarterType: selectedQuarter.quarterType,
-          location: selectedQuarter.areaType,
-          reason: emp.reason,
-          exchangeReason: emp.exchangeReason || "",
-          department: emp.department,
-        },
-        auth: true,
-      });
+      const createdAppNos = [];
+      const createdAppIds = [];
 
-      // Step 2 — If the employee selected a file, upload it now
-      if (emp.attachment && data?.id) {
-        try {
-          //console.log("[Upload] Starting file upload for application id:", data.id);
-          const fd = new FormData();
-          fd.append("attachment", emp.attachment);
-          const uploadResult = await request(`/api/admin/upload-attachment/${data.id}`, {
-            method: "POST",
-            body: fd,
-            auth: true,
-          });
-          //console.log("[Upload] Success:", uploadResult);
-        } catch (uploadErr) {
-          console.error("[Upload] FAILED:", uploadErr.message, uploadErr);
-          setSubmitError(`Application submitted (${data.appNo}), but file upload failed: ${uploadErr.message}. You can retry the upload later.`);
-          setSubmitting(false);
-          return; // stop here so user sees the error
+      // Submit each selected quarter as an independent, individual application
+      for (let i = 0; i < selectedQuarters.length; i++) {
+        const q = selectedQuarters[i];
+        const data = await request("/api/admin/checkapprovalsave", {
+          method: "POST",
+          body: {
+            quarterId: parseInt(q.quarterId),
+            quarterNo: q.quarterNumber,
+            quarterType: q.quarterType,
+            location: q.areaType,
+            reason: emp.reason,
+            exchangeReason: emp.exchangeReason || "",
+            department: emp.department,
+          },
+          auth: true,
+        });
+
+        const newId = data?.id || (Array.isArray(data?.ids) ? data.ids[0] : null);
+        const newAppNo = data?.appNo || (Array.isArray(data?.appNos) ? data.appNos[0] : null);
+
+        if (newId) createdAppIds.push(newId);
+        if (newAppNo) createdAppNos.push(newAppNo);
+
+        // Upload attachment if any for this application
+        if (emp.attachment && newId) {
+          try {
+            const fd = new FormData();
+            fd.append("attachment", emp.attachment);
+            await request(`/api/admin/upload-attachment/${newId}`, {
+              method: "POST",
+              body: fd,
+              auth: true,
+            });
+          } catch (uploadErr) {
+            console.error("[Upload] FAILED for application id:", newId, uploadErr.message, uploadErr);
+          }
         }
       }
 
-      showPopup({
-        title: "Application Submitted Successfully",
-        message: `Your quarter application has been submitted successfully! Application No: ${data.appNo}`,
-        variant: "success",
-      });
+      const appNoMsg = createdAppNos.length > 1
+        ? `Application Nos: ${createdAppNos.join(", ")}`
+        : `Application No: ${createdAppNos[0] || ""}`;
+
+      sessionStorage.setItem(
+        "quarters_apply_success",
+        JSON.stringify({
+          title: "Application Submitted Successfully",
+          message: `Your quarter application(s) have been submitted successfully! ${appNoMsg}`,
+          variant: "success",
+        })
+      );
 
       resetApplication();
+      window.location.reload();
     } catch (err) {
       setSubmitError(err.message || "Failed to submit. Please try again.");
+      showPopup({
+        title: "Submission Error",
+        message: err.message || "Failed to submit. Please try again.",
+        variant: "error",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -1015,10 +1128,25 @@ export default function ApplyForQuartersEmployees() {
                           <RequiredMark />
                         </h3>
                       </div>
-                      <div className="text-[12px] font-semibold text-slate-500">
-                        {selectedQuarter
-                          ? `Selected: ${selectedQuarter.quarterNumber}`
-                          : "Select one available quarter"}
+                      <div className="flex items-center gap-3">
+                        {eligibleVacantQuarterRows.some((q) => !q.isAlreadyApplied) && (
+                          <button
+                            type="button"
+                            onClick={handleToggleSelectAll}
+                            className="text-[12px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors cursor-pointer"
+                          >
+                            {eligibleVacantQuarterRows.filter((q) => !q.isAlreadyApplied).every((q) =>
+                              (emp.selectedQuarterRowKeys || []).includes(String(q.rowKey))
+                            )
+                              ? "Deselect All"
+                              : "Select All"}
+                          </button>
+                        )}
+                        <div className="text-[12px] font-semibold text-slate-500">
+                          {selectedQuarters.length > 0
+                            ? `Selected (${selectedQuarters.length}): ${selectedQuarters.map((q) => q.quarterNumber).join(", ")}`
+                            : "Select one or more available quarters"}
+                        </div>
                       </div>
                     </div>
 

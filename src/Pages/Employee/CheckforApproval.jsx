@@ -266,6 +266,10 @@ export default function CheckApproval() {
   const [deleting, setDeleting] = useState(false);
   const user = getUser();
 
+  const showPopup = (title, message, variant = "info") => {
+    setPopup({ open: true, title, message, variant });
+  };
+
   const showToast = (message, title = "Notice", variant = "error") => {
     setPopup({ open: true, title, message, variant });
   };
@@ -284,7 +288,19 @@ export default function CheckApproval() {
     let isActive = true;
     request("/api/admin/check-approval", { auth: true })
       .then((data) => {
-        if (isActive) setRows(Array.isArray(data?.items) ? data.items : []);
+        if (isActive) {
+          const rawItems = Array.isArray(data?.items) ? data.items : [];
+          const myEmpId = (user?.username || "").trim().toUpperCase();
+          const myUserId = user?.id;
+
+          const filtered = rawItems.filter((row) => {
+            if (myUserId && row.UserId && Number(row.UserId) === Number(myUserId)) return true;
+            if (myEmpId && row.EmpId && String(row.EmpId).trim().toUpperCase() === myEmpId) return true;
+            return false;
+          });
+
+          setRows(filtered);
+        }
       })
       .catch((fetchError) => {
         const msg = fetchError?.message || "Failed to load approval statuses.";
@@ -300,7 +316,7 @@ export default function CheckApproval() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [user?.id, user?.username]);
 
   useEffect(() => {
     let isActive = true;
@@ -356,8 +372,9 @@ export default function CheckApproval() {
       });
       setRows((prev) => prev.filter((item) => item.Id !== deleteTarget.Id));
       setDeleteTarget(null);
+      showPopup("Application Deleted", "Your application has been permanently deleted.", "success");
     } catch (err) {
-      setError(err?.message || "Failed to delete the application.");
+      showPopup("Error", err?.message || "Failed to delete the application.", "error");
     } finally {
       setDeleting(false);
     }

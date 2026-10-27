@@ -87,10 +87,13 @@ export function getEmployeeClasses() {
   return request("/api/employeeupdation/employee/classes", { method: "GET", auth: true });
 }
 
-export function updateEmployeeClass(empId, newClass) {
+export function updateEmployeeClass(payloadOrEmpId, newClass) {
+  const body = typeof payloadOrEmpId === "object"
+    ? payloadOrEmpId
+    : { empId: payloadOrEmpId, newClass };
   return request("/api/employeeupdation/employee-classes/update", {
     method: "POST",
-    body: { empId, newClass },
+    body,
     auth: true,
   });
 }
