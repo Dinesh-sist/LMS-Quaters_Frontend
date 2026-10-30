@@ -294,3 +294,9 @@ body.translated-rtl {
     padding: 16px;
   }
 }
+
+/* Ensure Leaflet map stays in its own stacking context below headers, popups and dropdowns */
+.leaflet-container {
+  z-index: 0 !important;
+  isolation: isolate;
+}
