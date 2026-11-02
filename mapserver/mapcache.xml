@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapcache>
+  <!-- Saved tiles go in this folder -->
+  <cache name="disk" type="disk">
+    <base>D:/NTCPWC-GIS-App/lms/tiles</base>
+  </cache>
+
+  <!-- Where MapCache gets new tiles: our MapServer -->
+  <source name="quarters_src" type="wms">
+    <getmap>
+      <params>
+        <FORMAT>image/png</FORMAT>
+        <LAYERS>quarters,quarters_mixed</LAYERS>
+        <TRANSPARENT>true</TRANSPARENT>
+      </params>
+    </getmap>
+    <http>
+      <url>http://localhost/lms?</url>
+    </http>
+  </source>
+
+  <format name="png_fast" type="PNG">
+    <compression>fast</compression>
+  </format>
+
+  <!-- The quarters tile set -->
+    <grid name="GM21">
+    <metadata><title>Google Maps compatible up to zoom 21</title></metadata>
+    <srs>EPSG:3857</srs>
+    <size>256 256</size>
+    <extent>-20037508.3427892480 -20037508.3427892480 20037508.3427892480 20037508.3427892480</extent>
+    <units>m</units>
+    <origin>top-left</origin>
+    <resolutions>156543.0339280410 78271.5169640205 39135.7584820102 19567.8792410051 9783.9396205026 4891.9698102513 2445.9849051256 1222.9924525628 611.4962262814 305.7481131407 152.8740565703 76.4370282852 38.2185141426 19.1092570713 9.5546285356 4.7773142678 2.3886571339 1.1943285670 0.5971642835 0.2985821417 0.1492910709 0.0746455354</resolutions>
+  </grid>
+  <tileset name="quarters">
+    <source>quarters_src</source>
+    <cache>disk</cache>
+    <grid>GM21</grid>
+    <format>png_fast</format>
+    <metatile>4 4</metatile>
+    <metabuffer>10</metabuffer>
+    <expires>60</expires>
+  </tileset>
+
+  <service type="wmts" enabled="true"/>
+  <service type="demo" enabled="true"/>
+  <default_format>png_fast</default_format>
+  <errors>report</errors>
+</mapcache>

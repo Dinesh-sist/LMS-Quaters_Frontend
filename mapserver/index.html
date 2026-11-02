@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>LMS Paradip Port</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  html, body, #map { height: 100%; margin: 0; }
+  .legend { background: white; padding: 8px 10px; line-height: 20px; border-radius: 4px; }
+  .legend i { display: inline-block; width: 16px; height: 16px; margin-right: 6px; vertical-align: middle; }
+
+  /* Mixed building popup: simple table */
+  .qd-sub { color: #666; font-size: 12px; margin-top: 2px; }
+  .qt { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 12px; }
+  .qt th { text-align: left; font-weight: 400; color: #666; padding: 3px 6px 3px 0; border-bottom: 1px solid #222; }
+  .qt td { padding: 5px 6px 5px 0; vertical-align: top; border-bottom: 1px solid #ddd; }
+  .qt tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+// Map centred on Paradip Port
+var map = L.map('map', {maxZoom: 21}).setView([20.27, 86.66], 15);
+
+// Base map: OpenStreetMap
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 21, maxNativeZoom: 19, attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+// MapServer link, used for the click popup
+var WMS = 'http://localhost/lms';
+
+// Quarters layer: saved tiles from MapCache
+var quarters = L.tileLayer('http://localhost/mapcache/wmts/1.0.0/quarters/default/GM21/{z}/{y}/{x}.png', {
+  maxNativeZoom: 21, maxZoom: 21, keepBuffer: 6, updateWhenZooming: false
+}).addTo(map);
+
+// Layer on/off box
+L.control.layers(null, {'Quarters buildings': quarters}, {collapsed: false}).addTo(map);
+
+// Legend
+var legend = L.control({position: 'bottomright'});
+legend.onAdd = function () {
+  var d = L.DomUtil.create('div', 'legend');
+  d.innerHTML =
+    '<b>Quarters</b><br>' +
+    '<i style="background:#00aa00"></i>Vacant<br>' +
+    '<i style="background:#dc0000"></i>Occupied<br>' +
+    '<i style="background:#7f77dd"></i>Mixed (vacant and occupied)<br>' +
+    '<i style="background:#ff8c00"></i>Beyond Repair<br>' +
+    '<i style="background:#969696"></i>Other / Unknown';
+  return d;
+};
+legend.addTo(map);
+
+// Make text safe before showing it in the popup
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// Sort quarter numbers like 2, 10, 11 (not 10, 11, 2)
+function sortNos(list) {
+  return list.sort(function (a, c) { return a.localeCompare(c, undefined, {numeric: true}); });
+}
+
+// Click popup
+map.on('click', function (e) {
+  if (!map.hasLayer(quarters)) { return; }
+
+  // Visible area (in meters) and clicked pixel
+  var size = map.getSize();
+  var b = map.getBounds();
+  var sw = map.options.crs.project(b.getSouthWest());
+  var ne = map.options.crs.project(b.getNorthEast());
+  var p = map.latLngToContainerPoint(e.latlng);
+
+  // Ask MapServer for ALL quarters at the clicked point (up to 200)
+  var url = WMS + '?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo' +
+    '&LAYERS=quarters&QUERY_LAYERS=quarters&STYLES=&SRS=EPSG:3857' +
+    '&BBOX=' + [sw.x, sw.y, ne.x, ne.y].join(',') +
+    '&WIDTH=' + size.x + '&HEIGHT=' + size.y +
+    '&X=' + Math.round(p.x) + '&Y=' + Math.round(p.y) +
+    '&INFO_FORMAT=application/vnd.ogc.gml&FEATURE_COUNT=200';
+
+  fetch(url).then(function (r) { return r.text(); }).then(function (txt) {
+    var xml = new DOMParser().parseFromString(txt, 'text/xml');
+    var nodes = xml.getElementsByTagName('quarters_feature');
+    if (!nodes.length) { return; }
+
+    // Read every quarter into a simple list
+    var rows = [];
+    for (var i = 0; i < nodes.length; i++) {
+      var get = function (n) {
+        var el = nodes[i].getElementsByTagName(n)[0];
+        return el ? el.textContent : '';
+      };
+      rows.push({
+        objectId: get('OBJECT_ID'), qno: get('QUARTER_NO'), type: get('QUARTER_TYPE'),
+        area: get('AREA_TYPE'), status: get('STATUS1')
+      });
+    }
+
+    // Count vacant and occupied quarters in this building
+    var vacant = rows.filter(function (r) { return r.status === 'VACANT'; });
+    var occupied = rows.filter(function (r) { return r.status === 'OCCUPIED'; });
+    var html = '';
+
+    if (vacant.length > 0 && occupied.length > 0) {
+      // Mixed building: group by quarter type + area type (normally just one group)
+      var groups = {};
+      rows.forEach(function (r) {
+        if (r.status !== 'VACANT' && r.status !== 'OCCUPIED') { return; }
+        var key = r.type + '|' + r.area;
+        if (!groups[key]) { groups[key] = {type: r.type, area: r.area, vac: [], occ: []}; }
+        if (r.status === 'VACANT') { groups[key].vac.push(r.qno); } else { groups[key].occ.push(r.qno); }
+      });
+
+      html = '<b>Quarter Details</b>';
+
+      // One small table per group: Status, Count, Quarter No
+      Object.keys(groups).forEach(function (k) {
+        var g = groups[k];
+        html += '<div class="qd-sub">Quarter Type: ' + esc(g.type) + ' &nbsp;|&nbsp; Area Type: ' + esc(g.area) + '</div>' +
+          '<table class="qt">' +
+          '<tr><th>Status</th><th>Count</th><th>Quarter No</th></tr>' +
+          '<tr><td>Vacant</td><td>' + g.vac.length + '</td><td>' + (g.vac.length ? esc(sortNos(g.vac).join(', ')) : '-') + '</td></tr>' +
+          '<tr><td>Occupied</td><td>' + g.occ.length + '</td><td>' + (g.occ.length ? esc(sortNos(g.occ).join(', ')) : '-') + '</td></tr>' +
+          '</table>';
+      });
+    } else {
+      // Fully vacant, fully occupied or other: same popup as before
+      var r0 = rows[0];
+      html = '<b>Quarter Details</b><br>' +
+        'Object ID: ' + esc(r0.objectId) + '<br>' +
+        'Quarter No: ' + esc(r0.qno) + '<br>' +
+        'Quarter Type: ' + esc(r0.type) + '<br>' +
+        'Area Type: ' + esc(r0.area) + '<br>' +
+        'Status: ' + esc(r0.status);
+    }
+
+    // maxHeight adds a scroll bar when the popup is very long
+    L.popup({maxHeight: 300, minWidth: 260}).setLatLng(e.latlng).setContent(html).openOn(map);
+  });
+});
+</script>
+</body>
+</html>

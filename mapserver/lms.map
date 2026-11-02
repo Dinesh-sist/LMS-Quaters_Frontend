@@ -1,0 +1,75 @@
+MAP
+  NAME "lms"
+  STATUS ON
+  SIZE 800 600
+  EXTENT 86.5 20.1 86.8 20.5
+  UNITS DD
+  PROJECTION "init=epsg:4326" END
+  IMAGETYPE PNG
+
+  WEB
+    METADATA
+      "ows_title" "LMS Paradip Port"
+      "ows_enable_request" "*"
+      "ows_srs" "EPSG:4326 EPSG:3857"
+      "ows_onlineresource" "http://localhost/lms?"
+    END
+  END
+
+  LAYER
+    NAME "quarters"
+    TYPE POLYGON
+    STATUS ON
+    METADATA
+      "ows_title" "Quarters"
+      "ows_srs" "EPSG:4326 EPSG:3857"
+      "gml_include_items" "all"
+      "gml_featureid" "RowID"
+    END
+    CONNECTIONTYPE PLUGIN
+    PLUGIN "mssql"
+    CONNECTION "server=localhost;database=LMSQuartersNew;integrated security=true"
+    DATA "Shape from (SELECT ROW_NUMBER() OVER (ORDER BY SNO, QUARTERS_NAME, [QUARTER NUMBER], [FLOOR DETAILS], AREA_TYPE) AS RowID, CAST(OBJECTID AS INT) AS OBJECT_ID, [QUARTER NUMBER] AS QUARTER_NO, CATEGORY AS QUARTER_TYPE, AREA_TYPE, STATUS1, Shape FROM dbo.Estate_Quarters) AS q USING UNIQUE RowID USING SRID=4326"
+    TEMPLATE "dummy"
+    PROJECTION "init=epsg:4326" END
+    CLASSITEM "STATUS1"
+    CLASS
+      NAME "Vacant"
+      EXPRESSION "VACANT"
+      STYLE COLOR 0 170 0 OUTLINECOLOR 80 80 80 END
+    END
+    CLASS
+      NAME "Occupied"
+      EXPRESSION "OCCUPIED"
+      STYLE COLOR 220 0 0 OUTLINECOLOR 80 80 80 END
+    END
+    CLASS
+      NAME "Beyond Repair"
+      EXPRESSION "BEYOND REPAIR"
+      STYLE COLOR 255 140 0 OUTLINECOLOR 80 80 80 END
+    END
+    CLASS
+      NAME "Other / Unknown"
+      STYLE COLOR 150 150 150 OUTLINECOLOR 80 80 80 END
+    END
+  END
+
+  LAYER
+    NAME "quarters_mixed"
+    TYPE POLYGON
+    STATUS ON
+    METADATA
+      "ows_title" "Quarters mixed"
+      "ows_srs" "EPSG:4326 EPSG:3857"
+    END
+    CONNECTIONTYPE PLUGIN
+    PLUGIN "mssql"
+    CONNECTION "server=localhost;database=LMSQuartersNew;integrated security=true"
+    DATA "Shape from (SELECT RowID, Shape FROM (SELECT ROW_NUMBER() OVER (ORDER BY SNO, QUARTERS_NAME, [QUARTER NUMBER], [FLOOR DETAILS], AREA_TYPE) AS RowID, Shape, SUM(CASE WHEN STATUS1 = 'VACANT' THEN 1 ELSE 0 END) OVER (PARTITION BY CONVERT(VARBINARY(MAX), Shape)) AS v, SUM(CASE WHEN STATUS1 = 'OCCUPIED' THEN 1 ELSE 0 END) OVER (PARTITION BY CONVERT(VARBINARY(MAX), Shape)) AS o FROM dbo.Estate_Quarters) t WHERE v > 0 AND o > 0) AS q USING UNIQUE RowID USING SRID=4326"
+    PROJECTION "init=epsg:4326" END
+    CLASS
+      NAME "Mixed"
+      STYLE COLOR 127 119 221 OUTLINECOLOR 80 80 80 END
+    END
+  END
+END

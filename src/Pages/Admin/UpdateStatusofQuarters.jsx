@@ -17,10 +17,10 @@ import Popup from "../../Components/Popup";
 import { lookupQuarterEmployee, getQuarterCategories, getQuarterAreas, getQuarterNumbers, getQuarterCurrentStatus, updateQuarterStatus } from "../../api";
 
 const STATUS_OPTIONS = [
-  { value: "VACANT", dot: "bg-green-500" },
-  { value: "OCCUPIED", dot: "bg-[#e87722]" },
-  { value: "UNDER MAINTENANCE", dot: "bg-amber-500" },
-  { value: "BEYOND REPAIR", dot: "bg-red-500" },
+  { value: "VACANT", dot: "bg-[#00aa00]" },
+  { value: "OCCUPIED", dot: "bg-[#dc0000]" },
+  { value: "UNDER MAINTENANCE", dot: "bg-[#969696]" },
+  { value: "BEYOND REPAIR", dot: "bg-[#ff8c00]" },
 ];
 
 function SelectField({ label, icon, placeholder, value, onChange, options, renderOption, highlightValue, colorTheme = "orange" }) {

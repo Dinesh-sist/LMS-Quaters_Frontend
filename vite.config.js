@@ -12,5 +12,11 @@ export default defineConfig({
     tailwindcss()
 
   ],
+  // Development only: send MapServer and MapCache requests to Apache (MS4W) on port 80
+  server: {
+    proxy: {
+      '^/lms(\\?.*)?$': { target: 'http://localhost', changeOrigin: true },
+      '/mapcache': { target: 'http://localhost', changeOrigin: true },
+    },
+  },
 })
-

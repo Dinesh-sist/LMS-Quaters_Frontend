@@ -2,8 +2,14 @@ import { useAdminMapPageController } from "./useAdminMapPageController";
 import { AdminMapFeaturePopup } from "./AdminMapFeaturePopup";
 import { AdminMapLegend } from "./AdminMapOverlays";
 import { AdminMapMapOverlay, MapContainer, TileLayer } from "./AdminMapMapOverlay";
+import { AdminQuartersTileLayer, AdminQuartersLegend } from "./AdminQuartersTileMap";
+
+// true  = quarters come from MapServer tiles (new map, with mixed buildings)
+// false = old map that draws the shapes from the API (fallback)
+const USE_MAPSERVER_TILES = true;
 
 export default function AdminMapPage() {
+  console.log("ADMIN MAP PAGE IS LOADING");
   const controller = useAdminMapPageController();
 
   return (
@@ -26,27 +32,33 @@ export default function AdminMapPage() {
                     attribution="&copy; OpenStreetMap contributors"
                   />
 
-                  <AdminMapMapOverlay
-                    setFeatureInfo={controller.setFeatureInfo}
-                    setClickPosition={controller.setClickPosition}
-                    highlightLayerRef={controller.highlightLayerRef}
-                  />
+                  {USE_MAPSERVER_TILES ? (
+                    <AdminQuartersTileLayer />
+                  ) : (
+                    <>
+                      <AdminMapMapOverlay
+                        setFeatureInfo={controller.setFeatureInfo}
+                        setClickPosition={controller.setClickPosition}
+                        highlightLayerRef={controller.highlightLayerRef}
+                      />
 
-                  <AdminMapFeaturePopup
-                    featureInfo={controller.featureInfo}
-                    clickPosition={controller.clickPosition}
-                    onClose={() => {
-                      controller.setFeatureInfo(null);
-                      controller.setClickPosition(null);
-                      if (controller.highlightLayerRef.current) {
-                        controller.highlightLayerRef.current.remove();
-                        controller.highlightLayerRef.current = null;
-                      }
-                    }}
-                  />
+                      <AdminMapFeaturePopup
+                        featureInfo={controller.featureInfo}
+                        clickPosition={controller.clickPosition}
+                        onClose={() => {
+                          controller.setFeatureInfo(null);
+                          controller.setClickPosition(null);
+                          if (controller.highlightLayerRef.current) {
+                            controller.highlightLayerRef.current.remove();
+                            controller.highlightLayerRef.current = null;
+                          }
+                        }}
+                      />
+                    </>
+                  )}
                 </MapContainer>
 
-                <AdminMapLegend />
+                {USE_MAPSERVER_TILES ? <AdminQuartersLegend /> : <AdminMapLegend />}
               </div>
             </div>
           </main>

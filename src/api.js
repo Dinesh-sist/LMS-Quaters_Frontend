@@ -274,3 +274,10 @@ export function registerEmployeeAdmin(payload) {
 }
 
 export { API_BASE, request };
+export function getQuarterLocation(category, area, quarterNumber) {
+  const params = new URLSearchParams({ category, area, quarterNumber });
+  return request(`/api/quarter-search/location?${params.toString()}`, {
+    method: "GET",
+    auth: true,
+  });
+}
