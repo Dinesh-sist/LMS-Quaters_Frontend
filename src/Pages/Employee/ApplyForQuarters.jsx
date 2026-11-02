@@ -212,7 +212,7 @@ export default function ApplyForQuarters() {
 
           {/* Mobile/tablet sidebar drawer */}
           {sidebarOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="fixed inset-0 z-[60] lg:hidden">
               <button
                 type="button"
                 className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px]"

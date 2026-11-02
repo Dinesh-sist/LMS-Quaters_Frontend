@@ -12,8 +12,8 @@ export default function AdminMapPage() {
       title="Quarters Map View"
       subtitle="Browse quarter polygons from Estate_Quarters and inspect unit details."
     >
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
-        <div className="relative h-[70vh] min-h-[520px] w-full">
+      <section className="relative z-0 isolate overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md">
+        <div className="relative z-0 isolate h-[70vh] min-h-[520px] w-full">
           <MapContainer
             center={[20.2649, 86.6938]}
             zoom={14}

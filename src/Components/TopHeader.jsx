@@ -51,7 +51,7 @@ export default function TopHeader({
   }, [fontSize]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b1f44] shadow-sm">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0b1f44] shadow-sm">
       <div className="flex min-h-[58px] sm:min-h-[76px] flex-nowrap items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-4 lg:gap-3 lg:px-8 xl:gap-4 xl:px-10">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           {typeof onOpenMenu === "function" && (

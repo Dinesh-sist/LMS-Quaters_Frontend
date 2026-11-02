@@ -742,7 +742,7 @@ export default function ApplyForQuartersEmployees() {
 
           {/* Mobile/tablet sidebar drawer */}
           {sidebarOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden">
+            <div className="fixed inset-0 z-[60] lg:hidden">
               <button
                 type="button"
                 className="absolute inset-0 bg-slate-950/35 backdrop-blur-[2px]"
@@ -1124,7 +1124,7 @@ export default function ApplyForQuartersEmployees() {
                       <div className="flex items-center gap-2">
                         <Home size={16} className="text-[#1a2e5a]" />
                         <h3 className="font-bold text-lg text-slate-900">
-                          Choose from Vacant Quarters Listing
+                          Choose from vacant quarters listing in order of your priority
                           <RequiredMark />
                         </h3>
                       </div>

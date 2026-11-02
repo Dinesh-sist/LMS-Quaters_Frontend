@@ -12,7 +12,7 @@ export default function AdminMapPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <main className="flex-1 overflow-y-auto bg-indigo-100/70 z-10">
             <div className="shadow-sm rounded-2xl w-full flex flex-col h-full">
-              <div className="relative h-[70vh] min-h-[520px] w-full">
+              <div className="relative z-0 isolate h-[70vh] min-h-[520px] w-full">
                 <MapContainer
                   center={[20.2649, 86.6935]}
                   zoom={14}
