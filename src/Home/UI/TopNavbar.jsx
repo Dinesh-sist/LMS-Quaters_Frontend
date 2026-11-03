@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { label: "Apply Online", to: null, dropdown: true },
   { label: "Staff Login", to: "/StaffLogin", dropdown: false },
   { label: "Outsiders", to: "http://ppa-lms.in/outsider/", dropdown: false },
-  { label: "REMS", to: "/REMSLogin", dropdown: false },
+  { label: "REMS", to: "https://ppa-lms.in/REMS", dropdown: false },
 
 ];
   
@@ -42,7 +42,7 @@ function FontSizeControls({ onDecrease, onIncrease, onReset }) {
       <button
         type="button"
         onClick={onDecrease}
-        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
+        className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-[12px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
         aria-label="Decrease font size"
         title="Decrease font size"
       >
@@ -51,7 +51,7 @@ function FontSizeControls({ onDecrease, onIncrease, onReset }) {
       <button
         type="button"
         onClick={onReset}
-        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
+        className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-[12px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
         aria-label="Reset font size"
         title="Reset font size"
       >
@@ -60,7 +60,7 @@ function FontSizeControls({ onDecrease, onIncrease, onReset }) {
       <button
         type="button"
         onClick={onIncrease}
-        className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-[13px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
+        className="flex h-6 w-6 items-center justify-center rounded-md bg-white text-[12px] font-bold text-blue-950 shadow-sm transition-all duration-200 hover:text-[#fb923c]"
         aria-label="Increase font size"
         title="Increase font size"
       >
@@ -387,7 +387,7 @@ export default function TopNavbar({
           }`}
       >
         {/* Maximum width container to unify sizes across 1024px up to 1440px+ */}
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-2">
+        <div className="flex max-w-auto items-center justify-between gap-2">
 
           {/* Brand/Logo Section */}
           <div className="flex min-w-0 shrink-0 items-center gap-3">
