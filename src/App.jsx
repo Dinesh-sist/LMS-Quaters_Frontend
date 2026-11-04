@@ -22,6 +22,8 @@ import UpdateStatusOfQuarters from './Pages/Admin/UpdateStatusofQuarters'
 import EmployeeRegistration from './Pages/Admin/EmployeeRegistration'
 import { consumeAuthRecovery, getToken, getUser, setAuth } from './auth'
 
+const BASE_NAME = import.meta.env.PROD ? "/v2" : "/";
+
 function TranslateRecovery() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,7 +50,7 @@ function TranslateRecovery() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={BASE_NAME}>
       <TranslateRecovery />
       <Routes>
         <Route path="/"                    element={<Home />} />

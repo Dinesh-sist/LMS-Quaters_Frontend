@@ -20,7 +20,7 @@ async function request(path, { method = "GET", body, auth = false, redirectOnUna
     });
   } catch (err) {
     if (err.message.toLowerCase().includes("failed to fetch") || err.name === "TypeError") {
-      throw new Error("failed to fetch");
+      throw new Error("failed to fetch", { cause: err });
     }
     throw err;
   }
