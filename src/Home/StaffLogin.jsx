@@ -11,7 +11,7 @@ import {
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
 import Popup from "../Components/Popup";
-import Image2 from "../assets/Image8.png";
+import Image2 from "../assets/Staff_Login_Image.png";
 import { login } from "../api";
 import { setAuth } from "../auth";
 

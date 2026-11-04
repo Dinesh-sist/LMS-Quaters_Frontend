@@ -20,7 +20,7 @@ import {
 import TopNavbar from "./UI/TopNavbar";
 import Footer from "../Components/Footer";
 import Popup from "../Components/Popup";
-import Image from "../assets/Image13.png";
+import Image from "../assets/Employee_Login_Image.png";
 import Logo from "../assets/Logo.png";
 import {
   getEmployeeClasses,
